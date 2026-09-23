@@ -81,3 +81,8 @@ deps/cystdf/cystdf_amalgamation.c
 deps/cystdf/cython_test.py
 STDF-Viewer.config
 test.py
+
+# SemiData user data and reproducible dependency lock
+workspace/
+.test-workspace/
+!uv.lock

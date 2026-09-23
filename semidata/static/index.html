@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>SemiData · Test engineering workbench</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="#library" aria-label="SemiData home"
+        ><span class="brand-mark">S<span>·</span></span
+        ><span>SemiData<small>TEST ENGINEERING</small></span></a
+      >
+      <div class="nav-label">WORKBENCH</div>
+      <nav aria-label="Main navigation">
+        <button class="nav-item active" data-view="library">
+          <span aria-hidden="true">▤</span> Data library
+          <span id="nav-count" class="nav-count">0</span>
+        </button>
+        <button class="nav-item" data-view="explore">
+          <span aria-hidden="true">◫</span> Explore
+        </button>
+        <button class="nav-item" data-view="pat">
+          <span aria-hidden="true">⌁</span> PAT lab
+        </button>
+        <button class="nav-item" data-view="runs">
+          <span aria-hidden="true">▧</span> Saved runs
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" data-view="help">
+          <span aria-hidden="true">?</span> Engineer guide
+        </button>
+        <div class="local-state">
+          <span class="status-dot"></span> Local workspace<small id="version"
+            >Connecting…</small
+          >
+        </div>
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <span
+          >WORKSPACE <span class="breadcrumb">/</span>
+          <strong id="view-label">Data library</strong></span
+        ><span class="privacy"
+          ><span class="status-dot"></span> Your data stays on this
+          machine</span
+        >
+      </header>
+      <div class="content">
+        <div id="notice" class="notice" role="status" hidden></div>
+        <section id="view-library" class="view">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">START WITH YOUR DATA</p>
+              <h1>Data library</h1>
+              <p>
+                Import once. Explore measurements, compare populations, and
+                evaluate screening recipes.
+              </p>
+            </div>
+            <button id="demo-btn" class="button secondary">
+              Load example data
+            </button>
+          </div>
+          <div id="library-metrics" class="metrics"></div>
+          <section class="panel import-panel" aria-labelledby="import-title">
+            <div>
+              <h2 id="import-title">Bring your STDF files</h2>
+              <p>
+                Paste a full local file path, one per line. Imports are stored
+                in your workspace and identical files are detected
+                automatically.
+              </p>
+              <a
+                href="https://stdf.io/generate"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Generate evaluation files at STDF.io ↗</a
+              >
+            </div>
+            <form id="import-form">
+              <label for="import-paths">Local file paths</label
+              ><textarea
+                id="import-paths"
+                rows="2"
+                placeholder="C:\TestData\lot-001.stdf"
+                required
+              ></textarea>
+              <div class="form-footer">
+                <span id="import-status" class="muted"
+                  >STDF and supported compressed STDF files</span
+                ><button id="import-btn" class="button primary" type="submit">
+                  Import files <span aria-hidden="true">↑</span>
+                </button>
+              </div>
+            </form>
+          </section>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>
+                  Imported datasets
+                  <span id="dataset-count" class="count-tag">0</span>
+                </h2>
+                <p>
+                  Choose up to 20 datasets to form your analysis population.
+                </p>
+              </div>
+              <label class="search-label"
+                ><span class="sr-only">Search datasets</span
+                ><input
+                  type="search"
+                  id="library-search"
+                  placeholder="Search lot, product, or file…"
+              /></label>
+            </div>
+            <div class="selection-bar">
+              <span id="selection-count">0 datasets selected</span>
+              <div>
+                <button id="select-visible" class="text-button">
+                  Select visible</button
+                ><button id="clear-selection" class="text-button">Clear</button
+                ><button id="open-explore" class="button compact secondary">
+                  Explore selected →
+                </button>
+              </div>
+            </div>
+            <div id="dataset-table"></div>
+          </section>
+          <p class="footnote" id="workspace-path"></p>
+        </section>
+
+        <section
+          id="population-controls"
+          class="panel population-panel"
+          hidden
+          aria-label="Analysis population"
+        >
+          <div class="population-heading">
+            <div>
+              <span class="eyebrow">SHARED POPULATION</span>
+              <p id="population-summary">
+                Select datasets in the data library.
+              </p>
+            </div>
+            <button id="change-datasets" class="text-button">
+              Change datasets →
+            </button>
+          </div>
+          <div class="control-grid">
+            <label
+              >Find a test<input
+                id="test-search"
+                type="search"
+                placeholder="Search test name or number…" /></label
+            ><label class="test-control"
+              >Measurement<select id="test-select">
+                <option value="">Select datasets first</option>
+              </select></label
+            ><label
+              >Site<select id="site-select">
+                <option value="">All sites</option>
+              </select></label
+            ><label
+              >Test attempts<select id="attempts-select">
+                <option value="current">Current within each file</option>
+                <option value="all">All attempts</option>
+              </select></label
+            >
+          </div>
+          <p class="footnote">
+            Current excludes superseded attempts within each source file. Device
+            identities are never merged across files.
+          </p>
+        </section>
+
+        <section id="view-explore" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">MEASUREMENT INTELLIGENCE</p>
+              <h1>Explore your population</h1>
+              <p>
+                Understand distributions, compare lots, and follow the
+                underlying measurements.
+              </p>
+            </div>
+            <button id="refresh-analysis" class="button secondary">
+              Refresh analysis
+            </button>
+          </div>
+          <div id="analysis-output">
+            <div class="empty">
+              <h2>Your next insight starts with a test</h2>
+              <p>Select datasets and a measurement above to explore.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-pat" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">PART AVERAGE TESTING</p>
+              <h1>Build a screening experiment</h1>
+              <p>
+                Define a reference population, preview statistical limits, and
+                preserve a reproducible result.
+              </p>
+            </div>
+            <span class="badge">Evaluation workflow</span>
+          </div>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Recipe configuration</h2>
+                <p>
+                  Screening evaluates eligible, passing devices with valid
+                  measurements. Source records remain unchanged.
+                </p>
+              </div>
+            </div>
+            <form id="pat-form">
+              <div class="recipe-grid">
+                <div class="recipe-fields">
+                  <label
+                    >Experiment name<input
+                      id="recipe-name"
+                      value="Population screening"
+                      maxlength="120"
+                      required
+                  /></label>
+                  <div class="two-column">
+                    <label
+                      >Limit method<select id="pat-method">
+                        <option value="sigma">Mean ± k × sample SD</option>
+                        <option value="mad">Median ± k × scaled MAD</option>
+                      </select></label
+                    ><label
+                      >Multiplier k<input
+                        id="pat-k"
+                        type="number"
+                        value="3"
+                        min="0.5"
+                        max="10"
+                        step="0.1"
+                        required
+                    /></label>
+                  </div>
+                  <p class="footnote">
+                    Scaled MAD = 1.4826 × median absolute deviation. Statistical
+                    screening is an engineering investigation, not a
+                    qualification or production release decision.
+                  </p>
+                </div>
+                <div>
+                  <label for="reference-select"
+                    >Reference datasets
+                    <span class="optional">optional</span></label
+                  ><select
+                    id="reference-select"
+                    multiple
+                    size="4"
+                    aria-describedby="reference-help"
+                  ></select>
+                  <p class="footnote" id="reference-help">
+                    Leave empty to use the selected population. At least 30
+                    eligible reference measurements are required. Ctrl-click to
+                    choose or remove references.
+                  </p>
+                  <button
+                    id="clear-reference"
+                    type="button"
+                    class="text-button"
+                  >
+                    Use selected population
+                  </button>
+                </div>
+              </div>
+              <div class="recipe-actions">
+                <p>Preview the exact population before saving.</p>
+                <button id="preview-btn" class="button primary" type="submit">
+                  Preview screening →</button
+                ><button
+                  id="save-run"
+                  class="button secondary"
+                  type="button"
+                  disabled
+                >
+                  Save experiment
+                </button>
+              </div>
+            </form>
+          </section>
+          <div id="pat-output">
+            <div class="empty">
+              <span class="empty-symbol" aria-hidden="true">⌁</span>
+              <h2>A clear boundary. A traceable decision.</h2>
+              <p>
+                Choose a test and preview your recipe to inspect limits and
+                flagged devices.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-runs" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">REPRODUCIBLE ENGINEERING</p>
+              <h1>Saved experiments</h1>
+              <p>
+                Revisit immutable screening results, review their source data,
+                and export flagged devices.
+              </p>
+            </div>
+            <button id="refresh-runs" class="button secondary">
+              Refresh history
+            </button>
+          </div>
+          <div id="runs-list" class="panel"></div>
+          <div id="run-output"></div>
+        </section>
+
+        <section id="view-help" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">ENGINEER GUIDE</p>
+              <h1>A useful first session</h1>
+              <p>
+                Make a small, repeatable evaluation before working with a larger
+                production dataset.
+              </p>
+            </div>
+            <a
+              class="button secondary"
+              href="/guide"
+              target="_blank"
+              rel="noopener"
+              >Open complete guide ↗</a
+            >
+          </div>
+          <div class="help-grid">
+            <section class="panel help-card">
+              <span class="step">01</span>
+              <h2>Build your library</h2>
+              <p>
+                Load the bundled examples or generate STDF files at STDF.io.
+                Paste the downloaded files’ full local paths into the import
+                form. Select datasets to define the population.
+              </p>
+            </section>
+            <section class="panel help-card">
+              <span class="step">02</span>
+              <h2>Explore a measurement</h2>
+              <p>
+                Search for a test, compare its distribution and lot statistics,
+                and inspect the ordered measurement plot. All histogram bins and
+                summary statistics use the full valid population.
+              </p>
+            </section>
+            <section class="panel help-card">
+              <span class="step">03</span>
+              <h2>Evaluate PAT</h2>
+              <p>
+                Choose mean/SD or median/MAD limits, set k, and preview flagged
+                devices. Use a separate reference dataset when the limits should
+                be learned from a different population.
+              </p>
+            </section>
+            <section class="panel help-card">
+              <span class="step">04</span>
+              <h2>Keep the evidence</h2>
+              <p>
+                Save a screening experiment to preserve its recipe, source
+                hashes, limits, and result. Open Saved runs to retrieve the
+                result or export the complete flagged-device CSV.
+              </p>
+            </section>
+          </div>
+          <section class="panel help-card">
+            <h2>Know this release’s boundaries</h2>
+            <p>
+              This evaluation release analyzes scalar PTR measurements. It does
+              not provide production sign-off, MPR/FTR analytics, wafer-map
+              screening, or automated AEC compliance. Current-attempt handling
+              applies within each file. PAT requires enough eligible reference
+              measurements and nonzero spread; read the calculation reference
+              before interpreting limits.
+            </p>
+            <p>
+              The library lists the most recent 200 datasets and runs. Analysis
+              accepts up to 20 datasets and 500,000 measurement rows. Ordered
+              plots display at most 800 points; PAT previews display at most
+              1,000 flagged rows, while saved CSV exports retain all flags.
+            </p>
+            <a href="/guide" target="_blank" rel="noopener"
+              >Read installation, calculations, evaluation steps, and
+              limitations →</a
+            >
+          </section>
+        </section>
+      </div>
+      <footer>
+        <span>SemiData Workbench · <a href="#help">Engineer guide</a></span
+        ><span>OPEN SOURCE · LOCAL FIRST · ENGINEER LED</span>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -213,6 +213,7 @@ fn on_ptr_view(
         test_id,
         result: result * 10f32.powi(scale),
         flag: test_flg[0],
+        parm_flag: ptr.parm_flg()[0],
     });
 
     if !exist || !lim_exist {

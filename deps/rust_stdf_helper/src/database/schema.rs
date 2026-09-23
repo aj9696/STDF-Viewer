@@ -122,6 +122,7 @@ pub(crate) static CREATE_TABLE_SQL: &str = "DROP TABLE IF EXISTS File_List;
                                                         TEST_ID INTEGER, 
                                                         RESULT REAL,
                                                         TEST_FLAG INTEGER,
+                                                        PARM_FLAG INTEGER,
                                                         PRIMARY KEY (DUTIndex, TEST_ID)) WITHOUT ROWID;
 
                                 CREATE TABLE IF NOT EXISTS MPR_Data (
@@ -255,7 +256,7 @@ pub(crate) static UPDATE_SUPERSEDE_DIE: &str = "UPDATE Dut_Info SET
 pub(crate) static INSERT_PTR_DATA: &str = "INSERT OR REPLACE INTO 
                                     PTR_Data 
                                 VALUES 
-                                    (:DUTIndex, :TEST_ID, :RESULT, :TEST_FLAG);";
+                                    (:DUTIndex, :TEST_ID, :RESULT, :TEST_FLAG, :PARM_FLAG);";
 
 pub(crate) static INSERT_MPR_DATA: &str = "INSERT OR REPLACE INTO 
                                     MPR_Data 

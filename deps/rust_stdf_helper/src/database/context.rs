@@ -25,6 +25,7 @@ struct PtrRow {
     tid: TestId,
     result: f32,
     flag: u8,
+    parm_flag: u8,
 }
 
 struct FtrRow {
@@ -113,7 +114,11 @@ impl<'con> DatabaseCtx<'con> {
         // prepared multi-row INSERT for the hot PTR_Data path
         let mut ptr_batch_sql = String::from("INSERT OR REPLACE INTO PTR_Data VALUES ");
         for i in 0..ROWS_PER_BATCH {
-            ptr_batch_sql.push_str(if i == 0 { "(?,?,?,?)" } else { ",(?,?,?,?)" });
+            ptr_batch_sql.push_str(if i == 0 {
+                "(?,?,?,?,?)"
+            } else {
+                ",(?,?,?,?,?)"
+            });
         }
         // prepared multi-row INSERT for the hot FTR_Data path
         let mut ftr_batch_sql = String::from("INSERT OR REPLACE INTO FTR_Data VALUES ");
@@ -259,22 +264,25 @@ impl<'con> DatabaseCtx<'con> {
         tid: TestId,
         result: f32,
         flag: u8,
+        parm_flag: u8,
     ) -> Result<(), StdfHelperError> {
         self.ptr_batch.push(PtrRow {
             dut,
             tid,
             result,
             flag,
+            parm_flag,
         });
         if self.ptr_batch.len() >= ROWS_PER_BATCH {
             {
                 let stmt = &mut self.insert_ptr_batch_stmt;
-                let mut params: Vec<&dyn ToSql> = Vec::with_capacity(ROWS_PER_BATCH * 4);
+                let mut params: Vec<&dyn ToSql> = Vec::with_capacity(ROWS_PER_BATCH * 5);
                 for r in self.ptr_batch.iter() {
                     params.push(&r.dut);
                     params.push(&r.tid);
                     params.push(&r.result);
                     params.push(&r.flag);
+                    params.push(&r.parm_flag);
                 }
                 stmt.execute(params.as_slice())?;
             }
@@ -386,7 +394,13 @@ impl<'con> DatabaseCtx<'con> {
         {
             let stmt = &mut self.insert_ptr_data_stmt;
             for r in self.ptr_batch.iter() {
-                stmt.execute(rusqlite::params![r.dut, r.tid, r.result, r.flag])?;
+                stmt.execute(rusqlite::params![
+                    r.dut,
+                    r.tid,
+                    r.result,
+                    r.flag,
+                    r.parm_flag
+                ])?;
             }
         }
         self.ptr_batch.clear();

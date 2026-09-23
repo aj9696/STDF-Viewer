@@ -36,6 +36,7 @@ pub enum DbOp {
         test_id: TestId,
         result: f32,
         flag: u8,
+        parm_flag: u8,
     },
     Ftr {
         dut_index: u64,
@@ -224,7 +225,8 @@ impl DbOp {
                 test_id,
                 result,
                 flag,
-            } => db_ctx.insert_ptr_data_batched(dut_index, test_id, result, flag),
+                parm_flag,
+            } => db_ctx.insert_ptr_data_batched(dut_index, test_id, result, flag, parm_flag),
             DbOp::Ftr {
                 dut_index,
                 test_id,

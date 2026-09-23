@@ -1,0 +1,54 @@
+name: Workbench verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workbench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v8.2.0
+        with:
+          version: "0.12.18"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Select verified Rust toolchain
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal
+          rustup default 1.98.1
+
+      - name: Install locked dependencies and build the native parser
+        run: |
+          uv cache clean rust-stdf-helper
+          uv sync --locked --no-dev --reinstall-package rust-stdf-helper
+
+      - name: Verify native parser import
+        run: .venv/bin/python -c "import rust_stdf_helper; print(rust_stdf_helper.__file__)"
+
+      - name: Run unit and integration tests
+        run: .venv/bin/python -m unittest discover -s tests -v
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Check browser JavaScript syntax
+        run: |
+          node --check semidata/static/app.js
+          node --check semidata/static/charts.js
+          node --check semidata/static/format.js
