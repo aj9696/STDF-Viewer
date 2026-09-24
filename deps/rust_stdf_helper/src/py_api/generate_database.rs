@@ -199,6 +199,7 @@ pub fn generate_database(
                         sub_fid,
                         raw_view.byte_order,
                         rec_view,
+                        raw_view.raw_data.len() == 12,
                         &mut ops,
                     ) {
                         let msg = format!("File[{}]: {}", fid, e.msg);

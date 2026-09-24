@@ -63,6 +63,10 @@ pub struct RecordTracker {
     // string and only allocate on the vacant-entry path.
     id_map: HashMap<(usize, u32), HashMap<String, TestId>>,
 
+    // PTR-only fallback candidates: Some(id) is unique; None is ambiguous.
+    // FTR/MPR names must not supply metadata for an omitted PTR name.
+    ptr_identities: HashMap<(usize, u32), Option<TestId>>,
+
     // number of unique tests seen by this tracker; local component of TestId
     test_id_counter: usize,
 
@@ -106,6 +110,7 @@ impl RecordTracker {
         RecordTracker {
             id_type,
             id_map: HashMap::with_capacity(1024),
+            ptr_identities: HashMap::with_capacity(1024),
             test_id_counter: 0,
             scale_map: HashMap::with_capacity(1024),
             default_llimit: HashMap::with_capacity(1024),
@@ -293,7 +298,9 @@ impl RecordTracker {
     /// return (dut_index, test_id) for [PTR], [FTR], [MPR] or maybe [STR] in the future
     ///
     /// `test_txt` is only used in the `TestNumberAndName` mode,
-    /// pass `None` in `TestNumberOnly` mode
+    /// pass `None` in `TestNumberOnly` mode or when PTR physically omits TEST_TXT.
+    /// Compact producers may omit names after the first PTR. Reuse a unique
+    /// prior PTR identity in that case; never confuse explicit empty names with omission.
     #[inline(always)]
     pub fn xtr_detected_optional(
         &mut self,
@@ -302,6 +309,7 @@ impl RecordTracker {
         site_num: u8,
         test_num: u32,
         test_txt: Option<&str>,
+        is_ptr: bool,
     ) -> Result<(u64, TestId), StdfHelperError> {
         // get dut_index
         let dut_index = match self.dut_index_tracker.get( &(file_id, head_num, site_num) ) {
@@ -313,12 +321,19 @@ impl RecordTracker {
         let names = self.id_map.entry((file_id, test_num)).or_default();
         let test_id = match self.id_type {
             TestIDType::TestNumberAndName => {
-                let test_txt = test_txt.ok_or_else(|| StdfHelperError {
-                    msg: format!(
-                        "Missing test name for test number [{}] in File[{}]",
-                        test_num, file_id
-                    ),
-                })?;
+                if is_ptr && test_txt.is_none() {
+                    match self.ptr_identities.get(&(file_id, test_num)) {
+                        Some(Some(id)) => return Ok((dut_index, *id)),
+                        Some(None) => return Err(StdfHelperError {
+                            msg: format!(
+                                "Ambiguous omitted PTR TEST_TXT for test number [{}] in File[{}]: multiple prior names",
+                                test_num, file_id
+                            ),
+                        }),
+                        None => {}
+                    }
+                }
+                let test_txt = test_txt.unwrap_or("");
                 match names.get(test_txt) {
                     Some(id) => *id,
                     None => {
@@ -342,6 +357,16 @@ impl RecordTracker {
                 }
             },
         };
+        if is_ptr && self.uses_test_name() {
+            self.ptr_identities
+                .entry((file_id, test_num))
+                .and_modify(|candidate| {
+                    if *candidate != Some(test_id) {
+                        *candidate = None;
+                    }
+                })
+                .or_insert(Some(test_id));
+        }
         Ok((dut_index, test_id))
     }
 

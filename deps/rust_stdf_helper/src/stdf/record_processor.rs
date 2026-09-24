@@ -132,10 +132,11 @@ pub fn process_record_view(
     subfile_id: usize,
     order: ByteOrder,
     rec_view: StdfRecordView,
+    ptr_name_omitted: bool,
     ops: &mut Vec<DbOp>,
 ) -> Result<(), StdfHelperError> {
     match rec_view {
-        StdfRecordView::PTR(ptr) => on_ptr_view(tracker, file_id, ptr, ops),
+        StdfRecordView::PTR(ptr) => on_ptr_view(tracker, file_id, ptr, ptr_name_omitted, ops),
         StdfRecordView::MPR(mpr) => on_mpr_view(tracker, file_id, mpr, ops),
         StdfRecordView::FTR(ftr) => on_ftr_view(tracker, file_id, ftr, ops),
         StdfRecordView::PIR(pir) => on_pir_view(tracker, file_id, pir, ops),
@@ -184,6 +185,7 @@ fn on_ptr_view(
     tracker: &mut RecordTracker,
     file_id: usize,
     ptr: PTRView,
+    name_omitted: bool,
     ops: &mut Vec<DbOp>,
 ) -> Result<(), StdfHelperError> {
     let test_num = ptr.test_num();
@@ -196,7 +198,7 @@ fn on_ptr_view(
 
     // In TestNumberOnly mode the name getter is not even called for lookup.
     let test_name_storage;
-    let test_name = if tracker.uses_test_name() {
+    let test_name = if tracker.uses_test_name() && !name_omitted {
         test_name_storage = ptr.test_txt().as_str();
         Some(test_name_storage.as_ref())
     } else {
@@ -204,7 +206,7 @@ fn on_ptr_view(
     };
 
     let (dut_index, test_id) =
-        tracker.xtr_detected_optional(file_id, head_num, site_num, test_num, test_name)?;
+        tracker.xtr_detected_optional(file_id, head_num, site_num, test_num, test_name, true)?;
     let (exist, scale) = tracker.update_scale(test_id, &res_scal);
     let lim_exist = tracker.default_limits_contains_id(test_id);
 
@@ -295,7 +297,7 @@ fn on_mpr_view(
     };
 
     let (dut_index, test_id) =
-        tracker.xtr_detected_optional(file_id, head_num, site_num, test_num, test_name)?;
+        tracker.xtr_detected_optional(file_id, head_num, site_num, test_num, test_name, false)?;
     let (exist, scale) = tracker.update_scale(test_id, &res_scal);
 
     let mut rtn_rslt = mpr.rtn_rslt();
@@ -386,7 +388,7 @@ fn on_ftr_view(
     };
 
     let (dut_index, test_id) =
-        tracker.xtr_detected_optional(file_id, head_num, site_num, test_num, test_name)?;
+        tracker.xtr_detected_optional(file_id, head_num, site_num, test_num, test_name, false)?;
     let (exist, _) = tracker.update_scale(test_id, &Some(0));
 
     ops.push(DbOp::Ftr {
