@@ -87,3 +87,16 @@ deletion, cross-file merging, compression, analytical features, and a hosted
 release are not part of BL-1. BL-1 pinned SQLite WASM 3.53.4-build1 and test-only
 playwright-core 1.63.0 in the prototype's npm lockfile. The existing parser and
 native workbench have no new runtime dependency on them.
+
+## 2026-09-24: autonomous logistics completion
+
+The engineer authorized continuing BL-2 through BL-6 while away, stopping at a
+frontend-ready foundation. Earlier human demonstration checkpoints now become
+recorded test/demo checkpoints; do not stop between authorized logistics slices.
+Keep analysis and production UX outside scope. Define import/transfer contracts,
+then implement bounded record retention, publication/recovery, portable transfer,
+folder coordination and frontend adapters in independently verified commits.
+Parallel work is limited to Rust decoding, source discovery, and transfer helpers
+once their interfaces are written; the root owns catalog/storage integration.
+Finish with independent review, browser tests, 1M/10M measurements, a runnable
+engineering console and a frontend handoff guide listing remaining limitations.
