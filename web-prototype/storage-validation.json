@@ -1,0 +1,183 @@
+{
+  "recordedAt": "2026-09-24T23:11:04.999Z",
+  "results": [
+    {
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "empty probe export rejected with save-first guidance",
+        "create/write/close/reopen",
+        "page reload",
+        "second-tab ownership and retry",
+        "invalid inputs preserve saved row",
+        "SQLite export/restore",
+        "incompatible/corrupt/oversized backup leaves live row intact",
+        "worker termination releases ownership; committed row survives",
+        "full browser process restart using the same test profile and origin",
+        "missing OPFS fails explicitly without temporary fallback",
+        "page-at-a-time OPFS export and chunked restore; all 3,000 rows equal"
+      ],
+      "storage": {
+        "origin": "http://127.0.0.1:64980",
+        "persisted": false,
+        "estimate": {
+          "quota": 10742682960,
+          "usage": 5264720,
+          "usageDetails": {
+            "fileSystem": 5264720
+          }
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+        "crossOriginIsolated": false
+      },
+      "initial": {
+        "row": null,
+        "sqliteVersion": "3.53.4",
+        "vfs": "semidata-proof-sahpool",
+        "wasmMemoryBytes": 8388608,
+        "poolCapacity": 6,
+        "poolFiles": 1,
+        "pageSize": 8192,
+        "pageCount": 2
+      },
+      "saved": {
+        "row": {
+          "id": 1,
+          "note": "Persistent probe chrome — μA ' SQL stays data",
+          "saved_at": "2026-09-24T23:11:00.346Z"
+        },
+        "sqliteVersion": "3.53.4",
+        "vfs": "semidata-proof-sahpool",
+        "wasmMemoryBytes": 8388608,
+        "poolCapacity": 6,
+        "poolFiles": 1,
+        "pageSize": 8192,
+        "pageCount": 2
+      },
+      "exportedBytes": 16384,
+      "transfer": {
+        "rows": 3000,
+        "bytes": 172032,
+        "pages": 21,
+        "maxChunkBytes": 8192,
+        "wasmMemoryBytes": 8388608,
+        "queryPlan": [
+          {
+            "id": 3,
+            "parent": 0,
+            "notused": 199,
+            "detail": "SCAN sqlite_dbpage VIRTUAL TABLE INDEX 2:"
+          }
+        ]
+      }
+    },
+    {
+      "channel": "msedge",
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "empty probe export rejected with save-first guidance",
+        "create/write/close/reopen",
+        "page reload",
+        "second-tab ownership and retry",
+        "invalid inputs preserve saved row",
+        "SQLite export/restore",
+        "incompatible/corrupt/oversized backup leaves live row intact",
+        "worker termination releases ownership; committed row survives",
+        "full browser process restart using the same test profile and origin",
+        "missing OPFS fails explicitly without temporary fallback",
+        "page-at-a-time OPFS export and chunked restore; all 3,000 rows equal"
+      ],
+      "storage": {
+        "origin": "http://127.0.0.1:64980",
+        "persisted": false,
+        "estimate": {
+          "quota": 10742682964,
+          "usage": 5264724,
+          "usageDetails": {
+            "fileSystem": 5264724
+          }
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36 Edg/153.0.0.0",
+        "crossOriginIsolated": false
+      },
+      "initial": {
+        "row": null,
+        "sqliteVersion": "3.53.4",
+        "vfs": "semidata-proof-sahpool",
+        "wasmMemoryBytes": 8388608,
+        "poolCapacity": 6,
+        "poolFiles": 1,
+        "pageSize": 8192,
+        "pageCount": 2
+      },
+      "saved": {
+        "row": {
+          "id": 1,
+          "note": "Persistent probe msedge — μA ' SQL stays data",
+          "saved_at": "2026-09-24T23:11:02.968Z"
+        },
+        "sqliteVersion": "3.53.4",
+        "vfs": "semidata-proof-sahpool",
+        "wasmMemoryBytes": 8388608,
+        "poolCapacity": 6,
+        "poolFiles": 1,
+        "pageSize": 8192,
+        "pageCount": 2
+      },
+      "exportedBytes": 16384,
+      "transfer": {
+        "rows": 3000,
+        "bytes": 172032,
+        "pages": 21,
+        "maxChunkBytes": 8192,
+        "wasmMemoryBytes": 8388608,
+        "queryPlan": [
+          {
+            "id": 3,
+            "parent": 0,
+            "notused": 199,
+            "detail": "SCAN sqlite_dbpage VIRTUAL TABLE INDEX 2:"
+          }
+        ]
+      }
+    }
+  ],
+  "assets": {
+    "package": "@sqlite.org/sqlite-wasm",
+    "version": "3.53.4-build1",
+    "files": {
+      "index.mjs": {
+        "bytes": 642742,
+        "sha256": "a6d3fe46aa3f924e7686329f97b0564549ef1f787e0c19924179aef7f72bcc01"
+      },
+      "sqlite3.wasm": {
+        "bytes": 868907,
+        "sha256": "2ee8f3dab694532afc8840e07703127287662d08b74e6ff50491ce63f00d5752"
+      },
+      "sqlite3-opfs-async-proxy.js": {
+        "bytes": 32505,
+        "sha256": "9f1970e05ee07a79332498858740b705eeb1dcee03bc150f6f690bc0fb5f0a06"
+      },
+      "NOTICE.txt": {
+        "bytes": 26203,
+        "sha256": "aa53af913f1b87df4e4137492b0f428a99e77bccafdedcbdd20489e033c8b2b2"
+      }
+    }
+  },
+  "scope": "BL-1 synthetic SQLite probe; no STDF persistence or large-file qualification",
+  "embeddedBrowser": {
+    "engineVersion": null,
+    "checks": [
+      "save",
+      "close/reopen",
+      "reload/reopen",
+      "second-tab rejection",
+      "visual inspection"
+    ],
+    "notTested": [
+      "host-process restart",
+      "backup/restore"
+    ],
+    "persisted": false
+  }
+}

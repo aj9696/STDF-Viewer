@@ -1,4 +1,4 @@
-# Browser STDF parser prototype
+# Browser STDF and storage prototypes
 
 This isolated experiment runs the upstream Rust STDF record parser as WebAssembly
 in a dedicated browser worker. It evaluates bounded ingestion before a browser
@@ -6,8 +6,52 @@ product architecture is selected. The existing SemiData application is unchanged
 
 The contract and acceptance criteria are in [SPEC.md](SPEC.md).
 The [next data-logistics proposal](../docs/browser-data-workflow.md) covers
-SQLite persistence, reopen/recovery, export and folder batches. That work is
-planned; this experiment still performs summary scans only.
+SQLite persistence, reopen/recovery, export and folder batches. The parser still
+performs summary scans only. The separate BL-1 storage proof below saves one
+synthetic note; it does not yet persist parsed STDF records.
+
+## Run the storage proof
+
+From the repository root, with Node.js 22 or later:
+
+```powershell
+npm.cmd --prefix web-prototype ci --ignore-scripts
+npm.cmd --prefix web-prototype run build:storage
+.venv/Scripts/python.exe -m http.server 8766 --bind 127.0.0.1 --directory web-prototype/site
+```
+
+If the lab server already runs on 8766, keep it running. Open
+[the storage proof](http://127.0.0.1:8766/storage.html), select **Open storage**,
+save a recognizable note, then close and reopen storage. Reloading the page or
+restarting the browser should recover the note at the same address/profile.
+Export a saved note, change it, then restore the downloaded `.sqlite3` file.
+Restore replaces only the synthetic note. Empty probes cannot be exported.
+
+The proof owns a separate OPFS directory and Web Lock. A second tab reports
+that storage is busy. Missing storage support fails explicitly; there is no
+temporary fallback. Clearing site data can remove the note. The page reports
+the browser's actual persistence grant and estimated usage/quota; neither is
+a backup. Private sessions are not supported as durable storage.
+
+SQLite `3.53.4-build1` is pinned by the npm lockfile, copied into `site/sqlite/`,
+and served locally. There is no CDN or data API. The generated manifest records
+asset hashes; the build includes [dependency notices](THIRD-PARTY-NOTICES.txt).
+The small download path deliberately caps backups at 1 MiB. The independent
+integration test proves a page-at-a-time path for later larger exports.
+
+```powershell
+npm.cmd --prefix web-prototype run test:storage
+# Or one installed desktop browser:
+npm.cmd --prefix web-prototype run test:storage -- chrome
+npm.cmd --prefix web-prototype run test:storage -- msedge
+```
+
+The harness uses pinned `playwright-core` with installed Chrome/Edge, its own
+loopback server, and disposable test profiles under `web-prototype/results/`.
+It restarts only those test browser processes, never the engineer's profile.
+No browser download is automatic. Raw results and small SQLite backups remain
+beside those profiles; they are ignored by Git. See
+[STORAGE-VALIDATION.md](STORAGE-VALIDATION.md) for results and untested cases.
 
 ## Run the experiment
 
@@ -28,9 +72,10 @@ the first 200 groups. Each subsequent scan starts a fresh worker.
 into that local Rust environment, and downloads the official pinned wasm-bindgen
 0.2.128 Windows CLI with its recorded SHA-256. It builds assets into `site/pkg/`
 and a native comparison executable into `.venv/toolchain/web-target/release/`.
-No Python packages or global toolchains are modified. Generated assets are
-ignored by Git and rebuilt from the committed Cargo lockfile. There is no npm
-runtime, bundler, CDN, or backend API.
+No Python packages or global toolchains are modified. Generated parser assets
+are ignored by Git and rebuilt from the committed Cargo lockfile. The parser
+has no npm runtime dependency, bundler, CDN, or backend API; the separate storage
+proof uses the locally copied SQLite assets.
 
 ## What the numbers mean
 

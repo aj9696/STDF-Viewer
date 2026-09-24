@@ -1,7 +1,8 @@
 # Specification: browser-library
 
-Status: BL-1 persistence experiment in progress, 2026-09-24. The full library
-below remains proposed; this increment stores a synthetic probe only.
+Status: BL-1 persistence experiment implemented and verified on desktop Chrome
+and Edge, 2026-09-24. The full library below remains proposed; this increment
+stores a synthetic probe only. See [storage validation](web-prototype/STORAGE-VALIDATION.md).
 Scope comes from [the capability map](CAPABILITIES.md#proposed-next-increment-browser-data-logistics).
 The engineer requested documentation and gradual logistics work. Analysis is
 outside this increment. This specification governs persistence; file discovery
@@ -25,6 +26,14 @@ VFS requires SharedArrayBuffer and appropriate isolation headers. Select and
 pin a released build after checking its actual API, rather than assuming the
 current development documentation matches it.
 [Official SQLite persistence documentation](https://sqlite.org/wasm/doc/trunk/persistence.md).
+
+BL-1 decision: retain `opfs-sahpool` for the next experiment, pinning
+`@sqlite.org/sqlite-wasm@3.53.4-build1`. Chrome and Edge passed process-restart
+checks and an OPFS page-by-page export/chunked restore of a 3,000-row fixture.
+The released build enables `sqlite_dbpage`; a read transaction plus an awaited
+file sink gives a viable bounded transfer path. This is feasibility evidence,
+not qualification of multi-gigabyte backups. See the validation note for the
+embedded-browser coverage limits and exact asset hashes.
 
 Record the tested browser versions, SQLite release, VFS, asset hashes, memory,
 and reopen/export results in a decision note before extending imports. If
@@ -68,7 +77,7 @@ retry. Unknown protocol versions/operations fail without SQL execution.
 | open | none | Acquire exclusive ownership, open/create probe, report rows and storage/runtime evidence |
 | write | `note`: string, 1–200 characters | Replace the single probe row in a durable transaction; return stored row |
 | read | none | Verify schema and integrity; return the row, if any |
-| export | none | Return a standalone SQLite ArrayBuffer, at most 1 MiB; never overwrite storage |
+| export | none | Require a saved row; return a standalone SQLite ArrayBuffer, at most 1 MiB; never overwrite storage |
 | restore | `bytes`: ArrayBuffer, at most 1 MiB | Validate a temporary imported database before transactionally copying its one probe row |
 | close | none | Close database and release pool handles and ownership |
 
@@ -194,7 +203,7 @@ summary scans. No fixed throughput target is claimed before measuring writes.
 - Never upload test content, modify source-folder files, silently discard raw
   flags/observations, or describe this proposal as shipped functionality.
 
-Open technical decisions: released SQLite/VFS selection, bounded export API,
+Open technical decisions: large-dataset qualification of the page export path,
 many-dataset handle cost, and retained-record schema/batch interface. Compression,
 folder watching, app-install/offline asset caching, and multi-tab collaboration
 are later scopes. Local file processing does not itself promise offline startup.
