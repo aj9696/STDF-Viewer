@@ -2,5 +2,14 @@
   "name": "semidata-browser-parser-prototype",
   "private": true,
   "type": "module",
-  "description": "Dependency-free browser host for the isolated Rust/WASM STDF parser proof"
+  "description": "Isolated browser proofs for Rust/WASM STDF parsing and local SQLite persistence",
+  "scripts": {
+    "build:storage": "node scripts/build-storage.mjs"
+  },
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "3.53.4-build1"
+  },
+  "devDependencies": {
+    "playwright-core": "1.63.0"
+  }
 }

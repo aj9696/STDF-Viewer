@@ -1,6 +1,7 @@
 # Specification: browser-library
 
-Status: proposed provider design, 2026-09-24; implementation not started.
+Status: BL-1 persistence experiment in progress, 2026-09-24. The full library
+below remains proposed; this increment stores a synthetic probe only.
 Scope comes from [the capability map](CAPABILITIES.md#proposed-next-increment-browser-data-logistics).
 The engineer requested documentation and gradual logistics work. Analysis is
 outside this increment. This specification governs persistence; file discovery
@@ -47,6 +48,42 @@ are explicit; opening a newer unsupported version fails without mutation.
 No automatic native-workspace conversion is part of the first increment.
 
 ## Provider behavior
+
+### BL-1 experiment contract
+
+The isolated `storage.html` page uses a dedicated module worker and one stable
+Web Lock, `semidata-storage-proof-v1`, before opening a separate SAH pool
+directory `.semidata-storage-proof-v1`. No existing parser/workbench data is
+accessed. No in-memory fallback is allowed. Closing the worker releases ownership.
+
+Requests are `{version: 1, id: positiveInteger, type, ...payload}`; responses are
+`{version: 1, id, ok: true, result}` or `{version: 1, id, ok: false,
+error: {code, message}}`. One request is in flight at a time. Errors include
+`UNSUPPORTED`, `BUSY`, `INVALID_REQUEST`, `INCOMPATIBLE`, `INVALID_BACKUP`,
+`NOT_OPEN`, and `STORAGE_ERROR`. Failed/terminated workers are discarded before
+retry. Unknown protocol versions/operations fail without SQL execution.
+
+| Operation | Input | Result / effect |
+| --- | --- | --- |
+| open | none | Acquire exclusive ownership, open/create probe, report rows and storage/runtime evidence |
+| write | `note`: string, 1–200 characters | Replace the single probe row in a durable transaction; return stored row |
+| read | none | Verify schema and integrity; return the row, if any |
+| export | none | Return a standalone SQLite ArrayBuffer, at most 1 MiB; never overwrite storage |
+| restore | `bytes`: ArrayBuffer, at most 1 MiB | Validate a temporary imported database before transactionally copying its one probe row |
+| close | none | Close database and release pool handles and ownership |
+
+Probe database `/probe.sqlite3`: `PRAGMA application_id = 1396985936`,
+`PRAGMA user_version = 1`, table `probe(id INTEGER PRIMARY KEY CHECK(id=1),
+note TEXT NOT NULL CHECK(length(note) BETWEEN 1 AND 200), saved_at TEXT NOT NULL)`.
+No implicit migration or reset of incompatible/corrupt storage. Read-only schema,
+version, integrity and row checks precede writes on reopen/restore. Backups are
+untrusted input: limit size, disable trusted schema, reject unexpected schema,
+and use parameterized SQL. A restore deliberately replaces only the synthetic
+probe row; it is not a dataset backup format. Large-file transfer remains BL-4.
+
+Use a released, lockfile-pinned SQLite asset served from this origin. The asset
+build copies the upstream license and records SHA-256 hashes. Automated browser
+checks use isolated persistent test profiles, never the engineer's profile.
 
 The provider supports creating an import job, writing bounded batches, checking
 the completed dataset, publishing it, reopening it, and recording failure.
