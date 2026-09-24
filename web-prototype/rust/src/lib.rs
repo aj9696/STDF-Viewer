@@ -1,4 +1,5 @@
 //! Bounded STDF framing with actual upstream borrowed record views.
+pub mod hashing;
 use rust_stdf::{ByteOrder, RecordHeader, StdfRecordView};
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
