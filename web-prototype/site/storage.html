@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SemiData · Local storage lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./library.js"></script>
+  </head>
+  <body>
+    <main id="storage-proof">
+      <header>
+        <a href="./">SemiData <span>ENGINEERING LAB</span></a>
+        <span class="badge">SQLite → local browser storage</span>
+      </header>
+      <section class="intro">
+        <p class="eyebrow">BL-1 · PERSISTENCE EXPERIMENT</p>
+        <h1>Save. Close. Reopen.</h1>
+        <p>
+          Check that a small SQLite database survives a new session in this
+          browser. This page stores one synthetic note. STDF storage, folder
+          imports, and analysis are future steps.
+        </p>
+      </section>
+      <section class="panel">
+        <h2>One local probe</h2>
+        <p class="hint">
+          Open storage, save a recognizable note, then close and reopen. You can
+          also reload the page or restart the browser and return to this exact
+          address. Only one tab can own this experiment at a time.
+        </p>
+        <div class="actions">
+          <button id="open-storage" type="button">Open storage</button>
+          <button id="read-storage" type="button" class="secondary" disabled>Read and verify</button>
+          <button id="close-storage" type="button" class="secondary" disabled>Close storage</button>
+        </div>
+        <form id="note-form">
+          <label for="probe-note">Synthetic note · up to 200 characters</label>
+          <input id="probe-note" type="text" maxlength="200" required disabled autocomplete="off" />
+          <div class="actions">
+            <button id="save-note" type="submit" disabled>Save note</button>
+            <span>No upload · separate from parser results</span>
+          </div>
+        </form>
+      </section>
+      <section id="status-panel" class="panel" aria-live="polite" aria-atomic="true">
+        <h2 id="status">Ready to test local storage</h2>
+        <p id="status-detail">Open storage to read an existing probe or create the empty database.</p>
+      </section>
+      <section id="stored-result" class="panel" hidden>
+        <h2>Last verified note</h2>
+        <dl>
+          <dt>Note</dt><dd id="stored-note"></dd>
+          <dt>Saved at</dt><dd id="saved-at"></dd>
+        </dl>
+        <h2>Runtime evidence</h2>
+        <dl id="runtime-evidence"></dl>
+        <p class="hint">WASM memory excludes JavaScript buffers and browser process memory.</p>
+      </section>
+      <section class="panel">
+        <h2>Small backup and restore</h2>
+        <p class="hint">
+          Export this probe, change the note, then restore the exported file to
+          verify recovery. Restore replaces the synthetic note. Backups are
+          limited to 1 MiB; this experiment does not establish large-file export.
+        </p>
+        <button id="export-storage" type="button" class="secondary" disabled>Export probe backup</button>
+        <label for="backup-file">Choose a previously exported probe</label>
+        <input id="backup-file" type="file" accept=".sqlite3,.sqlite,.db" disabled />
+        <div class="actions">
+          <button id="restore-storage" type="button" class="secondary" disabled>Restore and replace note</button>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Browser storage status</h2>
+        <dl id="storage-evidence"></dl>
+        <div class="actions">
+          <button id="persist-storage" type="button" class="secondary">Request persistence</button>
+        </div>
+        <p class="hint">
+          Storage belongs to this browser profile and exact origin, including
+          its port. Quota values are estimates, not reserved space. Persistence
+          depends on the browser's decision. Clearing site data removes the
+          database; private sessions may discard it when they end. Keep an export.
+        </p>
+      </section>
+      <footer>
+        Engineering proof only. Source files are not imported or modified.
+        SQLite assets load from this site; no test data leaves this browser.
+        <a href="./">Return to the parser lab</a>.
+      </footer>
+    </main>
+  </body>
+</html>

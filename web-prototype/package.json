@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Isolated browser proofs for Rust/WASM STDF parsing and local SQLite persistence",
   "scripts": {
-    "build:storage": "node scripts/build-storage.mjs"
+    "build:storage": "node scripts/build-storage.mjs",
+    "test:storage": "node scripts/storage-check.mjs"
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.53.4-build1"
