@@ -1,5 +1,1 @@
-*.* linguist-vendored=false
-# exclude deprecated cystdf
-deps/cystdf/** linguist-vendored
-# exclude build tools
-deps/build_tools/** linguist-vendored
+web-prototype/THIRD-PARTY-NOTICES.txt text eol=lf
