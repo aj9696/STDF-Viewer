@@ -96,8 +96,10 @@ test identity, superseded attempts, repeated PTRs, units, flags, and Cpk policy.
 The next proposed browser-only increment is documented separately in
 [Browser data workflow](browser-data-workflow.md) and
 [SPEC-browser-library.md](../SPEC-browser-library.md). It adds a persistence
-experiment before folder imports. Those documents describe planned behavior;
-the architecture above describes the delivered native workbench.
+experiment before folder imports. The isolated BL-1 SQLite probe is implemented;
+see [storage validation](../web-prototype/STORAGE-VALIDATION.md). Retained STDF
+storage and folder imports are still planned. The architecture above describes
+the delivered native workbench.
 
 1. Update the relevant module spec and acceptance checks.
 2. Record API changes in api.md before adding UI consumers.

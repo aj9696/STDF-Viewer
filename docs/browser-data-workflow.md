@@ -1,7 +1,9 @@
 # Browser data workflow
 
-Status: proposed next increment, 2026-09-24. This is a logistics plan, not a list
-of features already available. Analysis design remains with the engineer.
+Status: logistics roadmap, 2026-09-24. BL-1 is implemented as a separate
+[SQLite storage proof](../web-prototype/README.md#run-the-storage-proof) with a
+synthetic note. The dataset/folder workflow below remains proposed. Analysis
+design remains with the engineer.
 
 ## The next useful result
 
@@ -9,9 +11,10 @@ Import one STDF, close the browser, reopen the same application, and find the
 saved dataset ready without selecting or parsing the original again. Prove
 that small workflow before adding a folder containing hundreds of files.
 
-The current browser lab keeps summaries in memory. The current workbench has
-a native SQLite library. This plan adds a persistent library to the browser
-application; it does not automatically migrate the native workspace.
+The browser parser lab keeps summaries in memory; the separate storage proof
+can save and reopen its synthetic note. The workbench has a native SQLite
+library. This plan adds a retained-record library to the browser application;
+it does not automatically migrate the native workspace.
 
 ## Two places with different jobs
 

@@ -28,11 +28,19 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
 - [x] Verify the available STDF.io source and record its provenance/hash.
 - [x] Compare larger workloads, review changes, run regressions, and publish local evidence.
 
-## Browser data logistics (proposed)
+## Browser data logistics
 
 - [x] Document the workflow, proposed capability boundaries, storage candidate,
   source-versus-library distinction, and paced implementation checkpoints.
-- [ ] **BL-1 — Prove browser persistence.** Module: browser-library. Next slice.
+- [x] **BL-1 — Prove browser persistence.** Module: browser-library.
+  - Delivered: isolated synthetic-note SQLite lab; 11 checks passed in Chrome
+    153.0.8010.48 and Edge 153.0.4234.48, including browser process restart.
+    Embedded-browser save/reopen/reload/contention was checked separately;
+    its host restart and backup/restore remain unqualified. See
+    [storage validation](../web-prototype/STORAGE-VALIDATION.md).
+  - Decision: retain pinned SQLite WASM 3.53.4-build1 with `opfs-sahpool` for
+    BL-2. Page-at-a-time OPFS export/chunked restore preserved all 3,000 fixture
+    rows with an 8 KiB transfer buffer; large-file qualification remains open.
   - Acceptance: a tiny SQLite database survives close/reopen, page reload and
     browser restart; second-tab ownership and unavailable storage are explicit;
     small export/restore succeeds and a viable bounded-export path is identified.
@@ -41,7 +49,7 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
   - Files: under `web-prototype/`, split into a pinned asset/build + minimal
     worker/harness slice, then reopen/export verification + README and
     STORAGE-VALIDATION.md. Keep each slice to at most five files. Dependencies: none.
-- [ ] **BL-2 — Retain one actual STDF.** Module: browser-imports; depends BL-1.
+- [ ] **BL-2 — Retain one actual STDF.** Module: browser-imports; depends BL-1. Next slice.
   - Acceptance: copy/hash and import the evaluation STDF in bounded batches;
     retain ordered measurements/device context and publish only after checks;
     reopen the dataset without reading or parsing the original.
@@ -83,7 +91,8 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
   - Files: benchmark harness, portable result file, STORAGE-VALIDATION.md,
     browser workflow guide and capability status.
 
-Checkpoint after BL-1: review persistence and export feasibility with the
-engineer. Checkpoint after BL-2: demonstrate one imported/reopened real dataset.
+Checkpoint after BL-1: the storage proof and evidence are ready for engineer
+evaluation; this increment stops here. Checkpoint after BL-2: demonstrate one
+imported/reopened real dataset.
 Checkpoint after BL-4: demonstrate portable recovery before folder-scale use.
 Analysis and PAT design are intentionally left for the engineer's later plan.

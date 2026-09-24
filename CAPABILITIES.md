@@ -27,19 +27,22 @@ UI. These remain separate future increments, not implied delivered features.
 
 The measured import performance increment and isolated Rust/WASM browser parser
 experiment are implemented. See SPEC-import-performance.md for acceptance and
-docs/import-performance.md for results and limits. Durable browser storage,
-querying, and PAT migration remain future work; the shipping product still uses
-its local Python/Rust service.
+docs/import-performance.md for results and limits. A separate browser SQLite
+persistence proof now saves a synthetic note. Retained STDF storage, querying,
+and PAT migration remain future work; the workbench still uses its local
+Python/Rust service.
 
 ## Proposed next increment: browser data logistics
 
-Status: documented proposal, not implemented. The engineer requested a gradual
-storage/import workflow on 2026-09-24 and retains ownership of the analysis
-roadmap. See [Browser data workflow](docs/browser-data-workflow.md).
+Status: BL-1 persistence proof implemented; remaining modules proposed. The
+engineer requested a gradual storage/import workflow on 2026-09-24 and retains
+ownership of the analysis roadmap. See [Browser data workflow](docs/browser-data-workflow.md)
+and [storage evidence](web-prototype/STORAGE-VALIDATION.md). The proof passed
+11 checks in each tested desktop browser; it does not yet import STDF records.
 
 | Module id | Responsibility | Depends on |
 | --- | --- | --- |
-| browser-library | Persistent local catalog, dataset storage, ownership and recovery | Browser storage and candidate SQLite WASM |
+| browser-library | Persistent local catalog, dataset storage, ownership and recovery; BL-1 probe only implemented | Browser storage and pinned SQLite WASM |
 | browser-imports | File/folder selection, retained-record ingestion, duplicate handling and queue | browser-library, existing Rust decoder |
 | browser-transfer | Export and restore a versioned, verifiable dataset package | browser-library |
 

@@ -63,9 +63,12 @@ of truth remains `tasks/todo.md` under Browser data logistics.
 6. **BL-6: volume qualification.** Measure persistence-inclusive 1M/10M runs,
    restart, and folder batches. Publish the actual supported envelope.
 
-BL-1 is the next implementation slice. Show each checkpoint to the engineer;
-do not run the entire roadmap as one unattended change. At each later slice,
-write its module-specific interface and acceptance details before coding.
+BL-1 is implemented and documented in
+[storage validation](../web-prototype/STORAGE-VALIDATION.md). The next slice is
+BL-2. Show each checkpoint to the engineer; do not run the entire roadmap as
+one unattended change. At each later slice, write its module-specific interface
+and acceptance details before coding. The engineer reaffirmed one feature at
+a time on 2026-09-24.
 
 ### Decisions to test early
 
@@ -81,5 +84,6 @@ write its module-specific interface and acceptance details before coding.
 One worker and one active library owner are the starting proposal. Sequential
 per-file jobs keep memory and contention measurable. Folder monitoring, source
 deletion, cross-file merging, compression, analytical features, and a hosted
-release are not part of BL-1. Dependencies are evaluated locally and pinned
-when selected; no new dependency has been installed by this planning change.
+release are not part of BL-1. BL-1 pinned SQLite WASM 3.53.4-build1 and test-only
+playwright-core 1.63.0 in the prototype's npm lockfile. The existing parser and
+native workbench have no new runtime dependency on them.
