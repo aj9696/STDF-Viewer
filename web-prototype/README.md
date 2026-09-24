@@ -5,6 +5,9 @@ in a dedicated browser worker. It evaluates bounded ingestion before a browser
 product architecture is selected. The existing SemiData application is unchanged.
 
 The contract and acceptance criteria are in [SPEC.md](SPEC.md).
+The [next data-logistics proposal](../docs/browser-data-workflow.md) covers
+SQLite persistence, reopen/recovery, export and folder batches. That work is
+planned; this experiment still performs summary scans only.
 
 ## Run the experiment
 

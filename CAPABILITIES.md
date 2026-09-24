@@ -30,3 +30,21 @@ experiment are implemented. See SPEC-import-performance.md for acceptance and
 docs/import-performance.md for results and limits. Durable browser storage,
 querying, and PAT migration remain future work; the shipping product still uses
 its local Python/Rust service.
+
+## Proposed next increment: browser data logistics
+
+Status: documented proposal, not implemented. The engineer requested a gradual
+storage/import workflow on 2026-09-24 and retains ownership of the analysis
+roadmap. See [Browser data workflow](docs/browser-data-workflow.md).
+
+| Module id | Responsibility | Depends on |
+| --- | --- | --- |
+| browser-library | Persistent local catalog, dataset storage, ownership and recovery | Browser storage and candidate SQLite WASM |
+| browser-imports | File/folder selection, retained-record ingestion, duplicate handling and queue | browser-library, existing Rust decoder |
+| browser-transfer | Export and restore a versioned, verifiable dataset package | browser-library |
+
+Build order: prove browser-library persistence → one real file through
+browser-imports → failure recovery and browser-transfer → folder batches →
+large-file qualification. Provider specification: [SPEC-browser-library.md](SPEC-browser-library.md).
+Later module specifications are written when their slices begin; the current
+plan does not select analytical schemas, calculations, or PAT workflows.

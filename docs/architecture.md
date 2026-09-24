@@ -93,6 +93,12 @@ test identity, superseded attempts, repeated PTRs, units, flags, and Cpk policy.
 
 ## Adding a feature
 
+The next proposed browser-only increment is documented separately in
+[Browser data workflow](browser-data-workflow.md) and
+[SPEC-browser-library.md](../SPEC-browser-library.md). It adds a persistence
+experiment before folder imports. Those documents describe planned behavior;
+the architecture above describes the delivered native workbench.
+
 1. Update the relevant module spec and acceptance checks.
 2. Record API changes in api.md before adding UI consumers.
 3. Keep the calculation in its domain module; add known-answer tests.
