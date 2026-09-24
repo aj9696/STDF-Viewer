@@ -23,7 +23,7 @@ export async function hashFile(file, context, phase = "verify-source") {
 function checkFile(file, relativePath) {
   if (!(file instanceof File) || file.size < 1 || file.size > MAX_SOURCE_BYTES ||
       !/\.(stdf|std|stf)$/i.test(file.name) || file.name.length > 1024 ||
-      typeof relativePath !== "string" || relativePath.length > 4096) {
+      typeof relativePath !== "string" || relativePath.length < 1 || relativePath.length > 4096) {
     throw libraryError("INVALID_SOURCE", "Choose a raw .stdf/.std/.stf file up to 2 GiB with a valid relative path.");
   }
 }

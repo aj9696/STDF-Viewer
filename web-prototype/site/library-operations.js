@@ -31,8 +31,6 @@ async function restoreDataset(store, file, context) {
     onProgress: (event) => context.progress(event), checkCancelled: () => context.checkCancelled() };
   // Verify before duplicate detection: even duplicate packages must be intact.
   const { manifest } = await transfer.verifyPackage({ file, ...hooks });
-  const duplicate = await store.duplicate(manifest.source.sha256);
-  if (duplicate) return { dataset: duplicate, duplicate: true };
   const job = await store.createJob("restore", manifest.source.name, manifest.source.relativePath, manifest.source.size);
   let db;
   try {
@@ -48,6 +46,14 @@ async function restoreDataset(store, file, context) {
     const size = db.selectValue("PRAGMA page_count") * db.selectValue("PRAGMA page_size");
     db.close(); db = null;
     context.checkCancelled();
+    // Validate the database even if its source already exists in this library.
+    const duplicate = await store.duplicate(manifest.source.sha256);
+    if (duplicate) {
+      store.updateJob(job, "duplicate");
+      store.catalog.exec({ sql: "UPDATE jobs SET source_hash=?,dataset_id=? WHERE id=?", bind: [manifest.source.sha256, duplicate.id, job.id] });
+      await store.cleanup(job);
+      return { dataset: duplicate, duplicate: true };
+    }
     return { dataset: store.publish(job, manifest, size), duplicate: false };
   } catch (error) {
     db?.close();
@@ -69,10 +75,20 @@ export async function runOperation(store, message, context) {
       if (!key || !Number.isSafeInteger(after) || after < 0 || !Number.isInteger(limit) || limit < 1 || limit > 1000) {
         throw libraryError("INVALID_REQUEST", "Choose a known table, nonnegative cursor, and page size 1–1000.");
       }
-      const rows = db.selectObjects(`SELECT * FROM ${message.table} WHERE ${key}>? ORDER BY ${key} LIMIT ?`, [after, limit + 1]);
-      const items = rows.slice(0, limit);
-      if (JSON.stringify(items).length > 2 * 1024 * 1024) throw libraryError("PAGE_TOO_LARGE", "Request fewer rows; this page exceeds 2 MiB.");
-      return { items, nextAfter: rows.length > limit ? items.at(-1)[key] : null };
+      const statement = db.prepare(`SELECT * FROM ${message.table} WHERE ${key}>? ORDER BY ${key} LIMIT ?`);
+      const items = [], encoder = new TextEncoder();
+      let bytes = 2, more = false;
+      try {
+        statement.bind([after, limit + 1]);
+        while (statement.step()) {
+          const row = statement.get({});
+          const rowBytes = encoder.encode(JSON.stringify(row)).byteLength + 1;
+          if (bytes + rowBytes > 2 * 1024 * 1024 && items.length === 0) throw libraryError("CORRUPT", "Stored row exceeds the bounded read contract.");
+          if (items.length === limit || bytes + rowBytes > 2 * 1024 * 1024) { more = true; break; }
+          items.push(row); bytes += rowBytes;
+        }
+      } finally { statement.finalize(); }
+      return { items, nextAfter: more ? items.at(-1)[key] : null };
     });
     case "readRecord": return withDataset(store, message.datasetId, async ({ db, file }) => {
       if (!Number.isSafeInteger(message.seq) || message.seq < 1) throw libraryError("INVALID_REQUEST", "Record sequence must be positive.");
@@ -86,6 +102,11 @@ export async function runOperation(store, message, context) {
       const sha256 = await hashFile(file, context);
       if (sha256 !== manifest.source.sha256) throw libraryError("CORRUPT", "Source snapshot checksum differs from its manifest.");
       return { verified: true, sha256, counts: manifest.counts, verifiedAt: new Date().toISOString() };
+    }).catch((error) => {
+      if (["CORRUPT", "INCOMPATIBLE", "UNAVAILABLE"].includes(error.code)) {
+        store.catalog.exec({ sql: "UPDATE datasets SET status='unavailable' WHERE id=?", bind: [message.datasetId] });
+      }
+      throw error;
     });
     case "discardJob": {
       const row = store.catalog.selectObject("SELECT * FROM jobs WHERE id=?", [String(message.jobId)]);

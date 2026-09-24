@@ -77,6 +77,7 @@ export class LibraryStore {
   }
   async access(id) {
     const dataset = this.get(id);
+    if (dataset.status !== "ready") throw libraryError("UNAVAILABLE", "Dataset is marked unavailable. Recover it in a separate library from a verified package; this entry was preserved.");
     let db;
     try {
       if (!this.pool.getFileNames().includes(dataset.db_path)) throw new Error("Database file is missing");
@@ -132,6 +133,7 @@ export class LibraryStore {
     // Call only for this job's known unpublished artifacts after DB handles close.
     if (this.catalog.selectValue("SELECT 1 FROM datasets WHERE id=?", [job.id])) return;
     this.pool.unlink(job.dbPath);
+    this.pool.unlink(`${job.dbPath}-journal`);
     try { await this.sources.removeEntry(job.sourcePath); } catch (error) { if (error.name !== "NotFoundError") throw error; }
   }
 }

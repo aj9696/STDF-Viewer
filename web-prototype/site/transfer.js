@@ -22,7 +22,7 @@ function validateHeader(header) {
     fail("INCOMPATIBLE", "Unsupported dataset schema or parser version.");
   }
   const source = manifest.source;
-  if (!isCount(sourceBytes) || sourceBytes < 1 || !isCount(databaseBytes) ||
+  if (!isCount(sourceBytes) || sourceBytes < 1 || sourceBytes > 2 * 1024 ** 3 || !isCount(databaseBytes) ||
       databaseBytes < 512 || databaseBytes % 512 !== 0 ||
       sourceBytes + databaseBytes > PACKAGE_LIMIT || !isObject(source) ||
       source.size !== sourceBytes || !isDigest(source.sha256) ||
