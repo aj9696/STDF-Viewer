@@ -41,11 +41,13 @@ export class DataLibraryClient {
     return promise;
   }
   async open() {
+    if (this.pending) throw libraryError("BUSY", "The library is processing another operation.");
     if (!this.worker) this.start();
     try { return await this.request("open"); }
     catch (error) { this.terminate(); throw error; }
   }
   async close() {
+    if (this.pending) throw libraryError("BUSY", "Cancel or finish the active operation before closing.");
     if (!this.worker) return { closed: true };
     try { return await this.request("close"); }
     finally { this.terminate(); }
