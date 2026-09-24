@@ -66,8 +66,9 @@ Generated WASM asset for this check: 146,737 bytes; SHA-256
 ## Actual browser verification
 
 The parent task uploaded each real local file through the application in the
-Codex in-app browser. These were single observed scans, not repeated medians;
-filesystem cache was not controlled. All three browser semantic digests matched
+Codex in-app browser. The STDF.io and 1M files were scanned once; the 10M file
+was scanned twice. All observations are retained, with no reported median;
+filesystem cache was not controlled. Every browser semantic digest matched
 the native/WASM correctness harness. Browser engine/version was not recorded.
 Machine and generated WASM asset were the same as above.
 
@@ -75,7 +76,15 @@ Machine and generated WASM asset were the same as above.
 |---|---:|---:|---:|---:|
 | STDF.io / 44,800 PTR | 17.4 ms | 13.6 ms | Not recorded | 2,621,440 bytes |
 | 1M PTR | 384.4 ms | 261.9 ms | 15.9 ms | 6,094,848 bytes |
-| 10M PTR | 3,587.0 ms | 2,454.7 ms | 17.4 ms | 6,094,848 bytes |
+| 10M PTR, observation 1 | 3,587.0 ms | 2,454.7 ms | 17.4 ms | 6,094,848 bytes |
+| 10M PTR, observation 2 | 5,986.0 ms | 2,530.9 ms | 12.5 ms | 6,094,848 bytes |
+
+The observed 10M browser wall-time range is **3.587–5.986 seconds**, not a median
+or stable latency target. Most of the variation lies outside measured parser
+push calls (2,454.7–2,530.9 ms). The remaining wall-time interval includes file
+reads, scheduling, and summary work; their individual contributions were not
+instrumented, so no specific cause is established. The second observation's
+summary step was 1.2 ms. Counts, fingerprints, and memory bounds were unchanged.
 
 The 1M/10M runs used 4 MiB input slices, 65,539 bytes of carry allocation, and
 at most 94 bytes of carry occupancy. Counts/groups matched the table above.

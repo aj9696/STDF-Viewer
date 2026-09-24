@@ -123,20 +123,25 @@ writes, indexes, retest resolution, persisted history, or full-record decoding.
 ## Observed browser results
 
 Actual local-file uploads were verified in the Codex in-app browser on the
-development machine (Ryzen 7 7700X / Windows 11). These are single observations
-with uncontrolled filesystem cache, not medians or hardware-independent targets.
+development machine (Ryzen 7 7700X / Windows 11). The STDF.io and 1M files were
+observed once; the 10M file was observed twice. Filesystem cache was uncontrolled;
+these observations and ranges are not medians or hardware-independent targets.
 
 | File | PTR measurements | Browser read + summary scan | Peak WASM allocation |
 |---|---:|---:|---:|
 | STDF.io evaluation | 44,800 | 17.4 ms | 2.50 MiB |
 | Synthetic 93.65 MB | 1,000,000 | 384.4 ms | 5.81 MiB |
-| Synthetic 936.50 MB | 10,000,000 | 3,587.0 ms | 5.81 MiB |
+| Synthetic 936.50 MB | 10,000,000 | 3.587–5.986 s (2 observations) | 5.81 MiB |
 
 These scans perform no database writes or device/retest tracking. WASM memory is
 not browser RSS and excludes the input slice/runtime overhead. Every browser
 result matched the native/WASM semantic digest. See [VALIDATION.md](VALIDATION.md)
 for fixture identities, independent-reference checks, exact timing scopes, Node
 results, and the machine-readable browser observations.
+
+Most 10M wall-time variation was outside parser push calls, which took
+2.455–2.531 seconds. The remaining interval includes file reads, scheduling, and
+summary work; the individual cause of variation was not measured.
 
 Authoritative references:
 - [rust-stdf borrowed record views](https://docs.rs/rust-stdf/latest/rust_stdf/struct.RawDataElementView.html)
