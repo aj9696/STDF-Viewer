@@ -4,7 +4,7 @@ The framing pass is intentionally not a replacement STDF parser. It rejects
 incomplete streams before upstream's permissive EOF handling can publish them.
 """
 
-from contextlib import closing, contextmanager
+from contextlib import closing, contextmanager, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import BinaryIO, Iterator
@@ -17,21 +17,34 @@ import zipfile
 
 
 MAX_UNCOMPRESSED_BYTES = 2 * 1024**3
+_READ_CHUNK_BYTES = 1024 * 1024
 _MINIMUM_LENGTHS = {(1, 10): 15, (1, 20): 4, (5, 10): 2,
                     (5, 20): 17, (15, 10): 12, (15, 15): 12, (15, 20): 7}
 
 
-@contextmanager
-def _open_stream(path: Path) -> Iterator[BinaryIO]:
+def compression_kind(path: Path) -> str | None:
+    """Identify supported compression from bytes, independent of file suffix."""
     with path.open("rb") as probe:
         magic = probe.read(4)
     if magic.startswith(b"\x1f\x8b"):
+        return "gzip"
+    if magic.startswith(b"BZh"):
+        return "bzip2"
+    if magic.startswith(b"PK"):
+        return "zip"
+    return None
+
+
+@contextmanager
+def _open_stream(path: Path) -> Iterator[BinaryIO]:
+    kind = compression_kind(path)
+    if kind == "gzip":
         with gzip.open(path, "rb") as stream:
             yield stream
-    elif magic.startswith(b"BZh"):
+    elif kind == "bzip2":
         with bz2.open(path, "rb") as stream:
             yield stream
-    elif magic.startswith(b"PK"):
+    elif kind == "zip":
         with zipfile.ZipFile(path) as archive:
             members = [info for info in archive.infolist() if not info.is_dir()]
             if len(members) != 1:
@@ -47,13 +60,15 @@ def _open_stream(path: Path) -> Iterator[BinaryIO]:
             yield stream
 
 
-def preflight(path: Path, normalized: Path) -> dict:
-    """Validate record boundaries and completeness while writing raw STDF.
+def preflight(path: Path, normalized: Path | None) -> dict:
+    """Validate a bounded stream, optionally writing a normalized raw copy.
 
     Compressed members are streamed, never extracted by their archived paths.
     Only V4 IEEE big/little-endian input is accepted. An MRR and balanced
     head/site PIR/PRR pairs are required; no records may follow the final MRR.
     This verifies framing/ordering, not every STDF optional-field semantic.
+    Raw snapshots can be validated directly without creating a second copy.
+    The buffer holds one I/O chunk plus at most one partial U2-length record.
     """
     total = 0
     active: set[tuple[int, int]] = set()
@@ -63,63 +78,82 @@ def preflight(path: Path, normalized: Path) -> dict:
     mir = False
     mrr = False
     started_at = None
-    with _open_stream(path) as stream, normalized.open("wb") as output:
+    destination = normalized.open("wb") if normalized is not None else nullcontext(None)
+    with destination as output, _open_stream(path) as stream:
         far = stream.read(6)
         if len(far) != 6 or far[2:4] != b"\0\x0a" or far[5] != 4 or far[4] not in (1, 2):
             raise ValueError("Expected an STDF V4 FAR record with IEEE big/little-endian data.")
         endian = ">" if far[4] == 1 else "<"
         if struct.unpack(endian + "H", far[:2])[0] != 2:
             raise ValueError("Invalid FAR record length.")
-        output.write(far)
+        if output is not None:
+            output.write(far)
         total += 6
+        received = 6
+        buffer = b""
+        position = 0
+        header_struct = struct.Struct(endian + "HBB")
+        timestamp_struct = struct.Struct(endian + "I")
+        minimum_lengths = _MINIMUM_LENGTHS
         while True:
-            header = stream.read(4)
-            if not header:
+            # One bulk read/write replaces per-record I/O and body allocations.
+            # Read at most one byte beyond the cap to detect expansion overflow.
+            chunk = stream.read(min(_READ_CHUNK_BYTES, MAX_UNCOMPRESSED_BYTES - received + 1))
+            if not chunk:
                 break
-            if len(header) != 4:
-                raise ValueError(f"Truncated STDF record header at byte {total}.")
-            length, kind, subtype = struct.unpack(endian + "HBB", header)
-            if total + length + 4 > MAX_UNCOMPRESSED_BYTES:
+            received += len(chunk)
+            if received > MAX_UNCOMPRESSED_BYTES:
                 raise ValueError("The uncompressed STDF exceeds the 2 GiB evaluation limit.")
-            body = stream.read(length)
-            if len(body) != length:
-                raise ValueError(f"Truncated STDF record body at byte {total}.")
-            if mrr:
-                raise ValueError("Records follow the final MRR; concatenated files are not supported.")
-            key = (kind, subtype)
-            if length < _MINIMUM_LENGTHS.get(key, 0):
-                raise ValueError(f"STDF record {key} is missing required fields at byte {total}.")
-            if key == (0, 10):
-                raise ValueError("Unexpected FAR; import each STDF file separately.")
-            if key == (1, 10):
-                if mir or active or dut_count:
-                    raise ValueError("The STDF must contain one MIR before its device records.")
-                mir = True
-                timestamp = struct.unpack_from(endian + "I", body, 4)[0]
-                started_at = datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
-            elif key == (5, 10):
-                pair = (body[0], body[1])
-                if not mir or pair in active:
-                    raise ValueError("PIR before MIR or duplicate open PIR for the same head/site.")
-                active.add(pair)
-            elif key == (5, 20):
-                pair = (body[0], body[1])
-                if pair not in active:
-                    raise ValueError("PRR has no matching open PIR for its head/site.")
-                active.remove(pair)
-                dut_count += 1
-            elif kind == 15 and subtype in (10, 15, 20):
-                if (body[4], body[5]) not in active:
-                    raise ValueError("A test result has no open PIR for its head/site.")
-                ptr_count += subtype == 10
-            elif key == (1, 20):
-                if not mir or active:
-                    raise ValueError("MRR before MIR or with unfinished devices (missing PRR).")
-                mrr = True
-            output.write(header)
-            output.write(body)
-            total += length + 4
-            count += 1
+            if output is not None:
+                output.write(chunk)
+            buffer = buffer[position:] + chunk
+            position = 0
+            size = len(buffer)
+            while size - position >= 4:
+                length, kind, subtype = header_struct.unpack_from(buffer, position)
+                next_position = position + length + 4
+                if next_position > size:
+                    break
+                body = position + 4
+                if mrr:
+                    raise ValueError("Records follow the final MRR; concatenated files are not supported.")
+                key = (kind, subtype)
+                if length < minimum_lengths.get(key, 0):
+                    raise ValueError(f"STDF record {key} is missing required fields at byte {total}.")
+                if key == (0, 10):
+                    raise ValueError("Unexpected FAR; import each STDF file separately.")
+                if key == (1, 10):
+                    if mir or active or dut_count:
+                        raise ValueError("The STDF must contain one MIR before its device records.")
+                    mir = True
+                    timestamp = timestamp_struct.unpack_from(buffer, body + 4)[0]
+                    started_at = datetime.fromtimestamp(timestamp, timezone.utc).isoformat()
+                elif key == (5, 10):
+                    pair = (buffer[body], buffer[body + 1])
+                    if not mir or pair in active:
+                        raise ValueError("PIR before MIR or duplicate open PIR for the same head/site.")
+                    active.add(pair)
+                elif key == (5, 20):
+                    pair = (buffer[body], buffer[body + 1])
+                    if pair not in active:
+                        raise ValueError("PRR has no matching open PIR for its head/site.")
+                    active.remove(pair)
+                    dut_count += 1
+                elif kind == 15 and subtype in (10, 15, 20):
+                    if (buffer[body + 4], buffer[body + 5]) not in active:
+                        raise ValueError("A test result has no open PIR for its head/site.")
+                    ptr_count += subtype == 10
+                elif key == (1, 20):
+                    if not mir or active:
+                        raise ValueError("MRR before MIR or with unfinished devices (missing PRR).")
+                    mrr = True
+                position = next_position
+                total += length + 4
+                count += 1
+        remaining = len(buffer) - position
+        if remaining:
+            part = "header" if remaining < 4 else "body"
+            raise ValueError(f"Truncated STDF record {part} at byte {total}.")
     if not mrr or active:
         raise ValueError("Incomplete STDF: missing final MRR or unfinished device records.")
     if not dut_count:

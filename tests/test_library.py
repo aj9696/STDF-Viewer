@@ -95,6 +95,17 @@ class LibraryTests(unittest.TestCase):
         reopened = Library(self.library.workspace).dataset(dataset["id"])
         self.assertEqual(reopened["pass_count"], 117)
 
+    def test_raw_stream_with_compressed_suffix_imports_by_content(self):
+        for index, suffix in enumerate((".gz", ".bz2", ".zip")):
+            with self.subTest(suffix=suffix):
+                raw = self.files[index].read_bytes()
+                path = self.root / ("misnamed.stdf" + suffix)
+                path.write_bytes(raw)
+                dataset = self.library.import_file(path)["dataset"]
+                self.assertEqual((dataset["dut_count"], dataset["test_count"], dataset["measurements"]), (120, 3, 360))
+                snapshot = self.library.imports / dataset["id"] / ("source.stdf" + suffix)
+                self.assertEqual(snapshot.read_bytes(), raw)
+
     def test_supported_compressed_streams_preserve_original(self):
         raw = self.files[0].read_bytes()
         for suffix, data in ((".gz", gzip.compress(raw)), (".bz2", bz2.compress(raw))):

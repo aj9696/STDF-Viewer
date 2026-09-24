@@ -17,7 +17,7 @@ import sqlite3
 import uuid
 import zipfile
 
-from .ingest import MAX_UNCOMPRESSED_BYTES, parse_database, preflight
+from .ingest import MAX_UNCOMPRESSED_BYTES, compression_kind, parse_database, preflight
 
 
 SCHEMA_VERSION = 1
@@ -134,14 +134,19 @@ class Library:
                 if existing:
                     return {"dataset": _dataset(existing), "duplicate": True}
                 normalized = staging / "validated.stdf"
-                expected = preflight(snapshot, normalized)
+                # The Rust reader chooses compression by suffix. Normalize the
+                # rare raw file named .gz/.bz2/.zip too, so byte-based detection
+                # remains the import contract for misleading extensions.
+                needs_normalized = compression_kind(snapshot) is not None or snapshot.suffix != ".stdf"
+                expected = preflight(snapshot, normalized if needs_normalized else None)
                 database = staging / "source.db"
-                metadata = parse_database(normalized, database, expected)
+                metadata = parse_database(normalized if needs_normalized else snapshot, database, expected)
                 # The staging path disappears on publication; retain a usable
                 # provenance path in the upstream database before freezing it.
                 with closing(sqlite3.connect(database)) as parsed, parsed:
                     parsed.execute("UPDATE File_List SET Filename=?", (str(published / snapshot_name),))
-                normalized.unlink()
+                if needs_normalized:
+                    normalized.unlink()
                 with database.open("rb+") as parsed_file:
                     os.fsync(parsed_file.fileno())
                 result = {"id": dataset_id, "name": path.name, "sha256": sha256,
