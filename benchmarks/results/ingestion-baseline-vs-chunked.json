@@ -1,0 +1,741 @@
+{
+  "result_format_version": 1,
+  "measurement_date_utc": "2026-09-24",
+  "purpose": "Compare the original Python per-record preflight/normalization with chunked framing and raw-source parsing; native binary held constant.",
+  "environment": {
+    "python": "3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+    "logical_cpus": 16,
+    "starting_git_revision": "354335ee6531ea0c9ef15796f2c32eae74f99c99",
+    "native_binary_sha256": [
+      "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+    ],
+    "storage": "Local Windows filesystem in the working checkout; storage model and background synchronization not controlled."
+  },
+  "method": {
+    "repetitions_per_cohort": 3,
+    "fresh_process_per_sample": true,
+    "fresh_workspace_per_sample": true,
+    "timed_samples_serialized": true,
+    "cache_policy": "Input hash read before timing; OS caches not flushed. Warm/unspecified cache.",
+    "excluded_from_import_timer": [
+      "interpreter startup",
+      "library initialization",
+      "source hash read for report provenance",
+      "sampled logical comparison",
+      "report formatting"
+    ],
+    "progress_callbacks": "Original application callbacks retained, including approximately 100 ms polling granularity.",
+    "memory_measurement": "Windows GetProcessMemoryInfo peak working set immediately after import; native allocations included.",
+    "comparison_order": "Three baseline samples completed before three chunked samples for each workload; not interleaved A/B.",
+    "phase_note": "Phase medians need not sum to median total; each statistic is computed independently."
+  },
+  "interpretation": [
+    "The 1M-PTR cohort has no demonstrated full-import gain: medians 2.059 s baseline and 2.087 s chunked.",
+    "The 10M-PTR cohort median fell from 22.177 s to 20.304 s: 8.45% wall-clock reduction, with 31.93% preflight reduction.",
+    "Native-phase medians drifted despite identical binaries: 0.702 to 0.804 s at 1M and 7.223 to 8.329 s at 10M. Do not attribute that drift to the Python change.",
+    "Counts, parser database sizes, and sampled logical values/flags/identities matched. Sampling is not exhaustive database equivalence.",
+    "These synthetic workloads and this one machine do not establish universal production performance."
+  ],
+  "workloads": [
+    {
+      "name": "1m-ptr-full-metadata",
+      "source_filename": "benchmark-10000d-100t.stdf",
+      "source_sha256": "e0d0fcdd68e6c64b39f66ee90f454aaa293659095d30e16b9f9f7bd8c888e68f",
+      "source_bytes": 93650444,
+      "generator": {
+        "version": 1,
+        "seed": 42,
+        "sites": 4,
+        "duts": 10000,
+        "tests_per_dut": 100,
+        "compression": "none",
+        "metadata": "full PTR metadata repeated on every DUT"
+      },
+      "cohorts": {
+        "baseline": {
+          "summary": {
+            "samples": 3,
+            "source_sha256": "e0d0fcdd68e6c64b39f66ee90f454aaa293659095d30e16b9f9f7bd8c888e68f",
+            "source_bytes": 93650444,
+            "logical_sample_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+            "dataset_counts": {
+              "dut_count": 10000,
+              "test_count": 100,
+              "measurements": 1000000,
+              "pass_count": 9900
+            },
+            "full_import_seconds": {
+              "min": 2.0104110999964178,
+              "median": 2.05863019998651,
+              "max": 2.6258013999904506
+            },
+            "peak_rss_bytes": {
+              "min": 37347328,
+              "median": 37625856,
+              "max": 37859328
+            },
+            "database_bytes": {
+              "min": 32550912,
+              "median": 32550912,
+              "max": 32550912
+            },
+            "phases": {
+              "snapshot_hash_and_lock_seconds": {
+                "min": 0.13530879997415468,
+                "median": 0.17202820000238717,
+                "max": 0.20416969998041168
+              },
+              "preflight_normalization_seconds": {
+                "min": 0.7722355999867432,
+                "median": 0.7906481000245549,
+                "max": 1.0883619000087492
+              },
+              "native_parser_database_seconds": {
+                "min": 0.6021066000103019,
+                "median": 0.7020844999933615,
+                "max": 0.8028634999645874
+              },
+              "integrity_metadata_counts_seconds": {
+                "min": 0.3837498999782838,
+                "median": 0.45260309998411685,
+                "max": 0.492529800045304
+              },
+              "publication_other_seconds": {
+                "min": 0.028532000025734305,
+                "median": 0.02974450000328943,
+                "max": 0.037876499991398305
+              }
+            }
+          },
+          "samples": [
+            {
+              "label": "baseline-1m",
+              "recorded_at_utc": "2026-09-24T21:52:59.535605+00:00",
+              "full_import_seconds": 2.6258013999904506,
+              "process_cpu_seconds": 2.6875,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 0.20416969998041168,
+                "preflight_normalization_seconds": 1.0883619000087492,
+                "native_parser_database_seconds": 0.8028634999645874,
+                "integrity_metadata_counts_seconds": 0.492529800045304,
+                "publication_other_seconds": 0.037876499991398305
+              },
+              "peak_rss_bytes": 37347328,
+              "database_bytes": 32550912,
+              "sampled_logical_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "da852dc1216dd616ef12d2b62de2a269fcde05f19838c36a0200c7a3374d3251",
+                "semidata/ingest.py": "54ce7a05a4e3130f62c7691b899435d0020896e91a3c00c4ecfc6968348450a5",
+                "benchmarks/ingestion.py": "6e9e42c93ae0701fd269eec8a241d2eda6efdb1c3a5cb50aaf89e140e02a61b8",
+                "benchmarks/generate.py": "8a872d45539a978a9a388dfa8fb321d4ef16ce82124551ea6370258686dbf108"
+              }
+            },
+            {
+              "label": "baseline-1m-repeat1",
+              "recorded_at_utc": "2026-09-24T21:54:32.920651+00:00",
+              "full_import_seconds": 2.05863019998651,
+              "process_cpu_seconds": 2.09375,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 0.17202820000238717,
+                "preflight_normalization_seconds": 0.7722355999867432,
+                "native_parser_database_seconds": 0.7020844999933615,
+                "integrity_metadata_counts_seconds": 0.3837498999782838,
+                "publication_other_seconds": 0.028532000025734305
+              },
+              "peak_rss_bytes": 37859328,
+              "database_bytes": 32550912,
+              "sampled_logical_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "da852dc1216dd616ef12d2b62de2a269fcde05f19838c36a0200c7a3374d3251",
+                "semidata/ingest.py": "54ce7a05a4e3130f62c7691b899435d0020896e91a3c00c4ecfc6968348450a5",
+                "benchmarks/ingestion.py": "85f2ba451909795e2d51e48f216de39544afa753dca40cedce0d6c7bb211ca19",
+                "benchmarks/generate.py": "8a872d45539a978a9a388dfa8fb321d4ef16ce82124551ea6370258686dbf108"
+              }
+            },
+            {
+              "label": "baseline-1m-repeat2",
+              "recorded_at_utc": "2026-09-24T21:54:35.289753+00:00",
+              "full_import_seconds": 2.0104110999964178,
+              "process_cpu_seconds": 2.078125,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 0.13530879997415468,
+                "preflight_normalization_seconds": 0.7906481000245549,
+                "native_parser_database_seconds": 0.6021066000103019,
+                "integrity_metadata_counts_seconds": 0.45260309998411685,
+                "publication_other_seconds": 0.02974450000328943
+              },
+              "peak_rss_bytes": 37625856,
+              "database_bytes": 32550912,
+              "sampled_logical_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "da852dc1216dd616ef12d2b62de2a269fcde05f19838c36a0200c7a3374d3251",
+                "semidata/ingest.py": "54ce7a05a4e3130f62c7691b899435d0020896e91a3c00c4ecfc6968348450a5",
+                "benchmarks/ingestion.py": "85f2ba451909795e2d51e48f216de39544afa753dca40cedce0d6c7bb211ca19",
+                "benchmarks/generate.py": "8a872d45539a978a9a388dfa8fb321d4ef16ce82124551ea6370258686dbf108"
+              }
+            }
+          ]
+        },
+        "chunked": {
+          "summary": {
+            "samples": 3,
+            "source_sha256": "e0d0fcdd68e6c64b39f66ee90f454aaa293659095d30e16b9f9f7bd8c888e68f",
+            "source_bytes": 93650444,
+            "logical_sample_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+            "dataset_counts": {
+              "dut_count": 10000,
+              "test_count": 100,
+              "measurements": 1000000,
+              "pass_count": 9900
+            },
+            "full_import_seconds": {
+              "min": 2.081235799996648,
+              "median": 2.086640499997884,
+              "max": 2.1886480000102893
+            },
+            "peak_rss_bytes": {
+              "min": 37507072,
+              "median": 37818368,
+              "max": 37896192
+            },
+            "database_bytes": {
+              "min": 32550912,
+              "median": 32550912,
+              "max": 32550912
+            },
+            "phases": {
+              "snapshot_hash_and_lock_seconds": {
+                "min": 0.15931930002989247,
+                "median": 0.1691002000006847,
+                "max": 0.17076469998573884
+              },
+              "preflight_normalization_seconds": {
+                "min": 0.6102222999907099,
+                "median": 0.6193168999743648,
+                "max": 0.6303729999926873
+              },
+              "native_parser_database_seconds": {
+                "min": 0.803286999987904,
+                "median": 0.8037347000208683,
+                "max": 0.9029373000375926
+              },
+              "integrity_metadata_counts_seconds": {
+                "min": 0.4647757000057027,
+                "median": 0.46743429999332875,
+                "max": 0.4712335999356583
+              },
+              "publication_other_seconds": {
+                "min": 0.022097400040365756,
+                "median": 0.024784800014458597,
+                "max": 0.037143099994864315
+              }
+            }
+          },
+          "samples": [
+            {
+              "label": "chunked-1m-1",
+              "recorded_at_utc": "2026-09-24T22:01:04.541537+00:00",
+              "full_import_seconds": 2.086640499997884,
+              "process_cpu_seconds": 2.171875,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 0.17076469998573884,
+                "preflight_normalization_seconds": 0.6102222999907099,
+                "native_parser_database_seconds": 0.8037347000208683,
+                "integrity_metadata_counts_seconds": 0.4647757000057027,
+                "publication_other_seconds": 0.037143099994864315
+              },
+              "peak_rss_bytes": 37896192,
+              "database_bytes": 32550912,
+              "sampled_logical_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "2210af47ba3333da7d55a06f943283c72054af8d32482138311bfda87a0bb8c9",
+                "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+                "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+                "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+              }
+            },
+            {
+              "label": "chunked-1m-2",
+              "recorded_at_utc": "2026-09-24T22:01:07.038444+00:00",
+              "full_import_seconds": 2.081235799996648,
+              "process_cpu_seconds": 2.203125,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 0.1691002000006847,
+                "preflight_normalization_seconds": 0.6193168999743648,
+                "native_parser_database_seconds": 0.803286999987904,
+                "integrity_metadata_counts_seconds": 0.46743429999332875,
+                "publication_other_seconds": 0.022097400040365756
+              },
+              "peak_rss_bytes": 37818368,
+              "database_bytes": 32550912,
+              "sampled_logical_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "2210af47ba3333da7d55a06f943283c72054af8d32482138311bfda87a0bb8c9",
+                "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+                "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+                "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+              }
+            },
+            {
+              "label": "chunked-1m-3",
+              "recorded_at_utc": "2026-09-24T22:01:09.658721+00:00",
+              "full_import_seconds": 2.1886480000102893,
+              "process_cpu_seconds": 2.296875,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 0.15931930002989247,
+                "preflight_normalization_seconds": 0.6303729999926873,
+                "native_parser_database_seconds": 0.9029373000375926,
+                "integrity_metadata_counts_seconds": 0.4712335999356583,
+                "publication_other_seconds": 0.024784800014458597
+              },
+              "peak_rss_bytes": 37507072,
+              "database_bytes": 32550912,
+              "sampled_logical_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "2210af47ba3333da7d55a06f943283c72054af8d32482138311bfda87a0bb8c9",
+                "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+                "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+                "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+              }
+            }
+          ]
+        }
+      },
+      "median_reduction_percent": {
+        "full_import": -1.3606280531373471,
+        "preflight": 21.669716280209762
+      },
+      "correctness": {
+        "dataset_counts_equal": true,
+        "database_sizes_equal": true,
+        "sampled_logical_hashes_equal": true,
+        "sample_columns": [
+          "dut_index",
+          "test_number",
+          "test_name",
+          "unit",
+          "result",
+          "test_flag",
+          "parm_flag",
+          "part_id",
+          "head",
+          "site",
+          "part_flag",
+          "wafer",
+          "x",
+          "y",
+          "supersede"
+        ],
+        "sample_dut_indexes": [
+          1,
+          323,
+          646,
+          968,
+          1291,
+          1613,
+          1936,
+          2258,
+          2581,
+          2903,
+          3226,
+          3549,
+          3871,
+          4194,
+          4516,
+          4839,
+          5161,
+          5484,
+          5806,
+          6129,
+          6451,
+          6774,
+          7097,
+          7419,
+          7742,
+          8064,
+          8387,
+          8709,
+          9032,
+          9354,
+          9677,
+          10000
+        ]
+      }
+    },
+    {
+      "name": "10m-ptr-full-metadata",
+      "source_filename": "benchmark-100000d-100t.stdf",
+      "source_sha256": "c6db5a736bdd12033cd570927375b179a3a2a074c4621101cd3f953b53c4c2d4",
+      "source_bytes": 936502821,
+      "generator": {
+        "version": 1,
+        "seed": 42,
+        "sites": 4,
+        "duts": 100000,
+        "tests_per_dut": 100,
+        "compression": "none",
+        "metadata": "full PTR metadata repeated on every DUT"
+      },
+      "cohorts": {
+        "baseline": {
+          "summary": {
+            "samples": 3,
+            "source_sha256": "c6db5a736bdd12033cd570927375b179a3a2a074c4621101cd3f953b53c4c2d4",
+            "source_bytes": 936502821,
+            "logical_sample_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+            "dataset_counts": {
+              "dut_count": 100000,
+              "test_count": 100,
+              "measurements": 10000000,
+              "pass_count": 99009
+            },
+            "full_import_seconds": {
+              "min": 20.691229499992914,
+              "median": 22.176872099982575,
+              "max": 23.20078640000429
+            },
+            "peak_rss_bytes": {
+              "min": 37826560,
+              "median": 37900288,
+              "max": 37974016
+            },
+            "database_bytes": {
+              "min": 339443712,
+              "median": 339443712,
+              "max": 339443712
+            },
+            "phases": {
+              "snapshot_hash_and_lock_seconds": {
+                "min": 1.3016614000080153,
+                "median": 1.42374529998051,
+                "max": 1.7268055999884382
+              },
+              "preflight_normalization_seconds": {
+                "min": 8.481008099974133,
+                "median": 8.84956569998758,
+                "max": 9.115869600034785
+              },
+              "native_parser_database_seconds": {
+                "min": 6.521135599992704,
+                "median": 7.222987600020133,
+                "max": 7.923590800026432
+              },
+              "integrity_metadata_counts_seconds": {
+                "min": 4.06523260002723,
+                "median": 4.186761299963109,
+                "max": 4.62951450003311
+              },
+              "publication_other_seconds": {
+                "min": 0.17314289993373677,
+                "median": 0.20010790001833811,
+                "max": 0.24775909999152645
+              }
+            }
+          },
+          "samples": [
+            {
+              "label": "baseline-10m",
+              "recorded_at_utc": "2026-09-24T21:53:54.383375+00:00",
+              "full_import_seconds": 23.20078640000429,
+              "process_cpu_seconds": 24.921875,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 1.7268055999884382,
+                "preflight_normalization_seconds": 9.115869600034785,
+                "native_parser_database_seconds": 7.923590800026432,
+                "integrity_metadata_counts_seconds": 4.186761299963109,
+                "publication_other_seconds": 0.24775909999152645
+              },
+              "peak_rss_bytes": 37826560,
+              "database_bytes": 339443712,
+              "sampled_logical_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "da852dc1216dd616ef12d2b62de2a269fcde05f19838c36a0200c7a3374d3251",
+                "semidata/ingest.py": "54ce7a05a4e3130f62c7691b899435d0020896e91a3c00c4ecfc6968348450a5",
+                "benchmarks/ingestion.py": "6e9e42c93ae0701fd269eec8a241d2eda6efdb1c3a5cb50aaf89e140e02a61b8",
+                "benchmarks/generate.py": "8a872d45539a978a9a388dfa8fb321d4ef16ce82124551ea6370258686dbf108"
+              }
+            },
+            {
+              "label": "baseline-10m-repeat1",
+              "recorded_at_utc": "2026-09-24T21:54:58.326611+00:00",
+              "full_import_seconds": 22.176872099982575,
+              "process_cpu_seconds": 24.03125,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 1.3016614000080153,
+                "preflight_normalization_seconds": 8.84956569998758,
+                "native_parser_database_seconds": 7.222987600020133,
+                "integrity_metadata_counts_seconds": 4.62951450003311,
+                "publication_other_seconds": 0.17314289993373677
+              },
+              "peak_rss_bytes": 37974016,
+              "database_bytes": 339443712,
+              "sampled_logical_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "da852dc1216dd616ef12d2b62de2a269fcde05f19838c36a0200c7a3374d3251",
+                "semidata/ingest.py": "54ce7a05a4e3130f62c7691b899435d0020896e91a3c00c4ecfc6968348450a5",
+                "benchmarks/ingestion.py": "85f2ba451909795e2d51e48f216de39544afa753dca40cedce0d6c7bb211ca19",
+                "benchmarks/generate.py": "8a872d45539a978a9a388dfa8fb321d4ef16ce82124551ea6370258686dbf108"
+              }
+            },
+            {
+              "label": "baseline-10m-repeat2",
+              "recorded_at_utc": "2026-09-24T21:55:19.983082+00:00",
+              "full_import_seconds": 20.691229499992914,
+              "process_cpu_seconds": 22.703125,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 1.42374529998051,
+                "preflight_normalization_seconds": 8.481008099974133,
+                "native_parser_database_seconds": 6.521135599992704,
+                "integrity_metadata_counts_seconds": 4.06523260002723,
+                "publication_other_seconds": 0.20010790001833811
+              },
+              "peak_rss_bytes": 37900288,
+              "database_bytes": 339443712,
+              "sampled_logical_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "da852dc1216dd616ef12d2b62de2a269fcde05f19838c36a0200c7a3374d3251",
+                "semidata/ingest.py": "54ce7a05a4e3130f62c7691b899435d0020896e91a3c00c4ecfc6968348450a5",
+                "benchmarks/ingestion.py": "85f2ba451909795e2d51e48f216de39544afa753dca40cedce0d6c7bb211ca19",
+                "benchmarks/generate.py": "8a872d45539a978a9a388dfa8fb321d4ef16ce82124551ea6370258686dbf108"
+              }
+            }
+          ]
+        },
+        "chunked": {
+          "summary": {
+            "samples": 3,
+            "source_sha256": "c6db5a736bdd12033cd570927375b179a3a2a074c4621101cd3f953b53c4c2d4",
+            "source_bytes": 936502821,
+            "logical_sample_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+            "dataset_counts": {
+              "dut_count": 100000,
+              "test_count": 100,
+              "measurements": 10000000,
+              "pass_count": 99009
+            },
+            "full_import_seconds": {
+              "min": 19.864640199986752,
+              "median": 20.303923100000247,
+              "max": 21.558006699953694
+            },
+            "peak_rss_bytes": {
+              "min": 37650432,
+              "median": 37830656,
+              "max": 37896192
+            },
+            "database_bytes": {
+              "min": 339443712,
+              "median": 339443712,
+              "max": 339443712
+            },
+            "phases": {
+              "snapshot_hash_and_lock_seconds": {
+                "min": 1.3640200999798253,
+                "median": 1.5157939000055194,
+                "max": 1.5781433999654837
+              },
+              "preflight_normalization_seconds": {
+                "min": 5.786341600003652,
+                "median": 6.024149400007445,
+                "max": 6.240143899980467
+              },
+              "native_parser_database_seconds": {
+                "min": 7.9289996000006795,
+                "median": 8.329366900026798,
+                "max": 8.530348400003277
+              },
+              "integrity_metadata_counts_seconds": {
+                "min": 4.215370699996129,
+                "median": 4.469406199990772,
+                "max": 5.254169899970293
+              },
+              "publication_other_seconds": {
+                "min": 0.14957950002280995,
+                "median": 0.1695408999803476,
+                "max": 0.17119560000719503
+              }
+            }
+          },
+          "samples": [
+            {
+              "label": "chunked-10m-1",
+              "recorded_at_utc": "2026-09-24T22:01:31.025736+00:00",
+              "full_import_seconds": 20.303923100000247,
+              "process_cpu_seconds": 22.21875,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 1.5157939000055194,
+                "preflight_normalization_seconds": 6.240143899980467,
+                "native_parser_database_seconds": 7.9289996000006795,
+                "integrity_metadata_counts_seconds": 4.469406199990772,
+                "publication_other_seconds": 0.14957950002280995
+              },
+              "peak_rss_bytes": 37896192,
+              "database_bytes": 339443712,
+              "sampled_logical_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "2210af47ba3333da7d55a06f943283c72054af8d32482138311bfda87a0bb8c9",
+                "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+                "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+                "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+              }
+            },
+            {
+              "label": "chunked-10m-2",
+              "recorded_at_utc": "2026-09-24T22:01:53.512602+00:00",
+              "full_import_seconds": 21.558006699953694,
+              "process_cpu_seconds": 23.25,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 1.5781433999654837,
+                "preflight_normalization_seconds": 6.024149400007445,
+                "native_parser_database_seconds": 8.530348400003277,
+                "integrity_metadata_counts_seconds": 5.254169899970293,
+                "publication_other_seconds": 0.17119560000719503
+              },
+              "peak_rss_bytes": 37830656,
+              "database_bytes": 339443712,
+              "sampled_logical_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "2210af47ba3333da7d55a06f943283c72054af8d32482138311bfda87a0bb8c9",
+                "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+                "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+                "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+              }
+            },
+            {
+              "label": "chunked-10m-3",
+              "recorded_at_utc": "2026-09-24T22:02:14.350716+00:00",
+              "full_import_seconds": 19.864640199986752,
+              "process_cpu_seconds": 22.109375,
+              "phase_seconds": {
+                "snapshot_hash_and_lock_seconds": 1.3640200999798253,
+                "preflight_normalization_seconds": 5.786341600003652,
+                "native_parser_database_seconds": 8.329366900026798,
+                "integrity_metadata_counts_seconds": 4.215370699996129,
+                "publication_other_seconds": 0.1695408999803476
+              },
+              "peak_rss_bytes": 37650432,
+              "database_bytes": 339443712,
+              "sampled_logical_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+              "sampled_rows": 3200,
+              "native_binary_sha256": [
+                "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+              ],
+              "code_sha256": {
+                "semidata/library.py": "2210af47ba3333da7d55a06f943283c72054af8d32482138311bfda87a0bb8c9",
+                "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+                "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+                "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+              }
+            }
+          ]
+        }
+      },
+      "median_reduction_percent": {
+        "full_import": 8.445505712159463,
+        "preflight": 31.927174685918192
+      },
+      "correctness": {
+        "dataset_counts_equal": true,
+        "database_sizes_equal": true,
+        "sampled_logical_hashes_equal": true,
+        "sample_columns": [
+          "dut_index",
+          "test_number",
+          "test_name",
+          "unit",
+          "result",
+          "test_flag",
+          "parm_flag",
+          "part_id",
+          "head",
+          "site",
+          "part_flag",
+          "wafer",
+          "x",
+          "y",
+          "supersede"
+        ],
+        "sample_dut_indexes": [
+          1,
+          3226,
+          6452,
+          9678,
+          12904,
+          16129,
+          19355,
+          22581,
+          25807,
+          29032,
+          32258,
+          35484,
+          38710,
+          41936,
+          45161,
+          48387,
+          51613,
+          54839,
+          58064,
+          61290,
+          64516,
+          67742,
+          70968,
+          74193,
+          77419,
+          80645,
+          83871,
+          87096,
+          90322,
+          93548,
+          96774,
+          100000
+        ]
+      }
+    }
+  ]
+}
