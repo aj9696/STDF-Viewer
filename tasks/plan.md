@@ -26,3 +26,11 @@ the contract shared by backend and UI. The task checklist is `tasks/todo.md`.
 4. Browser integration, user evaluation script, review and fixes.
 
 No deployment or publication is part of this local evaluation release.
+
+## 2026-09-24: measured import performance and browser parsing
+
+Follow SPEC-import-performance.md. Establish process-isolated baselines before
+editing the measured paths. Optimize framing/I/O and native database costs in
+separate verifiable slices, then compare unchanged workloads. Build a separate
+browser parser prototype using the same inputs, with its smaller workload made
+explicit. Finish with review, documentation, and a runnable demonstration.

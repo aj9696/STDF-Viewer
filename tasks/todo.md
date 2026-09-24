@@ -17,3 +17,13 @@ The first evaluation release is runnable locally. The two open items are explici
 follow-up checks: browser automation could not complete STDF.io's Save download,
 and this task does not publish the local branch. Neither is reported as passed.
 See [Release verification](../docs/release-verification.md) for evidence and limits.
+
+## Import performance increment
+
+- [ ] Research STDF design from primary sources and document engineering implications.
+- [ ] Build deterministic large fixtures and capture unmodified phase/memory baselines.
+- [ ] Optimize bounded framing and avoid redundant raw-file normalization; test malformed and compressed input.
+- [ ] Measure and retain native database improvements with unchanged results.
+- [ ] Build and exercise raw-STDF Rust/WASM parsing in a browser worker.
+- [ ] Verify the available STDF.io source and record its provenance/hash.
+- [ ] Compare larger workloads, review changes, run regressions, and publish local evidence.

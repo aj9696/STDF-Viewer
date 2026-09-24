@@ -24,3 +24,7 @@ the user evaluates working increments as a test engineer.
 Full product direction includes MPR/FTR analysis, device genealogy, qualified
 PAT/DPAT recipes, wafer analysis, historical monitoring, automation, and improved
 UI. These remain separate future increments, not implied delivered features.
+
+The next authorized increment is measured import performance and an isolated
+browser parser experiment. See SPEC-import-performance.md for its capability
+map, acceptance criteria, and benchmark boundaries.
