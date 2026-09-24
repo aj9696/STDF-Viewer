@@ -1,6 +1,6 @@
 # SemiData engineer evaluation guide
 
-Applies to SemiData Workbench 0.1.0. Start with the reproducible examples below,
+Applies to SemiData Workbench 0.1.1. Start with the reproducible examples below,
 then repeat the workflows with STDF.io-generated files. This release connects
 a persistent data library, measurement investigation, lot/site comparison, and
 traceable PAT experiments. It is an engineering evaluation build.
@@ -147,9 +147,12 @@ The generator preview observed during setup reported **2,240 dies** and
 baseline setting. Treat the preview as a comparison checkpoint, not a
 guaranteed invariant across future versions of the external generator.
 
-The browser automation could configure and inspect this recipe but could not
-complete its **Save** download. Consequently, that file has **not yet been
-imported or verified by SemiData**. Complete that evaluation as follows:
+The downloaded `semidata-evaluation.stdf` was verified on 2026-09-24 with
+SemiData 0.1.1: **2,240 DUTs, 20 tests, 44,800 scalar measurements, and 1,691
+passing DUTs**. Every test has 2,240 measurements with retained names, units,
+and limits. This file uses compact PTR records; the 0.1.1 compatibility fix is
+required for correct test identity. Its exact source hash is recorded in
+[Release verification](release-verification.md). To repeat the evaluation:
 
 1. Generate the configured data and use the generator's save/download control
    to save an STDF file locally.
@@ -161,12 +164,20 @@ imported or verified by SemiData**. Complete that evaluation as follows:
    Compare the imported count with the generator's preview and record any
    disagreement. Do not assume mismatched denominators are equivalent.
 5. Select the dataset, open **Explore**, and choose a scalar measurement.
-   Compare its distribution across sites 1–4.
+   Compare its distribution across sites 0–3 in this fixture.
 6. Preview a PAT experiment. With no separate reference selected, the file's
    eligible population supplies its own reference. Save and export the result.
 7. To investigate a historical shift, generate a second file with a different
    lot identifier and a deliberately changed parameter, import it, and compare
    the same test identity and units. Keep a written record of both recipes.
+
+For the verified file, select **1000 · IDDQ_CORE_000 [mA]**, all sites,
+current attempts. Explore should report 2,240 valid measurements, mean
+approximately **7.826398 mA**, and sample SD **1.447922 mA**. In PAT, choose
+**Median ± k × scaled MAD**, k=3, and **Use selected population**. The expected
+preview has **1,691 eligible**, **549 excluded**, and **7 flagged**, with bounds
+approximately **4.392242–10.980282 mA**. The generator file has no PartID strings;
+use its dataset/DUT index and wafer coordinates to identify those attempts.
 
 This release does not render wafer maps or model those spatial patterns
 directly. Imported spatial information can appear in flagged-device evidence;

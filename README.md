@@ -3,7 +3,7 @@
 An open-source, local semiconductor test-data workbench built on
 [Noon Chen's STDF-Viewer](https://github.com/noonchen/STDF-Viewer).
 
-**Version 0.1.0 · engineering evaluation release · Windows verified**
+**Version 0.1.1 · engineering evaluation release · Windows verified**
 
 Import STDF once, compare scalar measurements across lots and sites, and
 evaluate reproducible PAT experiments with saved evidence. Files stay in your
@@ -47,6 +47,8 @@ and [Architecture](docs/architecture.md) for precise boundaries and resource cap
 - [Local API contract](docs/api.md)
 - [Native build and troubleshooting](docs/runtime-build.md)
 - [Release verification](docs/release-verification.md)
+- [Measured import performance](docs/import-performance.md) · [Why STDF looks this way](docs/stdf-format.md)
+- [Rust/WebAssembly browser parser experiment](web-prototype/README.md)
 - [Contribution guide](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 - [Capability map](CAPABILITIES.md) · [Implementation checklist](tasks/todo.md)
 

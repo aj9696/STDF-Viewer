@@ -1,6 +1,6 @@
 # Calculation reference
 
-Version: SemiData engine 0.1.0. These rules apply to the workbench, not every
+Version: SemiData engine 0.1.1. These rules apply to the workbench, not every
 calculation offered by the upstream desktop viewer.
 
 ## Test identity and units
@@ -12,6 +12,19 @@ uses those stored values without additional unit conversion. Test number alone
 does not establish equivalence across products or program revisions. Engineers
 must select compatible datasets; automated program-version reconciliation is
 not implemented.
+
+Compact PTR compatibility (0.1.1): when a PTR ends immediately after RESULT,
+its TEST_TXT field is physically absent. The importer reuses the sole prior PTR
+identity for that test number within the file, preserving its metadata and
+defaults. Multiple prior names make the record ambiguous and import fails.
+With no prior identity it remains unnamed. An explicitly encoded empty name
+remains a separate identity. This is a documented producer compatibility
+policy, not a claim that STDF mandates inheritance of TEST_TXT.
+
+Existing databases are immutable and are not repaired on open. If a 0.1.0
+import split compact PTRs into named and unnamed tests, import the original
+source into a new workspace using 0.1.1; same-workspace deduplication otherwise
+returns the existing dataset. Keep old saved runs with their original evidence.
 
 ## Attempts and device identity
 

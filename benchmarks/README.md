@@ -1,5 +1,13 @@
 # Reproducible ingestion benchmarks
 
+Final combined application evidence is in
+[ingestion-final.json](results/ingestion-final.json). Its three-run medians are
+2.279 s for 1M PTR and 20.968 s for 10M PTR, including the compact-PTR identity
+correction and native retest changes. Relative to the earlier baseline, 1M is
+slower and 10M modestly faster; cohorts were not interleaved. The Python-only
+and index-only comparisons below isolate different changes and should not be
+substituted for final application totals.
+
 These opt-in tools measure the complete SemiData import path and attribute
 time to source copying/hash, structural validation, native parsing/database
 construction, integrity/metadata checks, and publication. They generate

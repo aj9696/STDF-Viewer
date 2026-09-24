@@ -1,0 +1,729 @@
+{
+  "format_version": 1,
+  "purpose": "Final combined application: chunked preflight, lazy retest indexes, and compact PTR identity correction.",
+  "method": "Three fresh processes and workspaces per size, sequential; input SHA256 read before timer, OS caches not flushed. Baseline cohorts ran earlier, not interleaved. Timings are local synthetic evidence, not a tool ranking.",
+  "workloads": {
+    "1m": {
+      "summary": {
+        "samples": 3,
+        "reports": [
+          ".venv\\bench-data\\reports\\final-1m-1.json",
+          ".venv\\bench-data\\reports\\final-1m-2.json",
+          ".venv\\bench-data\\reports\\final-1m-3.json"
+        ],
+        "source_sha256": "e0d0fcdd68e6c64b39f66ee90f454aaa293659095d30e16b9f9f7bd8c888e68f",
+        "source_bytes": 93650444,
+        "logical_sample_sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+        "dataset_counts": {
+          "dut_count": 10000,
+          "test_count": 100,
+          "measurements": 1000000,
+          "pass_count": 9900
+        },
+        "full_import_seconds": {
+          "min": 2.2681327000027522,
+          "median": 2.279273599968292,
+          "max": 2.3262753000017256
+        },
+        "peak_rss_bytes": {
+          "min": 37605376,
+          "median": 37744640,
+          "max": 37863424
+        },
+        "database_bytes": {
+          "min": 32550912,
+          "median": 32550912,
+          "max": 32550912
+        },
+        "phases": {
+          "snapshot_hash_and_lock_seconds": {
+            "min": 0.16101280000293627,
+            "median": 0.1691833999939263,
+            "max": 0.17453640000894666
+          },
+          "preflight_normalization_seconds": {
+            "min": 0.6284572000149637,
+            "median": 0.6327422999893315,
+            "max": 0.6639229999855161
+          },
+          "native_parser_database_seconds": {
+            "min": 0.9033758000005037,
+            "median": 0.9037021999829449,
+            "max": 0.9040417000069283
+          },
+          "integrity_metadata_counts_seconds": {
+            "min": 0.5088360999943689,
+            "median": 0.5371925999643281,
+            "max": 0.5853750000242144
+          },
+          "publication_other_seconds": {
+            "min": 0.02860229997895658,
+            "median": 0.03527240001130849,
+            "max": 0.03742840001359582
+          }
+        }
+      },
+      "counts_database_bytes_and_sample_hash_match_baseline": true,
+      "samples": [
+        {
+          "label": "final-1m-1",
+          "recorded_at": "2026-09-24T22:16:28.886444+00:00",
+          "git_revision": "1db89d2ba008f3e7e57305d05b0b838d2d618da6",
+          "full_import_seconds": 2.2681327000027522,
+          "process_cpu_seconds": 2.28125,
+          "phases": {
+            "snapshot_hash_and_lock_seconds": 0.16101280000293627,
+            "preflight_normalization_seconds": 0.6284572000149637,
+            "preflight_counts": {
+              "dut_count": 10000,
+              "started_at": "2026-09-21T14:13:20+00:00",
+              "record_count": 1020013,
+              "ptr_count": 1000000,
+              "uncompressed_bytes": 93650444
+            },
+            "native_parser_database_seconds": 0.9040417000069283,
+            "memory_after_native": {
+              "peak_rss_bytes": 37863424,
+              "rss_bytes": 33107968,
+              "peak_commit_bytes": 26828800
+            },
+            "parse_and_validation_seconds": 1.4412342999712564,
+            "integrity_metadata_counts_seconds": 0.5371925999643281,
+            "publication_other_seconds": 0.03742840001359582
+          },
+          "database_bytes": 32550912,
+          "memory_after": {
+            "peak_rss_bytes": 37863424,
+            "rss_bytes": 32792576,
+            "peak_commit_bytes": 26828800
+          },
+          "logical_sample": {
+            "kind": "sampled-logical-PTR-v1",
+            "dut_indexes": [
+              1,
+              323,
+              646,
+              968,
+              1291,
+              1613,
+              1936,
+              2258,
+              2581,
+              2903,
+              3226,
+              3549,
+              3871,
+              4194,
+              4516,
+              4839,
+              5161,
+              5484,
+              5806,
+              6129,
+              6451,
+              6774,
+              7097,
+              7419,
+              7742,
+              8064,
+              8387,
+              8709,
+              9032,
+              9354,
+              9677,
+              10000
+            ],
+            "rows": 3200,
+            "sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+            "columns": [
+              "dut_index",
+              "test_number",
+              "test_name",
+              "unit",
+              "result",
+              "test_flag",
+              "parm_flag",
+              "part_id",
+              "head",
+              "site",
+              "part_flag",
+              "wafer",
+              "x",
+              "y",
+              "supersede"
+            ]
+          },
+          "code_sha256": {
+            "semidata/library.py": "fcea362a1f109d22ac52b51b4ea2a0e766683190d48ebb097f5369d98b976a43",
+            "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+            "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+            "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+          },
+          "native_sha256": [
+            "aa786a2ae035b64d3f374267ccff5fa7e589095626474670a9a64346281f5ee2"
+          ]
+        },
+        {
+          "label": "final-1m-2",
+          "recorded_at": "2026-09-24T22:16:31.642733+00:00",
+          "git_revision": "1db89d2ba008f3e7e57305d05b0b838d2d618da6",
+          "full_import_seconds": 2.3262753000017256,
+          "process_cpu_seconds": 2.34375,
+          "phases": {
+            "snapshot_hash_and_lock_seconds": 0.1691833999939263,
+            "preflight_normalization_seconds": 0.6327422999893315,
+            "preflight_counts": {
+              "dut_count": 10000,
+              "started_at": "2026-09-21T14:13:20+00:00",
+              "record_count": 1020013,
+              "ptr_count": 1000000,
+              "uncompressed_bytes": 93650444
+            },
+            "native_parser_database_seconds": 0.9037021999829449,
+            "memory_after_native": {
+              "peak_rss_bytes": 37744640,
+              "rss_bytes": 31948800,
+              "peak_commit_bytes": 26701824
+            },
+            "parse_and_validation_seconds": 1.4890772000071593,
+            "integrity_metadata_counts_seconds": 0.5853750000242144,
+            "publication_other_seconds": 0.03527240001130849
+          },
+          "database_bytes": 32550912,
+          "memory_after": {
+            "peak_rss_bytes": 37744640,
+            "rss_bytes": 32464896,
+            "peak_commit_bytes": 26701824
+          },
+          "logical_sample": {
+            "kind": "sampled-logical-PTR-v1",
+            "dut_indexes": [
+              1,
+              323,
+              646,
+              968,
+              1291,
+              1613,
+              1936,
+              2258,
+              2581,
+              2903,
+              3226,
+              3549,
+              3871,
+              4194,
+              4516,
+              4839,
+              5161,
+              5484,
+              5806,
+              6129,
+              6451,
+              6774,
+              7097,
+              7419,
+              7742,
+              8064,
+              8387,
+              8709,
+              9032,
+              9354,
+              9677,
+              10000
+            ],
+            "rows": 3200,
+            "sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+            "columns": [
+              "dut_index",
+              "test_number",
+              "test_name",
+              "unit",
+              "result",
+              "test_flag",
+              "parm_flag",
+              "part_id",
+              "head",
+              "site",
+              "part_flag",
+              "wafer",
+              "x",
+              "y",
+              "supersede"
+            ]
+          },
+          "code_sha256": {
+            "semidata/library.py": "fcea362a1f109d22ac52b51b4ea2a0e766683190d48ebb097f5369d98b976a43",
+            "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+            "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+            "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+          },
+          "native_sha256": [
+            "aa786a2ae035b64d3f374267ccff5fa7e589095626474670a9a64346281f5ee2"
+          ]
+        },
+        {
+          "label": "final-1m-3",
+          "recorded_at": "2026-09-24T22:16:34.379721+00:00",
+          "git_revision": "1db89d2ba008f3e7e57305d05b0b838d2d618da6",
+          "full_import_seconds": 2.279273599968292,
+          "process_cpu_seconds": 2.28125,
+          "phases": {
+            "snapshot_hash_and_lock_seconds": 0.17453640000894666,
+            "preflight_normalization_seconds": 0.6639229999855161,
+            "preflight_counts": {
+              "dut_count": 10000,
+              "started_at": "2026-09-21T14:13:20+00:00",
+              "record_count": 1020013,
+              "ptr_count": 1000000,
+              "uncompressed_bytes": 93650444
+            },
+            "native_parser_database_seconds": 0.9033758000005037,
+            "memory_after_native": {
+              "peak_rss_bytes": 37605376,
+              "rss_bytes": 32374784,
+              "peak_commit_bytes": 26427392
+            },
+            "parse_and_validation_seconds": 1.4122118999948725,
+            "integrity_metadata_counts_seconds": 0.5088360999943689,
+            "publication_other_seconds": 0.02860229997895658
+          },
+          "database_bytes": 32550912,
+          "memory_after": {
+            "peak_rss_bytes": 37605376,
+            "rss_bytes": 32792576,
+            "peak_commit_bytes": 26427392
+          },
+          "logical_sample": {
+            "kind": "sampled-logical-PTR-v1",
+            "dut_indexes": [
+              1,
+              323,
+              646,
+              968,
+              1291,
+              1613,
+              1936,
+              2258,
+              2581,
+              2903,
+              3226,
+              3549,
+              3871,
+              4194,
+              4516,
+              4839,
+              5161,
+              5484,
+              5806,
+              6129,
+              6451,
+              6774,
+              7097,
+              7419,
+              7742,
+              8064,
+              8387,
+              8709,
+              9032,
+              9354,
+              9677,
+              10000
+            ],
+            "rows": 3200,
+            "sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+            "columns": [
+              "dut_index",
+              "test_number",
+              "test_name",
+              "unit",
+              "result",
+              "test_flag",
+              "parm_flag",
+              "part_id",
+              "head",
+              "site",
+              "part_flag",
+              "wafer",
+              "x",
+              "y",
+              "supersede"
+            ]
+          },
+          "code_sha256": {
+            "semidata/library.py": "fcea362a1f109d22ac52b51b4ea2a0e766683190d48ebb097f5369d98b976a43",
+            "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+            "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+            "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+          },
+          "native_sha256": [
+            "aa786a2ae035b64d3f374267ccff5fa7e589095626474670a9a64346281f5ee2"
+          ]
+        }
+      ]
+    },
+    "10m": {
+      "summary": {
+        "samples": 3,
+        "reports": [
+          ".venv\\bench-data\\reports\\final-10m-1.json",
+          ".venv\\bench-data\\reports\\final-10m-2.json",
+          ".venv\\bench-data\\reports\\final-10m-3.json"
+        ],
+        "source_sha256": "c6db5a736bdd12033cd570927375b179a3a2a074c4621101cd3f953b53c4c2d4",
+        "source_bytes": 936502821,
+        "logical_sample_sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+        "dataset_counts": {
+          "dut_count": 100000,
+          "test_count": 100,
+          "measurements": 10000000,
+          "pass_count": 99009
+        },
+        "full_import_seconds": {
+          "min": 20.941081999975722,
+          "median": 20.96847780002281,
+          "max": 21.521362699975725
+        },
+        "peak_rss_bytes": {
+          "min": 37916672,
+          "median": 38268928,
+          "max": 38289408
+        },
+        "database_bytes": {
+          "min": 339443712,
+          "median": 339443712,
+          "max": 339443712
+        },
+        "phases": {
+          "snapshot_hash_and_lock_seconds": {
+            "min": 1.3961247999686748,
+            "median": 1.4112838000291958,
+            "max": 1.4200022000004537
+          },
+          "preflight_normalization_seconds": {
+            "min": 5.591263699985575,
+            "median": 6.031578299996909,
+            "max": 7.025281099951826
+          },
+          "native_parser_database_seconds": {
+            "min": 7.123882399988361,
+            "median": 8.131499400013126,
+            "max": 8.63236859999597
+          },
+          "integrity_metadata_counts_seconds": {
+            "min": 5.184626700007357,
+            "median": 5.2242705000098795,
+            "max": 5.78868160006823
+          },
+          "publication_other_seconds": {
+            "min": 0.1489350000047125,
+            "median": 0.15760899998713285,
+            "max": 0.1635153999668546
+          }
+        }
+      },
+      "counts_database_bytes_and_sample_hash_match_baseline": true,
+      "samples": [
+        {
+          "label": "final-10m-1",
+          "recorded_at": "2026-09-24T22:16:56.351658+00:00",
+          "git_revision": "1db89d2ba008f3e7e57305d05b0b838d2d618da6",
+          "full_import_seconds": 20.941081999975722,
+          "process_cpu_seconds": 23.078125,
+          "phases": {
+            "snapshot_hash_and_lock_seconds": 1.3961247999686748,
+            "preflight_normalization_seconds": 6.031578299996909,
+            "preflight_counts": {
+              "dut_count": 100000,
+              "started_at": "2026-09-21T14:13:20+00:00",
+              "record_count": 10200101,
+              "ptr_count": 10000000,
+              "uncompressed_bytes": 936502821
+            },
+            "native_parser_database_seconds": 8.131499400013126,
+            "memory_after_native": {
+              "peak_rss_bytes": 38268928,
+              "rss_bytes": 32251904,
+              "peak_commit_bytes": 27209728
+            },
+            "parse_and_validation_seconds": 13.355769900023006,
+            "integrity_metadata_counts_seconds": 5.2242705000098795,
+            "publication_other_seconds": 0.15760899998713285
+          },
+          "database_bytes": 339443712,
+          "memory_after": {
+            "peak_rss_bytes": 38268928,
+            "rss_bytes": 32272384,
+            "peak_commit_bytes": 27209728
+          },
+          "logical_sample": {
+            "kind": "sampled-logical-PTR-v1",
+            "dut_indexes": [
+              1,
+              3226,
+              6452,
+              9678,
+              12904,
+              16129,
+              19355,
+              22581,
+              25807,
+              29032,
+              32258,
+              35484,
+              38710,
+              41936,
+              45161,
+              48387,
+              51613,
+              54839,
+              58064,
+              61290,
+              64516,
+              67742,
+              70968,
+              74193,
+              77419,
+              80645,
+              83871,
+              87096,
+              90322,
+              93548,
+              96774,
+              100000
+            ],
+            "rows": 3200,
+            "sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+            "columns": [
+              "dut_index",
+              "test_number",
+              "test_name",
+              "unit",
+              "result",
+              "test_flag",
+              "parm_flag",
+              "part_id",
+              "head",
+              "site",
+              "part_flag",
+              "wafer",
+              "x",
+              "y",
+              "supersede"
+            ]
+          },
+          "code_sha256": {
+            "semidata/library.py": "fcea362a1f109d22ac52b51b4ea2a0e766683190d48ebb097f5369d98b976a43",
+            "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+            "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+            "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+          },
+          "native_sha256": [
+            "aa786a2ae035b64d3f374267ccff5fa7e589095626474670a9a64346281f5ee2"
+          ]
+        },
+        {
+          "label": "final-10m-2",
+          "recorded_at": "2026-09-24T22:17:18.857031+00:00",
+          "git_revision": "1db89d2ba008f3e7e57305d05b0b838d2d618da6",
+          "full_import_seconds": 21.521362699975725,
+          "process_cpu_seconds": 23.5,
+          "phases": {
+            "snapshot_hash_and_lock_seconds": 1.4200022000004537,
+            "preflight_normalization_seconds": 7.025281099951826,
+            "preflight_counts": {
+              "dut_count": 100000,
+              "started_at": "2026-09-21T14:13:20+00:00",
+              "record_count": 10200101,
+              "ptr_count": 10000000,
+              "uncompressed_bytes": 936502821
+            },
+            "native_parser_database_seconds": 7.123882399988361,
+            "memory_after_native": {
+              "peak_rss_bytes": 37916672,
+              "rss_bytes": 32448512,
+              "peak_commit_bytes": 26755072
+            },
+            "parse_and_validation_seconds": 12.91256400005659,
+            "integrity_metadata_counts_seconds": 5.78868160006823,
+            "publication_other_seconds": 0.1635153999668546
+          },
+          "database_bytes": 339443712,
+          "memory_after": {
+            "peak_rss_bytes": 37916672,
+            "rss_bytes": 32514048,
+            "peak_commit_bytes": 26755072
+          },
+          "logical_sample": {
+            "kind": "sampled-logical-PTR-v1",
+            "dut_indexes": [
+              1,
+              3226,
+              6452,
+              9678,
+              12904,
+              16129,
+              19355,
+              22581,
+              25807,
+              29032,
+              32258,
+              35484,
+              38710,
+              41936,
+              45161,
+              48387,
+              51613,
+              54839,
+              58064,
+              61290,
+              64516,
+              67742,
+              70968,
+              74193,
+              77419,
+              80645,
+              83871,
+              87096,
+              90322,
+              93548,
+              96774,
+              100000
+            ],
+            "rows": 3200,
+            "sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+            "columns": [
+              "dut_index",
+              "test_number",
+              "test_name",
+              "unit",
+              "result",
+              "test_flag",
+              "parm_flag",
+              "part_id",
+              "head",
+              "site",
+              "part_flag",
+              "wafer",
+              "x",
+              "y",
+              "supersede"
+            ]
+          },
+          "code_sha256": {
+            "semidata/library.py": "fcea362a1f109d22ac52b51b4ea2a0e766683190d48ebb097f5369d98b976a43",
+            "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+            "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+            "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+          },
+          "native_sha256": [
+            "aa786a2ae035b64d3f374267ccff5fa7e589095626474670a9a64346281f5ee2"
+          ]
+        },
+        {
+          "label": "final-10m-3",
+          "recorded_at": "2026-09-24T22:17:40.869929+00:00",
+          "git_revision": "1db89d2ba008f3e7e57305d05b0b838d2d618da6",
+          "full_import_seconds": 20.96847780002281,
+          "process_cpu_seconds": 23.09375,
+          "phases": {
+            "snapshot_hash_and_lock_seconds": 1.4112838000291958,
+            "preflight_normalization_seconds": 5.591263699985575,
+            "preflight_counts": {
+              "dut_count": 100000,
+              "started_at": "2026-09-21T14:13:20+00:00",
+              "record_count": 10200101,
+              "ptr_count": 10000000,
+              "uncompressed_bytes": 936502821
+            },
+            "native_parser_database_seconds": 8.63236859999597,
+            "memory_after_native": {
+              "peak_rss_bytes": 38289408,
+              "rss_bytes": 32366592,
+              "peak_commit_bytes": 26529792
+            },
+            "parse_and_validation_seconds": 13.816995300003327,
+            "integrity_metadata_counts_seconds": 5.184626700007357,
+            "publication_other_seconds": 0.1489350000047125
+          },
+          "database_bytes": 339443712,
+          "memory_after": {
+            "peak_rss_bytes": 38289408,
+            "rss_bytes": 32149504,
+            "peak_commit_bytes": 26529792
+          },
+          "logical_sample": {
+            "kind": "sampled-logical-PTR-v1",
+            "dut_indexes": [
+              1,
+              3226,
+              6452,
+              9678,
+              12904,
+              16129,
+              19355,
+              22581,
+              25807,
+              29032,
+              32258,
+              35484,
+              38710,
+              41936,
+              45161,
+              48387,
+              51613,
+              54839,
+              58064,
+              61290,
+              64516,
+              67742,
+              70968,
+              74193,
+              77419,
+              80645,
+              83871,
+              87096,
+              90322,
+              93548,
+              96774,
+              100000
+            ],
+            "rows": 3200,
+            "sha256": "21274609517e05eff4dedbe3f576ed545509c0ef118fd2a1a09e65869a689a08",
+            "columns": [
+              "dut_index",
+              "test_number",
+              "test_name",
+              "unit",
+              "result",
+              "test_flag",
+              "parm_flag",
+              "part_id",
+              "head",
+              "site",
+              "part_flag",
+              "wafer",
+              "x",
+              "y",
+              "supersede"
+            ]
+          },
+          "code_sha256": {
+            "semidata/library.py": "fcea362a1f109d22ac52b51b4ea2a0e766683190d48ebb097f5369d98b976a43",
+            "semidata/ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+            "benchmarks/ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+            "benchmarks/generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+          },
+          "native_sha256": [
+            "aa786a2ae035b64d3f374267ccff5fa7e589095626474670a9a64346281f5ee2"
+          ]
+        }
+      ]
+    }
+  },
+  "environment": {
+    "python": "3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+    "logical_cpus": 16
+  }
+}

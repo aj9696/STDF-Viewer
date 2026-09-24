@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.1 — 2026-09-24
+
+- Read preflight input in bounded chunks and avoid a redundant copy for raw
+  STDF; preserve compression detection by content, including misleading suffixes.
+- Preserve compact PTR identity and default metadata when TEST_TXT is physically
+  omitted and the prior name is unambiguous; reject ambiguous omissions.
+- Index prior-attempt lookups lazily for PartID and die-coordinate retests.
+- Add deterministic million/ten-million-measurement benchmarks, phase timing,
+  memory evidence, and exact/sampled correctness comparisons.
+- Add an isolated Rust/WebAssembly worker experiment for local browser scans.
+  Persistent browser databases and PAT are not implemented in that experiment.
+
+See [performance evidence](docs/import-performance.md) and the
+[compatibility policy](docs/methods.md). Existing imported databases are not
+rewritten; reimport affected compact sources into a fresh workspace.
+
 ## 0.1.0 — 2026-09-23
 
 First local engineering evaluation release of SemiData Workbench.

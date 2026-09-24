@@ -1,4 +1,8 @@
-# Release verification — SemiData Workbench 0.1.0
+# Release verification — SemiData Workbench
+
+The current checkpoint is **0.1.1, 2026-09-24**, recorded below with 41
+application and 3 benchmark Python tests. The opening sections preserve the
+historical 0.1.0 evidence; their outstanding items are updated at that checkpoint.
 
 Evaluation date: 2026-09-23. Base: noonchen/STDF-Viewer commit `b8deaad`.
 This record describes a local Windows engineering evaluation, not a production
@@ -85,7 +89,7 @@ from known-pass counts. The UI also invalidates stale previews and prevents
 editable recipes from drifting during a save. Saved experiment evidence remains
 independent of subsequent population selections.
 
-## Outstanding external evaluation
+## Outstanding at the 0.1.0 checkpoint
 
 The [STDF.io generator](https://stdf.io/generate) recipe in the engineer guide
 was configured and its preview inspected. Browser automation could not complete
@@ -99,3 +103,60 @@ qualification; and no representative large-file speed or memory benchmark.
 Big-endian preflight support has not been exercised by a big-endian fixture in
 this suite. See [Calculation reference](methods.md) and
 [Architecture](architecture.md) before extending the supported workflows.
+
+## 0.1.1 verification — 2026-09-24
+
+This later checkpoint resolves the STDF.io import and synthetic performance
+checks left open above. It does not imply representative production coverage
+or hosted CI execution.
+
+- **41 application Python tests passed**, including the actual rebuilt native
+  extension, plus **3 benchmark-tool tests**.
+- **3 native Rust tests** and **6 browser-parser Rust tests** passed.
+- JavaScript syntax, Python compilation, changed-native-file Rust formatting,
+  prototype formatting, and Git whitespace checks passed.
+- Browser-parser native/WASM parity passed on 1M and 10M inputs at different
+  chunk sizes. Independent Python decoding matched little/big-endian semantic
+  fixtures and the STDF.io source. Actual browser scans, cancellation, truncated
+  input errors, and workbench Explore/PAT were exercised without console errors.
+- Independent review found and resolved misleading compression-suffix handling,
+  omitted-name ambiguity involving empty identities, and accidental inheritance
+  from FTR/MPR rather than preceding PTR records.
+
+The final native extension SHA-256 is
+`aa786a2ae035b64d3f374267ccff5fa7e589095626474670a9a64346281f5ee2`.
+It was built from this checkout. Windows denied deletion of the existing
+package metadata during normal replacement; the locally built wheel was
+installed by verified in-place file writes. Installed files matched every
+wheel RECORD hash, including the extension. No ACL changes were made.
+
+The available external-generator file `semidata-evaluation.stdf` is 782,607
+bytes, with SHA-256
+`792afbf3596d3b4b19fb861131310f42b9b712d6c039d359594cee3e2df7aa01`.
+It imported as lot SEMIDATA-EVAL-001, product STDF-GEN-DEVICE, 2,240 DUTs,
+20 tests, 44,800 PTR measurements, and 1,691 passing DUTs, with no import
+warnings. Each test retains its name, unit, limits, and 2,240 rows. Test 1000
+Explore and the self-reference MAD k=3 preview matched the guide's 2,240 valid,
+1,691 eligible, 549 excluded, and 7 flagged checkpoints in the browser.
+See [external compatibility evidence](../benchmarks/results/stdfio-compatibility.json).
+
+The original native application import benchmark and final combined build used
+the same hashed 1M/10M fixtures. Counts, database sizes, and sampled logical
+data matched. Final medians were 2.279 and 20.968 seconds respectively; this
+demonstrates a modest large-input improvement and no small-input speed win.
+Separate native retest experiments demonstrated approximately 31×/29× faster
+native phases with exhaustive row equality for the small retest workloads.
+[Performance methodology](import-performance.md) distinguishes those workloads,
+the Python-only comparison, and the much smaller browser-summary workload.
+
+The browser proof is a genuine Rust/WASM worker using local File slices.
+Its two actual 10M summary scans took 3.587 and 5.986 seconds, with approximately
+5.81 MiB WASM linear memory plus the input slice. These observations exclude
+persistent storage and PAT; total browser RSS was not measured. The full
+[prototype validation record](../web-prototype/VALIDATION.md) gives boundaries.
+
+Hosted CI now includes benchmark tools and browser-parser Rust checks, but has
+not run for this local branch. Application caps remain 2 GiB per input/expanded
+stream and 500,000 selected analysis rows. Big-endian framing and prototype
+decoding are tested; broad native ATE-vendor and MPR/FTR analytics qualification
+remain outside this release.

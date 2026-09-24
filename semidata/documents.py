@@ -3,7 +3,7 @@
 import html
 import re
 
-DOCS = ("engineer-guide", "installation", "methods", "architecture", "api", "runtime-build", "release-verification")
+DOCS = ("engineer-guide", "installation", "methods", "architecture", "api", "runtime-build", "release-verification", "import-performance", "stdf-format")
 
 
 def inline(text):

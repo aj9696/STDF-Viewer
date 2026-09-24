@@ -40,7 +40,12 @@ jobs:
         run: .venv/bin/python -c "import rust_stdf_helper; print(rust_stdf_helper.__file__)"
 
       - name: Run unit and integration tests
-        run: .venv/bin/python -m unittest discover -s tests -v
+        run: |
+          .venv/bin/python -m unittest discover -s tests -v
+          .venv/bin/python -m unittest discover -s benchmarks -t . -p "test_*.py" -v
+
+      - name: Verify browser parser framing and semantics
+        run: cargo test --locked --manifest-path web-prototype/rust/Cargo.toml
 
       - uses: actions/setup-node@v7
         with:
@@ -52,3 +57,5 @@ jobs:
           node --check semidata/static/app.js
           node --check semidata/static/charts.js
           node --check semidata/static/format.js
+          node --check web-prototype/site/app.js
+          node --check web-prototype/site/worker.js

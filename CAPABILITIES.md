@@ -1,6 +1,6 @@
 # SemiData Workbench capability map
 
-Status: first engineering evaluation release, 0.1.0. Working product name: SemiData.
+Status: engineering evaluation release, 0.1.1. Working product name: SemiData.
 
 The product is an open-source semiconductor test-data workbench. PAT,
 characterization, interactive investigation, and historical analysis share the
@@ -25,6 +25,8 @@ Full product direction includes MPR/FTR analysis, device genealogy, qualified
 PAT/DPAT recipes, wafer analysis, historical monitoring, automation, and improved
 UI. These remain separate future increments, not implied delivered features.
 
-The next authorized increment is measured import performance and an isolated
-browser parser experiment. See SPEC-import-performance.md for its capability
-map, acceptance criteria, and benchmark boundaries.
+The measured import performance increment and isolated Rust/WASM browser parser
+experiment are implemented. See SPEC-import-performance.md for acceptance and
+docs/import-performance.md for results and limits. Durable browser storage,
+querying, and PAT migration remain future work; the shipping product still uses
+its local Python/Rust service.

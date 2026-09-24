@@ -1,6 +1,6 @@
 # Install and run SemiData Workbench
 
-Applies to the 0.1.0 engineering evaluation release. SemiData is a local Python
+Applies to the 0.1.1 engineering evaluation release. SemiData is a local Python
 application with a Rust STDF parser and a browser interface. It needs no
 separate database server. The current launch instructions target Windows.
 

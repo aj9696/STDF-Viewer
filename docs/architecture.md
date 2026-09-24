@@ -61,6 +61,13 @@ leave an unreferenced staging/import directory; the catalog ignores it.
 No automatic orphan deletion is implemented. Stop the server before backing up
 the entire workspace, including SQLite sidecars if present.
 
+Since 0.1.1, preflight reads 1 MiB chunks and retains at most one partial record
+between reads. Raw snapshots are parsed directly after validation, avoiding a
+second full-file write. Compressed inputs and raw files with a misleading
+compression suffix still use temporary normalized STDF, because the native
+reader selects compression by filename. Byte signatures remain authoritative
+for the workbench import contract.
+
 ## Decision 003: local browser UI with a native service
 
 The browser contains only local assets. Python binds 127.0.0.1, validates Host,
