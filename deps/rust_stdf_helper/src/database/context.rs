@@ -57,8 +57,8 @@ pub struct DatabaseCtx<'con> {
     insert_file_info_stmt: Statement<'con>,
     insert_dut_stmt: Statement<'con>,
     update_dut_stmt: Statement<'con>,
-    update_supersede_dut_stmt: Statement<'con>,
-    update_supersede_die_stmt: Statement<'con>,
+    update_supersede_dut_stmt: Option<Statement<'con>>,
+    update_supersede_die_stmt: Option<Statement<'con>>,
     insert_ptr_data_stmt: Statement<'con>,
     insert_mpr_data_stmt: Statement<'con>,
     insert_ftr_data_stmt: Statement<'con>,
@@ -93,8 +93,6 @@ impl<'con> DatabaseCtx<'con> {
         let insert_file_info_stmt = conn.prepare(INSERT_FILE_INFO)?;
         let insert_dut_stmt = conn.prepare(INSERT_DUT)?;
         let update_dut_stmt = conn.prepare(UPDATE_DUT)?;
-        let update_supersede_dut_stmt = conn.prepare(UPDATE_SUPERSEDE_DUT)?;
-        let update_supersede_die_stmt = conn.prepare(UPDATE_SUPERSEDE_DIE)?;
         let insert_ptr_data_stmt = conn.prepare(INSERT_PTR_DATA)?;
         let insert_mpr_data_stmt = conn.prepare(INSERT_MPR_DATA)?;
         let insert_ftr_data_stmt = conn.prepare(INSERT_FTR_DATA)?;
@@ -155,8 +153,8 @@ impl<'con> DatabaseCtx<'con> {
             insert_file_info_stmt,
             insert_dut_stmt,
             update_dut_stmt,
-            update_supersede_dut_stmt,
-            update_supersede_die_stmt,
+            update_supersede_dut_stmt: None,
+            update_supersede_die_stmt: None,
             insert_ptr_data_stmt,
             insert_mpr_data_stmt,
             insert_ftr_data_stmt,
@@ -246,13 +244,31 @@ impl<'con> DatabaseCtx<'con> {
 
     #[inline(always)]
     pub fn update_supersede_dut(&mut self, p: &[&dyn ToSql]) -> Result<(), StdfHelperError> {
-        self.update_supersede_dut_stmt.execute(p)?;
+        // Build only when a retest needs this lookup. Ordinary imports avoid
+        // maintaining an extra index for every inserted/updated DUT.
+        // Prepare after index creation: INDEXED BY prevents SQLite from choosing
+        // a growing primary-key scan when this fresh database has no statistics.
+        if self.update_supersede_dut_stmt.is_none() {
+            self.db.execute_batch(CREATE_PART_RETEST_INDEX)?;
+            self.update_supersede_dut_stmt = Some(self.db.prepare(UPDATE_SUPERSEDE_DUT)?);
+        }
+        self.update_supersede_dut_stmt
+            .as_mut()
+            .expect("part retest statement initialized above")
+            .execute(p)?;
         Ok(())
     }
 
     #[inline(always)]
     pub fn update_supersede_die(&mut self, p: &[&dyn ToSql]) -> Result<(), StdfHelperError> {
-        self.update_supersede_die_stmt.execute(p)?;
+        if self.update_supersede_die_stmt.is_none() {
+            self.db.execute_batch(CREATE_DIE_RETEST_INDEX)?;
+            self.update_supersede_die_stmt = Some(self.db.prepare(UPDATE_SUPERSEDE_DIE)?);
+        }
+        self.update_supersede_die_stmt
+            .as_mut()
+            .expect("die retest statement initialized above")
+            .execute(p)?;
         Ok(())
     }
 
@@ -544,5 +560,73 @@ impl<'con> DatabaseCtx<'con> {
         self.insert_datalog_batch_stmt.finalize()?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod retest_tests {
+    use super::*;
+
+    #[test]
+    fn lazy_retest_indexes_preserve_exact_identity_and_scope() {
+        let connection = Connection::open_in_memory().unwrap();
+        let mut context = DatabaseCtx::new(&connection).unwrap();
+        let identities = [
+            (0, 1, 1, "A", 1, 10, 20),
+            (0, 1, 1, "A", 1, 11, 20),
+            (0, 1, 1, "B", 1, 10, 20),
+            (1, 1, 1, "A", 1, 10, 20),
+            (0, 2, 1, "A", 1, 10, 20),
+            (0, 1, 2, "A", 1, 10, 20),
+            (0, 1, 1, "C", 2, 10, 20),
+        ];
+        for (index, (fid, head, site, part, wafer, x, y)) in identities.iter().enumerate() {
+            connection
+                .execute(
+                    "INSERT INTO Dut_Info
+                     (Fid, HEAD_NUM, SITE_NUM, DUTIndex, PartID, WaferIndex, XCOORD, YCOORD, Supersede)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
+                    rusqlite::params![fid, head, site, index, part, wafer, x, y],
+                )
+                .unwrap();
+        }
+        let indexes = || -> i64 {
+            connection
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_schema
+                     WHERE name IN ('dutPartRetestKey', 'dutDieRetestKey')",
+                    [],
+                    |row| row.get(0),
+                )
+                .unwrap()
+        };
+        let superseded = || -> Vec<i64> {
+            connection
+                .prepare("SELECT DUTIndex FROM Dut_Info WHERE Supersede=1 ORDER BY DUTIndex")
+                .unwrap()
+                .query_map([], |row| row.get(0))
+                .unwrap()
+                .map(Result::unwrap)
+                .collect()
+        };
+        assert_eq!(indexes(), 0);
+        for _ in 0..2 {
+            context
+                .update_supersede_dut(rusqlite::params![0, 1, 1, "A"])
+                .unwrap();
+        }
+        assert_eq!(indexes(), 1);
+        assert_eq!(superseded(), vec![0, 1]);
+
+        connection
+            .execute("UPDATE Dut_Info SET Supersede=0", [])
+            .unwrap();
+        for _ in 0..2 {
+            context
+                .update_supersede_die(rusqlite::params![0, 1, 1, 1, 10, 20])
+                .unwrap();
+        }
+        assert_eq!(indexes(), 2);
+        assert_eq!(superseded(), vec![0, 2]);
     }
 }

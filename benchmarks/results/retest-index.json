@@ -1,0 +1,934 @@
+{
+  "format": "native-retest-index-v1",
+  "method": {
+    "samples_per_build_per_case": 3,
+    "order": [
+      "baseline",
+      "candidate",
+      "candidate",
+      "baseline",
+      "baseline",
+      "candidate"
+    ],
+    "processes": "Each sample is a fresh process and a fresh Library workspace.",
+    "cache": "Input hashed before timing; OS caches not flushed.",
+    "native_phase": "Parser, SQLite writes/indexes, and real application progress callbacks; polling can add about 100 ms.",
+    "checks": "All six sampled hashes per case match. First pair of each retest case compared exhaustively across every table, excluding only the snapshot filename.",
+    "limits": "One Windows workstation and synthetic PTR workloads; no universal parser-speed or cross-tool claim."
+  },
+  "cases": {
+    "part": {
+      "source": {
+        "filename": "benchmark-10000d-3t-retest-part.stdf",
+        "bytes": 6380442,
+        "sha256": "d44234366f2ae5de1a553991cb51de23c3f33ff2f90adc0ff5aa76082a85fbdd",
+        "measurements": 60000,
+        "dut_attempts": 20000
+      },
+      "sampled_equality_all_six": true,
+      "logical_sample": {
+        "kind": "sampled-logical-PTR-v1",
+        "dut_indexes": [
+          1,
+          646,
+          1291,
+          1936,
+          2581,
+          3226,
+          3871,
+          4516,
+          5162,
+          5807,
+          6452,
+          7097,
+          7742,
+          8387,
+          9032,
+          9677,
+          10323,
+          10968,
+          11613,
+          12258,
+          12903,
+          13548,
+          14193,
+          14838,
+          15484,
+          16129,
+          16774,
+          17419,
+          18064,
+          18709,
+          19354,
+          20000
+        ],
+        "rows": 96,
+        "sha256": "bf8da4b579293f95e53f05f3cec14278382fd0728102ee5e05c47a8a9bdbfc26",
+        "columns": [
+          "dut_index",
+          "test_number",
+          "test_name",
+          "unit",
+          "result",
+          "test_flag",
+          "parm_flag",
+          "part_id",
+          "head",
+          "site",
+          "part_flag",
+          "wafer",
+          "x",
+          "y",
+          "supersede"
+        ]
+      },
+      "baseline": {
+        "native_binary_sha256": [
+          "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+        ],
+        "samples": [
+          {
+            "label": "index2-part-baseline-1",
+            "recorded_at": "2026-09-24T22:07:45.627712+00:00",
+            "native_seconds": 6.220082199957687,
+            "full_import_seconds": 6.340394099999685,
+            "database_bytes": 3014656,
+            "peak_rss_bytes": 38735872
+          },
+          {
+            "label": "index2-part-baseline-2",
+            "recorded_at": "2026-09-24T22:07:53.751691+00:00",
+            "native_seconds": 6.22184610000113,
+            "full_import_seconds": 6.350822900014464,
+            "database_bytes": 3014656,
+            "peak_rss_bytes": 38338560
+          },
+          {
+            "label": "index2-part-baseline-3",
+            "recorded_at": "2026-09-24T22:08:00.228381+00:00",
+            "native_seconds": 6.020985799957998,
+            "full_import_seconds": 6.14205809996929,
+            "database_bytes": 3014656,
+            "peak_rss_bytes": 38170624
+          }
+        ],
+        "native_seconds": {
+          "min": 6.020985799957998,
+          "median": 6.220082199957687,
+          "max": 6.22184610000113
+        },
+        "full_import_seconds": {
+          "min": 6.14205809996929,
+          "median": 6.340394099999685,
+          "max": 6.350822900014464
+        }
+      },
+      "candidate": {
+        "native_binary_sha256": [
+          "7d6460f4e14ac770f9765b9f21f01089d8f2ff2de5cae9aa73901c47b1bc63f4"
+        ],
+        "samples": [
+          {
+            "label": "index2-part-candidate-1",
+            "recorded_at": "2026-09-24T22:07:46.346819+00:00",
+            "native_seconds": 0.20093819999601692,
+            "full_import_seconds": 0.35421239997958764,
+            "database_bytes": 3493888,
+            "peak_rss_bytes": 38379520
+          },
+          {
+            "label": "index2-part-candidate-2",
+            "recorded_at": "2026-09-24T22:07:47.061073+00:00",
+            "native_seconds": 0.2009729000274092,
+            "full_import_seconds": 0.34809499996481463,
+            "database_bytes": 3493888,
+            "peak_rss_bytes": 38416384
+          },
+          {
+            "label": "index2-part-candidate-3",
+            "recorded_at": "2026-09-24T22:08:00.908782+00:00",
+            "native_seconds": 0.20083350001368672,
+            "full_import_seconds": 0.36185619997559115,
+            "database_bytes": 3493888,
+            "peak_rss_bytes": 38547456
+          }
+        ],
+        "native_seconds": {
+          "min": 0.20083350001368672,
+          "median": 0.20093819999601692,
+          "max": 0.2009729000274092
+        },
+        "full_import_seconds": {
+          "min": 0.34809499996481463,
+          "median": 0.35421239997958764,
+          "max": 0.36185619997559115
+        }
+      },
+      "native_speedup": 30.955200156470916,
+      "retest_indexes": [
+        "dutPartRetestKey"
+      ],
+      "supersede_counts": [
+        [
+          0,
+          10000
+        ],
+        [
+          1,
+          10000
+        ]
+      ],
+      "exhaustive_first_pair": {
+        "equal": true,
+        "excluded_columns": [
+          "File_List.Filename"
+        ],
+        "tables": {
+          "Bin_Info": {
+            "rows": 4,
+            "columns": [
+              "Fid",
+              "BIN_TYPE",
+              "BIN_NUM",
+              "BIN_NAME",
+              "BIN_PF"
+            ],
+            "sha256": "1756915694b96e3b9af259e53753ececff1e571eca34a610a282b35df4336237"
+          },
+          "Datalog": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "RecordType",
+              "Value",
+              "AfterDUTIndex",
+              "isBeforePRR"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Dut_Counts": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "SITE_NUM",
+              "PART_CNT",
+              "RTST_CNT",
+              "ABRT_CNT",
+              "GOOD_CNT",
+              "FUNC_CNT"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Dut_Info": {
+            "rows": 20000,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "SITE_NUM",
+              "DUTIndex",
+              "TestCount",
+              "TestTime",
+              "PartID",
+              "PartText",
+              "HBIN",
+              "SBIN",
+              "Flag",
+              "WaferIndex",
+              "XCOORD",
+              "YCOORD",
+              "Supersede"
+            ],
+            "sha256": "79c0a328625142a6d05f89101a3e480f638f34362a8a63f1dceaba8b763293cc"
+          },
+          "Dynamic_Limits": {
+            "rows": 0,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "LLimit",
+              "HLimit"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "FTR_Data": {
+            "rows": 0,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "TEST_FLAG"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "File_Info": {
+            "rows": 18,
+            "columns": [
+              "Fid",
+              "SubFid",
+              "Field",
+              "Value"
+            ],
+            "sha256": "c71784eeeb62f070af986bd3e93229845b5ac2cfc676cf5f4a64a2a7d264c9b6"
+          },
+          "File_List": {
+            "rows": 1,
+            "columns": [
+              "Fid",
+              "SubFid",
+              "Lot_ID",
+              "Sublot_ID",
+              "Product_ID",
+              "Flow_ID"
+            ],
+            "sha256": "6c23b915ec1a5297896b6f0398462c388142af062a36b1be1ea943afb93aff09"
+          },
+          "MPR_Data": {
+            "rows": 0,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "RTN_RSLT",
+              "RTN_STAT",
+              "TEST_FLAG"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "PTR_Data": {
+            "rows": 60000,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "RESULT",
+              "TEST_FLAG",
+              "PARM_FLAG"
+            ],
+            "sha256": "f5f2ae9e9d06180f87ebf9500b6eda998354af1c0f5f1b19721154c1791c0b31"
+          },
+          "Pin_Info": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "P_PG_INDX",
+              "GRP_NAM",
+              "GRP_MODE",
+              "GRP_RADX",
+              "PGM_CHAR",
+              "PGM_CHAL",
+              "RTN_CHAR",
+              "RTN_CHAL"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Pin_Map": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "SITE_NUM",
+              "PMR_INDX",
+              "CHAN_TYP",
+              "CHAN_NAM",
+              "PHY_NAM",
+              "LOG_NAM",
+              "From_GRP"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "TestPin_Map": {
+            "rows": 0,
+            "columns": [
+              "TEST_ID",
+              "PMR_INDX",
+              "PIN_TYPE"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Test_Info": {
+            "rows": 3,
+            "columns": [
+              "Fid",
+              "TEST_ID",
+              "TEST_NUM",
+              "recHeader",
+              "TEST_NAME",
+              "RES_SCAL",
+              "LLimit",
+              "HLimit",
+              "Unit",
+              "OPT_FLAG",
+              "FailCount",
+              "RTN_ICNT",
+              "RSLT_PGM_CNT",
+              "LSpec",
+              "HSpec",
+              "VECT_NAM",
+              "SEQ_NAME"
+            ],
+            "sha256": "ae1c64feccdbbebe770d93f7cd854797500d19d76e9cdc0ef63a7be071f216fb"
+          },
+          "Wafer_Info": {
+            "rows": 5,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "WaferIndex",
+              "PART_CNT",
+              "RTST_CNT",
+              "ABRT_CNT",
+              "GOOD_CNT",
+              "FUNC_CNT",
+              "WAFER_ID",
+              "FABWF_ID",
+              "FRAME_ID",
+              "MASK_ID",
+              "USR_DESC",
+              "EXC_DESC"
+            ],
+            "sha256": "4b12ee01f5be14b199451c018536b7afeb1287fa6ec6d8a686a335d4751a1981"
+          }
+        }
+      }
+    },
+    "die": {
+      "source": {
+        "filename": "benchmark-10000d-3t-retest-die.stdf",
+        "bytes": 6380442,
+        "sha256": "f4e24fff5cb6d1cf4da184653696a1b67f81b7199772033e90922bed4f0077c7",
+        "measurements": 60000,
+        "dut_attempts": 20000
+      },
+      "sampled_equality_all_six": true,
+      "logical_sample": {
+        "kind": "sampled-logical-PTR-v1",
+        "dut_indexes": [
+          1,
+          646,
+          1291,
+          1936,
+          2581,
+          3226,
+          3871,
+          4516,
+          5162,
+          5807,
+          6452,
+          7097,
+          7742,
+          8387,
+          9032,
+          9677,
+          10323,
+          10968,
+          11613,
+          12258,
+          12903,
+          13548,
+          14193,
+          14838,
+          15484,
+          16129,
+          16774,
+          17419,
+          18064,
+          18709,
+          19354,
+          20000
+        ],
+        "rows": 96,
+        "sha256": "4e30a8104a3e559a773870580400382fde13d5aa40fedf1bc76b8dc496f7ac6f",
+        "columns": [
+          "dut_index",
+          "test_number",
+          "test_name",
+          "unit",
+          "result",
+          "test_flag",
+          "parm_flag",
+          "part_id",
+          "head",
+          "site",
+          "part_flag",
+          "wafer",
+          "x",
+          "y",
+          "supersede"
+        ]
+      },
+      "baseline": {
+        "native_binary_sha256": [
+          "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+        ],
+        "samples": [
+          {
+            "label": "index2-die-baseline-1",
+            "recorded_at": "2026-09-24T22:08:07.607027+00:00",
+            "native_seconds": 6.222380299994256,
+            "full_import_seconds": 6.351539600000251,
+            "database_bytes": 3031040,
+            "peak_rss_bytes": 38359040
+          },
+          {
+            "label": "index2-die-baseline-2",
+            "recorded_at": "2026-09-24T22:08:15.156691+00:00",
+            "native_seconds": 5.8192417999962345,
+            "full_import_seconds": 5.944324899988715,
+            "database_bytes": 3031040,
+            "peak_rss_bytes": 38592512
+          },
+          {
+            "label": "index2-die-baseline-3",
+            "recorded_at": "2026-09-24T22:08:20.700346+00:00",
+            "native_seconds": 5.117757800035179,
+            "full_import_seconds": 5.225807600014377,
+            "database_bytes": 3031040,
+            "peak_rss_bytes": 38133760
+          }
+        ],
+        "native_seconds": {
+          "min": 5.117757800035179,
+          "median": 5.8192417999962345,
+          "max": 6.222380299994256
+        },
+        "full_import_seconds": {
+          "min": 5.225807600014377,
+          "median": 5.944324899988715,
+          "max": 6.351539600000251
+        }
+      },
+      "candidate": {
+        "native_binary_sha256": [
+          "7d6460f4e14ac770f9765b9f21f01089d8f2ff2de5cae9aa73901c47b1bc63f4"
+        ],
+        "samples": [
+          {
+            "label": "index2-die-candidate-1",
+            "recorded_at": "2026-09-24T22:08:08.249423+00:00",
+            "native_seconds": 0.20127129997126758,
+            "full_import_seconds": 0.3318446999765001,
+            "database_bytes": 3407872,
+            "peak_rss_bytes": 38608896
+          },
+          {
+            "label": "index2-die-candidate-2",
+            "recorded_at": "2026-09-24T22:08:08.892329+00:00",
+            "native_seconds": 0.20086250000167638,
+            "full_import_seconds": 0.32202820002567023,
+            "database_bytes": 3407872,
+            "peak_rss_bytes": 38875136
+          },
+          {
+            "label": "index2-die-candidate-3",
+            "recorded_at": "2026-09-24T22:08:21.278894+00:00",
+            "native_seconds": 0.20089869998628274,
+            "full_import_seconds": 0.31230829999549314,
+            "database_bytes": 3407872,
+            "peak_rss_bytes": 38658048
+          }
+        ],
+        "native_seconds": {
+          "min": 0.20086250000167638,
+          "median": 0.20089869998628274,
+          "max": 0.20127129997126758
+        },
+        "full_import_seconds": {
+          "min": 0.31230829999549314,
+          "median": 0.32202820002567023,
+          "max": 0.3318446999765001
+        }
+      },
+      "native_speedup": 28.966050056041027,
+      "retest_indexes": [
+        "dutDieRetestKey"
+      ],
+      "supersede_counts": [
+        [
+          0,
+          10000
+        ],
+        [
+          1,
+          10000
+        ]
+      ],
+      "exhaustive_first_pair": {
+        "equal": true,
+        "excluded_columns": [
+          "File_List.Filename"
+        ],
+        "tables": {
+          "Bin_Info": {
+            "rows": 4,
+            "columns": [
+              "Fid",
+              "BIN_TYPE",
+              "BIN_NUM",
+              "BIN_NAME",
+              "BIN_PF"
+            ],
+            "sha256": "1756915694b96e3b9af259e53753ececff1e571eca34a610a282b35df4336237"
+          },
+          "Datalog": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "RecordType",
+              "Value",
+              "AfterDUTIndex",
+              "isBeforePRR"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Dut_Counts": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "SITE_NUM",
+              "PART_CNT",
+              "RTST_CNT",
+              "ABRT_CNT",
+              "GOOD_CNT",
+              "FUNC_CNT"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Dut_Info": {
+            "rows": 20000,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "SITE_NUM",
+              "DUTIndex",
+              "TestCount",
+              "TestTime",
+              "PartID",
+              "PartText",
+              "HBIN",
+              "SBIN",
+              "Flag",
+              "WaferIndex",
+              "XCOORD",
+              "YCOORD",
+              "Supersede"
+            ],
+            "sha256": "2dbdb0046a9ff63206d5073f4f74ff85a83118797f0c9b0e8ec3c1fd3d232244"
+          },
+          "Dynamic_Limits": {
+            "rows": 0,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "LLimit",
+              "HLimit"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "FTR_Data": {
+            "rows": 0,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "TEST_FLAG"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "File_Info": {
+            "rows": 18,
+            "columns": [
+              "Fid",
+              "SubFid",
+              "Field",
+              "Value"
+            ],
+            "sha256": "c71784eeeb62f070af986bd3e93229845b5ac2cfc676cf5f4a64a2a7d264c9b6"
+          },
+          "File_List": {
+            "rows": 1,
+            "columns": [
+              "Fid",
+              "SubFid",
+              "Lot_ID",
+              "Sublot_ID",
+              "Product_ID",
+              "Flow_ID"
+            ],
+            "sha256": "6c23b915ec1a5297896b6f0398462c388142af062a36b1be1ea943afb93aff09"
+          },
+          "MPR_Data": {
+            "rows": 0,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "RTN_RSLT",
+              "RTN_STAT",
+              "TEST_FLAG"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "PTR_Data": {
+            "rows": 60000,
+            "columns": [
+              "DUTIndex",
+              "TEST_ID",
+              "RESULT",
+              "TEST_FLAG",
+              "PARM_FLAG"
+            ],
+            "sha256": "f5f2ae9e9d06180f87ebf9500b6eda998354af1c0f5f1b19721154c1791c0b31"
+          },
+          "Pin_Info": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "P_PG_INDX",
+              "GRP_NAM",
+              "GRP_MODE",
+              "GRP_RADX",
+              "PGM_CHAR",
+              "PGM_CHAL",
+              "RTN_CHAR",
+              "RTN_CHAL"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Pin_Map": {
+            "rows": 0,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "SITE_NUM",
+              "PMR_INDX",
+              "CHAN_TYP",
+              "CHAN_NAM",
+              "PHY_NAM",
+              "LOG_NAM",
+              "From_GRP"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "TestPin_Map": {
+            "rows": 0,
+            "columns": [
+              "TEST_ID",
+              "PMR_INDX",
+              "PIN_TYPE"
+            ],
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+          },
+          "Test_Info": {
+            "rows": 3,
+            "columns": [
+              "Fid",
+              "TEST_ID",
+              "TEST_NUM",
+              "recHeader",
+              "TEST_NAME",
+              "RES_SCAL",
+              "LLimit",
+              "HLimit",
+              "Unit",
+              "OPT_FLAG",
+              "FailCount",
+              "RTN_ICNT",
+              "RSLT_PGM_CNT",
+              "LSpec",
+              "HSpec",
+              "VECT_NAM",
+              "SEQ_NAME"
+            ],
+            "sha256": "ae1c64feccdbbebe770d93f7cd854797500d19d76e9cdc0ef63a7be071f216fb"
+          },
+          "Wafer_Info": {
+            "rows": 5,
+            "columns": [
+              "Fid",
+              "HEAD_NUM",
+              "WaferIndex",
+              "PART_CNT",
+              "RTST_CNT",
+              "ABRT_CNT",
+              "GOOD_CNT",
+              "FUNC_CNT",
+              "WAFER_ID",
+              "FABWF_ID",
+              "FRAME_ID",
+              "MASK_ID",
+              "USR_DESC",
+              "EXC_DESC"
+            ],
+            "sha256": "4b12ee01f5be14b199451c018536b7afeb1287fa6ec6d8a686a335d4751a1981"
+          }
+        }
+      }
+    },
+    "ordinary": {
+      "source": {
+        "filename": "benchmark-10000d-100t.stdf",
+        "bytes": 93650444,
+        "sha256": "e0d0fcdd68e6c64b39f66ee90f454aaa293659095d30e16b9f9f7bd8c888e68f",
+        "measurements": 1000000,
+        "dut_attempts": 10000
+      },
+      "sampled_equality_all_six": true,
+      "logical_sample": {
+        "kind": "sampled-logical-PTR-v1",
+        "dut_indexes": [
+          1,
+          323,
+          646,
+          968,
+          1291,
+          1613,
+          1936,
+          2258,
+          2581,
+          2903,
+          3226,
+          3549,
+          3871,
+          4194,
+          4516,
+          4839,
+          5161,
+          5484,
+          5806,
+          6129,
+          6451,
+          6774,
+          7097,
+          7419,
+          7742,
+          8064,
+          8387,
+          8709,
+          9032,
+          9354,
+          9677,
+          10000
+        ],
+        "rows": 3200,
+        "sha256": "591b8c94b4aa22d3f032ff87ab93f12b712004d260caa29e041d6c01617b89c6",
+        "columns": [
+          "dut_index",
+          "test_number",
+          "test_name",
+          "unit",
+          "result",
+          "test_flag",
+          "parm_flag",
+          "part_id",
+          "head",
+          "site",
+          "part_flag",
+          "wafer",
+          "x",
+          "y",
+          "supersede"
+        ]
+      },
+      "baseline": {
+        "native_binary_sha256": [
+          "41ee5b8a1e306049b8a07e112373abe4e0ff552c972a8adf2656153a74419d4b"
+        ],
+        "samples": [
+          {
+            "label": "index2-ordinary-baseline-1",
+            "recorded_at": "2026-09-24T22:08:23.210245+00:00",
+            "native_seconds": 0.6021762000164017,
+            "full_import_seconds": 1.6032804000424221,
+            "database_bytes": 32550912,
+            "peak_rss_bytes": 38109184
+          },
+          {
+            "label": "index2-ordinary-baseline-2",
+            "recorded_at": "2026-09-24T22:08:30.073132+00:00",
+            "native_seconds": 0.8021995999733917,
+            "full_import_seconds": 2.064642300014384,
+            "database_bytes": 32550912,
+            "peak_rss_bytes": 37810176
+          },
+          {
+            "label": "index2-ordinary-baseline-3",
+            "recorded_at": "2026-09-24T22:08:32.616249+00:00",
+            "native_seconds": 0.8036129000247456,
+            "full_import_seconds": 2.12782850000076,
+            "database_bytes": 32550912,
+            "peak_rss_bytes": 37216256
+          }
+        ],
+        "native_seconds": {
+          "min": 0.6021762000164017,
+          "median": 0.8021995999733917,
+          "max": 0.8036129000247456
+        },
+        "full_import_seconds": {
+          "min": 1.6032804000424221,
+          "median": 2.064642300014384,
+          "max": 2.12782850000076
+        }
+      },
+      "candidate": {
+        "native_binary_sha256": [
+          "7d6460f4e14ac770f9765b9f21f01089d8f2ff2de5cae9aa73901c47b1bc63f4"
+        ],
+        "samples": [
+          {
+            "label": "index2-ordinary-candidate-1",
+            "recorded_at": "2026-09-24T22:08:25.267482+00:00",
+            "native_seconds": 0.6027056000311859,
+            "full_import_seconds": 1.6924945000209846,
+            "database_bytes": 32550912,
+            "peak_rss_bytes": 37838848
+          },
+          {
+            "label": "index2-ordinary-candidate-2",
+            "recorded_at": "2026-09-24T22:08:27.603204+00:00",
+            "native_seconds": 0.8024860000004992,
+            "full_import_seconds": 1.9565769000328146,
+            "database_bytes": 32550912,
+            "peak_rss_bytes": 37937152
+          },
+          {
+            "label": "index2-ordinary-candidate-3",
+            "recorded_at": "2026-09-24T22:08:35.234802+00:00",
+            "native_seconds": 0.8031972000026144,
+            "full_import_seconds": 2.1915260000387207,
+            "database_bytes": 32550912,
+            "peak_rss_bytes": 37855232
+          }
+        ],
+        "native_seconds": {
+          "min": 0.6027056000311859,
+          "median": 0.8024860000004992,
+          "max": 0.8031972000026144
+        },
+        "full_import_seconds": {
+          "min": 1.6924945000209846,
+          "median": 1.9565769000328146,
+          "max": 2.1915260000387207
+        }
+      },
+      "native_speedup": 0.9996431090048833,
+      "retest_indexes": [],
+      "supersede_counts": [
+        [
+          0,
+          10000
+        ]
+      ]
+    }
+  },
+  "environment": {
+    "python": "3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+    "logical_cpus": 16,
+    "git_revision": "0ca2d48df8572f4e208316a290e8d9a8590987cc"
+  },
+  "python_code_sha256": {
+    "library.py": "fcea362a1f109d22ac52b51b4ea2a0e766683190d48ebb097f5369d98b976a43",
+    "ingest.py": "fd24188fb137304ebe09c78a865c02c06fae838041214e41be496e16ae311799",
+    "ingestion.py": "9c50980f402e6b787c22f0438e9d2d1483c8c83d6a0d424f99c208962632f23d",
+    "generate.py": "66850f598c2c4d3efe34cd3481c6ff4b1fd3bfb8327a20c7d52e2ac7da69798f"
+  }
+}

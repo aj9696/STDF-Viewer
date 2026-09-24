@@ -172,6 +172,64 @@ hash. It does not build, replace, or install that package. Change only one
 implementation layer at a time, or state clearly when comparing combined
 changes.
 
+## Recorded native retest comparison
+
+The portable [native retest results](results/retest-index.json) isolate the
+database index change from the later PTR metadata correction. Both builds use
+the same Python sources. The baseline native source is revision
+`74a9fa25a2049f47481aef13035d298e7017db95`; the candidate changes only
+`database/context.rs` and `database/schema.rs`. Actual binary hashes are recorded.
+
+| Workload | Baseline native median | Indexed native median | Baseline full import | Indexed full import |
+| --- | ---: | ---: | ---: | ---: |
+| 10,000 PartID retests, 60,000 PTR | 6.220 s | 0.201 s | 6.340 s | 0.354 s |
+| 10,000 coordinate retests, 60,000 PTR | 5.819 s | 0.201 s | 5.944 s | 0.322 s |
+| Ordinary 1M PTR control | 0.802 s | 0.802 s | 2.065 s | 1.957 s |
+
+There are three fresh-process samples per build per workload, interleaved as
+baseline/candidate, candidate/baseline, baseline/candidate. Builds and other
+benchmarks were stopped during the series. Native retest medians improved by
+about 31× and 29× on these fixtures. The ordinary native control is unchanged
+within measurement resolution; this change does not accelerate the ordinary
+PTR loop. These results are separate from the Python-only comparison above.
+
+The first baseline/candidate pair for each retest fixture has equal rows across
+all 15 database tables, excluding only `File_List.Filename`, which identifies
+different temporary snapshots. This includes every result, both flag bytes,
+device identity, test metadata, and supersession value. Both fixtures retain
+10,000 superseded and 10,000 current attempts. Sampled hashes also match across
+all six samples of each workload. The ordinary control creates no retest index
+and has the same database size. Retest indexes add 479,232 bytes for PartID and
+376,832 bytes for coordinates; process peak working sets remain around 37 MiB.
+
+To repeat the complete sequence, generate the three fixtures documented above
+and preserve the two importable native package directories. Then run:
+
+```powershell
+./.venv/Scripts/python.exe -m benchmarks.native_retests `
+  --baseline-package-root .venv/native-baseline `
+  --candidate-package-root .venv/native-index-candidate2 `
+  --prefix native-repeat `
+  --output .venv/bench-data/native-repeat.json
+```
+
+The runner executes all 18 imports sequentially, preserves their raw reports,
+rejects changed Python sources or mismatched logical samples, and performs the
+exhaustive retest comparisons after timing. Use a new prefix for every series.
+To regenerate the published portable summary from the retained original reports:
+
+```powershell
+./.venv/Scripts/python.exe -m benchmarks.native_retests `
+  --summarize-only --prefix index2 `
+  --output benchmarks/results/retest-index.json
+```
+
+The summary contains no user-specific paths. Its stored table hashes use the
+documented projected rows in sorted order. Native phase measurements retain
+the application's progress polling overhead, which is material for the 0.2 s
+candidate runs. The index is created on the first retest of its type, and
+`INDEXED BY` ensures SQLite uses it even before statistics exist.
+
 ## Storage and cleanup
 
 A 936.5 MB raw fixture and each completed import need roughly another 936.5 MB

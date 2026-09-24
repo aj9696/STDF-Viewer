@@ -235,7 +235,7 @@ pub(crate) static UPDATE_DUT: &str = "UPDATE Dut_Info SET
                             WHERE 
                                 Fid=:Fid AND DUTIndex=:DUTIndex;";
 
-pub(crate) static UPDATE_SUPERSEDE_DUT: &str = "UPDATE Dut_Info SET
+pub(crate) static UPDATE_SUPERSEDE_DUT: &str = "UPDATE Dut_Info INDEXED BY dutPartRetestKey SET
                                         Supersede=1
                                     WHERE
                                         Fid=:Fid AND 
@@ -243,7 +243,7 @@ pub(crate) static UPDATE_SUPERSEDE_DUT: &str = "UPDATE Dut_Info SET
                                         SITE_NUM=:SITE_NUM AND
                                         PartID=:PartID;";
 
-pub(crate) static UPDATE_SUPERSEDE_DIE: &str = "UPDATE Dut_Info SET
+pub(crate) static UPDATE_SUPERSEDE_DIE: &str = "UPDATE Dut_Info INDEXED BY dutDieRetestKey SET
                                         Supersede=1
                                     WHERE
                                         Fid=:Fid AND 
@@ -252,6 +252,12 @@ pub(crate) static UPDATE_SUPERSEDE_DIE: &str = "UPDATE Dut_Info SET
                                         WaferIndex=:WaferIndex AND
                                         XCOORD=:XCOORD AND
                                         YCOORD=:YCOORD;";
+
+pub(crate) static CREATE_PART_RETEST_INDEX: &str = "CREATE INDEX dutPartRetestKey
+                                    ON Dut_Info (Fid, HEAD_NUM, SITE_NUM, PartID);";
+
+pub(crate) static CREATE_DIE_RETEST_INDEX: &str = "CREATE INDEX dutDieRetestKey
+                                    ON Dut_Info (Fid, HEAD_NUM, SITE_NUM, WaferIndex, XCOORD, YCOORD);";
 
 pub(crate) static INSERT_PTR_DATA: &str = "INSERT OR REPLACE INTO 
                                     PTR_Data 
