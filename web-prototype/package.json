@@ -1,0 +1,6 @@
+{
+  "name": "semidata-browser-parser-prototype",
+  "private": true,
+  "type": "module",
+  "description": "Dependency-free browser host for the isolated Rust/WASM STDF parser proof"
+}

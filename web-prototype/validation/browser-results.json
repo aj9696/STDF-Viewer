@@ -1,0 +1,61 @@
+{
+  "observed_on": "2026-09-24",
+  "environment": "Codex in-app browser on Windows 11 / AMD Ryzen 7 7700X",
+  "reported_by": "Parent task's actual browser file-upload walk-through",
+  "browser_engine_version": null,
+  "repetitions_per_file": 1,
+  "filesystem_cache_controlled": false,
+  "measurement_scope": "Raw STDF framing plus PTR summaries; no database import",
+  "wasm_sha256": "97049a653dc47a5354d113851c42bbd351c44cf2c0686c3810b0ef206007ede6",
+  "browser_process_rss_measured": false,
+  "interaction_checks": {
+    "visual_layout": "Passed parent screenshot inspection",
+    "cancel": "10M scan interrupted at 4.5%; Scan enabled and partial report hidden",
+    "truncation_error": "17-byte file rejected at record offset 6 with 11 pending bytes",
+    "console_errors_observed": false
+  },
+  "results": [
+    {
+      "file": "semidata-evaluation.stdf",
+      "bytes": 782607,
+      "records": 49376,
+      "ptr_count": 44800,
+      "groups": 20,
+      "ptr_digest": "8fceda952793195d",
+      "wall_ms": 17.4,
+      "parse_ms": 13.6,
+      "setup_ms": null,
+      "peak_wasm_bytes": 2621440
+    },
+    {
+      "file": "benchmark-10000d-100t.stdf",
+      "bytes": 93650444,
+      "records": 1020013,
+      "ptr_count": 1000000,
+      "groups": 100,
+      "ptr_digest": "3f1ca4ca37f2222f",
+      "wall_ms": 384.4,
+      "parse_ms": 261.9,
+      "setup_ms": 15.9,
+      "peak_wasm_bytes": 6094848,
+      "chunk_bytes": 4194304,
+      "carry_capacity": 65539,
+      "max_pending_bytes": 94
+    },
+    {
+      "file": "benchmark-100000d-100t.stdf",
+      "bytes": 936502821,
+      "records": 10200101,
+      "ptr_count": 10000000,
+      "groups": 100,
+      "ptr_digest": "a17503a85330872e",
+      "wall_ms": 3587.0,
+      "parse_ms": 2454.7,
+      "setup_ms": 17.4,
+      "peak_wasm_bytes": 6094848,
+      "chunk_bytes": 4194304,
+      "carry_capacity": 65539,
+      "max_pending_bytes": 94
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SemiData · Browser parser lab</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a href="./">SemiData <span>ENGINEERING LAB</span></a
+        ><span class="badge">Rust → WebAssembly</span>
+      </header>
+      <section class="intro">
+        <p class="eyebrow">BROWSER INGESTION PROTOTYPE</p>
+        <h1>Big files. A small working set.</h1>
+        <p>
+          Read raw STDF directly on your machine, with the upstream Rust parser
+          running in a browser worker. This is a bounded summary scan, separate
+          from the analysis workbench.
+        </p>
+      </section>
+      <section class="panel">
+        <form id="file-form">
+          <label for="stdf-file">Select a raw STDF v4 file</label
+          ><input
+            id="stdf-file"
+            type="file"
+            accept=".stdf,.std,.stf"
+            required
+          />
+          <div class="actions">
+            <button id="scan" type="submit">Scan file →</button
+            ><button id="cancel" type="button" class="secondary" disabled>
+              Cancel</button
+            ><span>4 MiB chunks · no upload · one worker</span>
+          </div>
+        </form>
+        <p class="hint">
+          Compressed files are not supported in this experiment. Your file is
+          read in slices; it is never converted into one full-file JavaScript
+          buffer.
+        </p>
+      </section>
+      <section id="status-panel" class="panel" aria-live="polite">
+        <div class="status-heading">
+          <h2 id="status">Ready for a local file</h2>
+          <span id="percent">0%</span>
+        </div>
+        <progress
+          id="progress"
+          value="0"
+          max="1"
+          aria-label="File scan progress"
+        ></progress>
+        <p id="progress-detail" class="hint">
+          The UI stays responsive while the worker processes measurements.
+        </p>
+      </section>
+      <section id="report" hidden>
+        <div class="heading">
+          <h2>Scan results</h2>
+          <button id="export" class="secondary">Export summary JSON ↓</button>
+        </div>
+        <div id="metrics" class="metrics"></div>
+        <div id="warnings" class="warning" hidden></div>
+        <section class="panel">
+          <h2>Measurement summaries</h2>
+          <p class="hint">
+            Raw statistics use the stored base units. Valid failures are
+            included; invalid/nonfinite results are excluded. These are all test
+            attempts, without device retest consolidation or PAT eligibility.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Test</th>
+                  <th>Units</th>
+                  <th>Records</th>
+                  <th>Valid</th>
+                  <th>Excluded</th>
+                  <th>Mean · raw</th>
+                  <th>Sample SD · raw</th>
+                  <th>Scale</th>
+                  <th>Mean · scaled</th>
+                </tr>
+              </thead>
+              <tbody id="groups"></tbody>
+            </table>
+          </div>
+          <p id="group-count" class="hint"></p>
+        </section>
+        <div class="details-grid">
+          <section class="panel">
+            <h2>Record inventory</h2>
+            <dl id="record-counts"></dl>
+          </section>
+          <section class="panel">
+            <h2>Measurement flags</h2>
+            <p class="hint">
+              TEST_FLG / PARM_FLG, hexadecimal. Every combination is retained.
+            </p>
+            <dl id="flag-counts"></dl>
+          </section>
+        </div>
+        <section class="panel">
+          <h2>Reproducibility and memory</h2>
+          <dl id="evidence"></dl>
+          <p class="hint">
+            WASM linear memory is measured separately from browser memory and
+            the input slice. It is not a browser process RSS estimate. The
+            semantic fingerprint is for equivalence checks, not security.
+          </p>
+        </section>
+      </section>
+      <footer>
+        Prototype scope: record framing and PTR summaries. No database, history,
+        charts, PAT, compression, or production release workflow is implemented
+        here.
+      </footer>
+    </main>
+  </body>
+</html>
