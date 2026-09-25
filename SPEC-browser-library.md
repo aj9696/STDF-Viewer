@@ -1,54 +1,38 @@
 # Specification: browser-library
 
-Status: BL-1 persistence experiment implemented and verified on desktop Chrome
-and Edge, 2026-09-24. The full library below remains proposed; this increment
-stores a synthetic probe only. See [storage validation](web-prototype/STORAGE-VALIDATION.md).
-Scope comes from [the capability map](CAPABILITIES.md#proposed-next-increment-browser-data-logistics).
-The engineer requested documentation and gradual logistics work. Analysis is
-outside this increment. This specification governs persistence; file discovery
-and batch import orchestration belong to browser-imports.
+Status: implemented browser data foundation, 2026-09-24. BL-1 established the
+storage choice; BL-2 through BL-6 add retained STDF imports, recovery, portable
+packages and folder coordination. See [full-path validation](web-prototype/LIBRARY-VALIDATION.md)
+and [the frontend contract](web-prototype/docs/FRONTEND-CONTRACT.md).
+The engineer authorized completing logistics autonomously before frontend work.
+Analysis remains outside this increment.
 
-## Objective and first acceptance
+## Objective and storage decision
 
-Establish a local browser library which can save data, reopen it without an
-STDF rescan, and distinguish complete datasets from interrupted imports.
-The first task is a small storage feasibility experiment, not a complete
-database product or a new analytical model.
-
-## Candidate and decision checkpoint
-
-Trial official SQLite WASM in one dedicated worker, initially using
-`opfs-sahpool`. That VFS avoids COOP/COEP headers, has exclusive pool ownership
-across browsing contexts, and requires capacity for database/journal/temp files.
-Its `exportFile()` convenience function allocates the whole database, so it
-does not establish a bounded-memory export solution. The alternative `opfs`
-VFS requires SharedArrayBuffer and appropriate isolation headers. Select and
-pin a released build after checking its actual API, rather than assuming the
-current development documentation matches it.
+A browser library saves complete retained datasets, reopens them without an
+STDF rescan, and distinguishes completed data from interrupted imports. Official
+SQLite WASM `@sqlite.org/sqlite-wasm@3.53.4-build1` runs in one dedicated worker
+using `opfs-sahpool`, without COOP/COEP or SharedArrayBuffer requirements.
+Assets and notices are served locally and pinned in the npm lockfile.
 [Official SQLite persistence documentation](https://sqlite.org/wasm/doc/trunk/persistence.md).
 
-BL-1 decision: retain `opfs-sahpool` for the next experiment, pinning
-`@sqlite.org/sqlite-wasm@3.53.4-build1`. Chrome and Edge passed process-restart
-checks and an OPFS page-by-page export/chunked restore of a 3,000-row fixture.
-The released build enables `sqlite_dbpage`; a read transaction plus an awaited
-file sink gives a viable bounded transfer path. This is feasibility evidence,
-not qualification of multi-gigabyte backups. See the validation note for the
-embedded-browser coverage limits and exact asset hashes.
-
-Record the tested browser versions, SQLite release, VFS, asset hashes, memory,
-and reopen/export results in a decision note before extending imports. If
-bounded export cannot be supported, reconsider the VFS here. Do not build a
-large library around an untested backup path. In-memory whole-database designs
-are not the starting proposal for these large inputs.
+The convenience `exportFile()` whole-database allocation is not used for dataset
+packages. `sqlite_dbpage` reads one page at a time inside a read transaction;
+awaited OPFS writes provide backpressure. Restore uses the VFS's chunked import
+callback into a new UUID database, followed by exact schema, integrity, count,
+record-span and reference checks. The original [BL-1 evidence](web-prototype/STORAGE-VALIDATION.md)
+is historical feasibility evidence; full retained-import measurements are in
+the newer validation report.
 
 ## Ownership and storage layout
 
-Proposed logical layout: one versioned catalog plus an independent database
+Implemented logical layout: one versioned catalog plus an independent database
 per source dataset, and exact source snapshots in a separate OPFS directory.
 Physical paths depend on the selected VFS; logical SQLite filenames must not
 be confused with ordinary filesystem paths. Raw sources must never be placed
-inside the SAH pool's reserved directory. Measure pool/file-handle growth
-before committing to this layout for many datasets.
+inside the SAH pool's reserved directory. Each dataset consumes one pool file; reserve six spare slots before staging.
+The initial pool has eight slots. The 1,000-dataset cap is an evaluation guard,
+not qualification at that library size.
 
 One worker owns an active library. A second tab reports that the library is
 already open, rather than creating a second pool or silently replacing data.
@@ -88,7 +72,7 @@ No implicit migration or reset of incompatible/corrupt storage. Read-only schema
 version, integrity and row checks precede writes on reopen/restore. Backups are
 untrusted input: limit size, disable trusted schema, reject unexpected schema,
 and use parameterized SQL. A restore deliberately replaces only the synthetic
-probe row; it is not a dataset backup format. Large-file transfer remains BL-4.
+probe row; it is not a dataset backup format. The separate BL-4 package path below supersedes this probe transfer.
 
 Use a released, lockfile-pinned SQLite asset served from this origin. The asset
 build copies the upstream license and records SHA-256 hashes. Automated browser
@@ -96,8 +80,9 @@ checks use isolated persistent test profiles, never the engineer's profile.
 
 The provider supports creating an import job, writing bounded batches, checking
 the completed dataset, publishing it, reopening it, and recording failure.
-These are required behaviors, not final public method signatures or SQL DDL.
-Specify concrete worker messages and persisted schema before implementation.
+Concrete worker messages and persisted schema are defined in the frontend
+contract and `site/dataset-schema.js`. Import and package specs define their
+separate contracts.
 
 | State | Catalog/library behavior |
 | --- | --- |
@@ -112,7 +97,9 @@ Publishing is an atomic catalog transaction after dataset/source finalization.
 Do not assume a transaction spans separate database and source files. Recovery
 must reconcile the catalog with staged artifacts; unreferenced completed files
 are surfaced for recovery, not silently treated as disposable. Cleanup is scoped
-to known incomplete artifacts and never deletes a ready dataset's source.
+to known incomplete artifacts and never deletes a ready dataset's source. Explicit discard also removes that
+job's rollback journal; abandoned exports have a separate inventory and release
+operation. A known unavailable dataset cannot be reused as a duplicate.
 Reopening checks that published artifacts are present and usable; a saved
 Ready label alone is not proof. Missing/corrupt artifacts produce a visible
 recovery state, never an empty replacement database. Check existence/openability
@@ -131,7 +118,7 @@ artifact and must not silently mutate an earlier dataset.
 
 Catalog minimum: dataset/job IDs, state, source hash and byte size, display name,
 import time, parser/schema versions, covered record types, warnings, and counts.
-Dataset identity is local to its source. Future row storage must preserve raw
+Dataset identity is local to its source. Retained row storage preserves raw
 measurement bits, flags, source sequence/offsets, metadata and device attempts;
 do not aggregate or collapse repeated observations while ingesting. An STDF
 snapshot is authoritative where a record family is not decoded yet. Neither
@@ -151,30 +138,12 @@ do not promise retention based on detecting private mode.
 
 ## Structure, commands, and code conventions
 
-Keep the experiment in `web-prototype/`. Proposed additions are
-`site/storage-worker.js`, `site/library.js`, a storage integration harness under
-`scripts/`, and `STORAGE-VALIDATION.md`. Parser changes remain under `rust/`.
-Do not add a framework, server API, or global runtime for this experiment.
-
-Existing checks, executable from the repository root in PowerShell:
-
-```powershell
-. .venv/runtime-environment.ps1
-./web-prototype/build.ps1
-cargo test --locked --manifest-path web-prototype/rust/Cargo.toml
-node --check web-prototype/site/worker.js
-node web-prototype/scripts/check.mjs ../semidata-evaluation.stdf
-.venv/Scripts/python.exe -m http.server 8766 --bind 127.0.0.1 --directory web-prototype/site
-```
-
-These commands validate the existing parser, not unimplemented persistence.
-The first task must add exact storage build/test commands and pinned assets to
-the README. Use plain JS modules, named Rust types, parameterized SQL, and
-versioned worker messages. Match the existing style, for example:
-
-```js
-self.postMessage({ type: "error", message: String(error?.message ?? error) });
-```
+Implementation stays in `web-prototype/`: Rust under `rust/`, framework-free JS
+under `site/`, integration/fixture tools under `scripts/`. The new `foundation.html`
+engineering console exercises the public client. The summary parser and synthetic
+storage proof remain separate. Build and test commands are maintained in the
+[prototype README](web-prototype/README.md); runtime modules have no CDN/backend
+or dependency on the native workbench.
 
 ## Verification and boundaries
 
@@ -201,9 +170,10 @@ summary scans. No fixed throughput target is claimed before measuring writes.
 - Bring changes to retention, automatic source writes, or analytical semantics
   back to the engineer as product decisions with a concrete proposal.
 - Never upload test content, modify source-folder files, silently discard raw
-  flags/observations, or describe this proposal as shipped functionality.
+  flags/observations, or describe unqualified scenarios as supported functionality.
 
-Open technical decisions: large-dataset qualification of the page export path,
-many-dataset handle cost, and retained-record schema/batch interface. Compression,
+Remaining qualification: many-dataset handle cost, browser RSS/JavaScript peak
+memory, real physical disk-full/power-loss behavior, and native folder permission
+renewal across browser versions. Compression,
 folder watching, app-install/offline asset caching, and multi-tab collaboration
 are later scopes. Local file processing does not itself promise offline startup.

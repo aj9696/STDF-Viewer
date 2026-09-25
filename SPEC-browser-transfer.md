@@ -28,7 +28,7 @@ The extension is `.sdlibrary`. The format is uncompressed and sequential:
 
 The exact total size must match; trailing and truncated bytes are rejected.
 All sizes/counts are nonnegative safe integers. The package cap is 8 GiB;
-the source must be nonempty and the database at least 512 bytes and a multiple
+the source must be nonempty and at most 2 GiB; the database is at least 512 bytes and a multiple
 of 512. The header is `{formatVersion: 1, manifest, sourceBytes, databaseBytes}`.
 Unsupported package, schema, or parser versions fail without output writes.
 
@@ -66,7 +66,8 @@ await restorePackage({ file, pool, databaseName, sourceWritable, createHasher,
 `db` is the pinned SQLite OO1 connection, and `pool` is its SAH-pool utility.
 The caller exclusively owns the worker/pool and serializes operations. Export
 requires no preexisting transaction; it holds a read transaction for a stable
-page snapshot and awaits each write before reading the next chunk/page.
+page snapshot. Consecutive pages are copied into one fixed-size transfer buffer;
+each write is awaited before that buffer is reused.
 Restore refuses any name already present in `pool.getFileNames()`. The target
 database must be closed and its internally generated name owned by a staging
 job. Names have one absolute path component (`/` followed by 1–128 letters,

@@ -25,29 +25,32 @@ Full product direction includes MPR/FTR analysis, device genealogy, qualified
 PAT/DPAT recipes, wafer analysis, historical monitoring, automation, and improved
 UI. These remain separate future increments, not implied delivered features.
 
-The measured import performance increment and isolated Rust/WASM browser parser
-experiment are implemented. See SPEC-import-performance.md for acceptance and
-docs/import-performance.md for results and limits. A separate browser SQLite
-persistence proof now saves a synthetic note. Retained STDF storage, querying,
-and PAT migration remain future work; the workbench still uses its local
-Python/Rust service.
+The native evaluation workbench above remains runnable and unchanged. A separate
+browser-only data foundation now retains STDF in local SQLite, coordinates
+file/folder queues and exports/restores portable packages. Analysis is not yet
+connected to the browser library.
 
-## Proposed next increment: browser data logistics
+## Browser data logistics
 
-Status: BL-1 persistence proof implemented; remaining modules proposed. The
-engineer requested a gradual storage/import workflow on 2026-09-24 and retains
-ownership of the analysis roadmap. See [Browser data workflow](docs/browser-data-workflow.md)
-and [storage evidence](web-prototype/STORAGE-VALIDATION.md). The proof passed
-11 checks in each tested desktop browser; it does not yet import STDF records.
+Status: implemented engineering foundation, 2026-09-24. The engineer authorized
+completing BL-2 through BL-6 while away, through frontend readiness. See
+[Browser data workflow](docs/browser-data-workflow.md),
+[full-path validation](web-prototype/LIBRARY-VALIDATION.md) and
+[frontend handoff](web-prototype/docs/FRONTEND-HANDOFF.md).
 
 | Module id | Responsibility | Depends on |
 | --- | --- | --- |
-| browser-library | Persistent local catalog, dataset storage, ownership and recovery; BL-1 probe only implemented | Browser storage and pinned SQLite WASM |
-| browser-imports | File/folder selection, retained-record ingestion, duplicate handling and queue | browser-library, existing Rust decoder |
-| browser-transfer | Export and restore a versioned, verifiable dataset package | browser-library |
+| browser-library | Local catalog, immutable per-source SQLite, ownership, recovery, bounded reads | OPFS and pinned SQLite WASM |
+| browser-imports | Retained Rust decoding, file/folder inventory, sequential import queue and content identity | browser-library, Rust/WASM |
+| browser-transfer | Versioned source+database packages, bounded export/restore and checksums | browser-library |
 
-Build order: prove browser-library persistence → one real file through
-browser-imports → failure recovery and browser-transfer → folder batches →
-large-file qualification. Provider specification: [SPEC-browser-library.md](SPEC-browser-library.md).
-Later module specifications are written when their slices begin; the current
-plan does not select analytical schemas, calculations, or PAT workflows.
+The engineering console is `web-prototype/site/foundation.html`. The product
+frontend can consume the documented client and source/queue modules. Normalized
+measurements currently cover PTR; MPR/FTR retain device context and exact raw
+records. Effective STDF defaults, cross-file identity, analysis and PAT policy
+remain separate decisions. Compression, background folder watching, offline
+asset caching and multi-tab collaboration are not implemented.
+
+Provider, import and transfer contracts are in SPEC-browser-library.md,
+SPEC-browser-imports.md and SPEC-browser-transfer.md. Original native databases
+are not migrated automatically. No release or deployment is implied.

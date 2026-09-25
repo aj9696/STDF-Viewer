@@ -35,7 +35,7 @@ separate verifiable slices, then compare unchanged workloads. Build a separate
 browser parser prototype using the same inputs, with its smaller workload made
 explicit. Finish with review, documentation, and a runnable demonstration.
 
-## 2026-09-24: browser data logistics — proposed next work
+## 2026-09-24: browser data logistics — initial plan (historical)
 
 The engineer requested a slower, documented progression and owns the analysis
 roadmap. This phase plans persistence, file handling, and library operations.
@@ -63,7 +63,8 @@ of truth remains `tasks/todo.md` under Browser data logistics.
 6. **BL-6: volume qualification.** Measure persistence-inclusive 1M/10M runs,
    restart, and folder batches. Publish the actual supported envelope.
 
-BL-1 is implemented and documented in
+The following checkpoint instructions describe the initial limited authorization;
+the autonomous-completion section below supersedes them. BL-1 was implemented in
 [storage validation](../web-prototype/STORAGE-VALIDATION.md). The next slice is
 BL-2. Show each checkpoint to the engineer; do not run the entire roadmap as
 one unattended change. At each later slice, write its module-specific interface

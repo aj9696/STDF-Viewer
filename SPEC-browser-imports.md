@@ -31,7 +31,8 @@ Tuple columns (a version change is required to reorder them):
   metadata, omitted-versus-empty fields and exact optional-tail bytes. IDs start
   at 1. Same test number and exact metadata tail can share a definition; distinct
   declarations do not. Name is null when omitted. Do not silently apply analytical
-  defaults. Limit 20,000 definitions and fail explicitly above that limit.
+  defaults. Limit 20,000 definitions and 16 MiB of retained definition-tail bytes;
+  fail explicitly above either limit.
 - measurements: `[seq, device_id, definition_id, test_number, head, site,
   test_flags, parm_flags, result_bits, result]`. Keep every PTR, including repeated
   test/device pairs. Result is finite numeric or null; result_bits preserves
