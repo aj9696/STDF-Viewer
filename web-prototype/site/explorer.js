@@ -108,7 +108,7 @@ function selectTest(number) {
     pages.definitions = { ...initialPage(), ...definitions };
     pages.measurements = { ...initialPage(), ...measurements };
     $('selected-test').textContent = `Test ${number}`;
-    $('selected-name').textContent = pages.tests.items.find((row) => row.test_number === number)?.name ?? 'Name not recorded';
+    $('selected-name').textContent = pages.tests.items.find((row) => row.test_number === number)?.name ?? 'Unnamed test';
     $('test-summary').textContent = `${count(detail.measurementCount)} observations · ${count(detail.definitionCount)} recorded declarations`;
     $('test-empty').hidden = true; $('test-detail').hidden = false;
     renderTests(pages.tests, selected);

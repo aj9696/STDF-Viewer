@@ -49,7 +49,7 @@ export function renderTests(page, selected) {
     const button = element('button', undefined, 'test-choice');
     button.type = 'button'; button.dataset.testNumber = row.test_number;
     button.setAttribute('aria-pressed', String(row.test_number === selected));
-    button.append(element('strong', `Test ${row.test_number}`), element('span', row.name ?? 'Name not recorded'),
+    button.append(element('strong', `Test ${row.test_number}`), element('span', row.name ?? 'Unnamed test'),
       element('small', `${count(row.definition_count)} recorded ${row.definition_count === 1 ? 'declaration' : 'declarations'}`));
     fragment.append(button);
   }
