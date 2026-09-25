@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "examples": [
+    {
+      "id": "baseline",
+      "title": "Clean lot",
+      "description": "48 devices, two sites, three tests. All pass.",
+      "files": [
+        {
+          "name": "baseline.stdf",
+          "url": "examples/baseline.stdf",
+          "bytes": 8090,
+          "sha256": "75e271e7b9b8909695aea650115143c551de38f919928f08441e8f8b4e1d77b0"
+        }
+      ],
+      "expected": {
+        "devices": 48,
+        "attempts": 48,
+        "tests": 3,
+        "observations": 144,
+        "passed": 48,
+        "failed": 0
+      },
+      "suggested": {
+        "tab": "histogram",
+        "testNumber": 1002
+      }
+    },
+    {
+      "id": "site-shift",
+      "title": "Site shift",
+      "description": "Compare two lots. Site 2 draws more current in the second.",
+      "files": [
+        {
+          "name": "baseline.stdf",
+          "url": "examples/baseline.stdf",
+          "bytes": 8090,
+          "sha256": "75e271e7b9b8909695aea650115143c551de38f919928f08441e8f8b4e1d77b0"
+        },
+        {
+          "name": "site-shift.stdf",
+          "url": "examples/site-shift.stdf",
+          "bytes": 8139,
+          "sha256": "786a9e71d5a3c4cec54053e23640a8c0d051c7feb695db93cb092fa543350cda"
+        }
+      ],
+      "expected": {
+        "devicesPerFile": 48,
+        "tests": 3,
+        "observationsPerFile": 144,
+        "shiftedLotPassed": 36,
+        "shiftedLotFailed": 12,
+        "site1CurrentMean": 18,
+        "site2CurrentMean": 24,
+        "site2Failures": 12
+      },
+      "suggested": {
+        "tab": "histogram",
+        "testNumber": 1002,
+        "seriesBy": "site",
+        "compare": true
+      }
+    },
+    {
+      "id": "retest",
+      "title": "Fail to pass",
+      "description": "Six failed devices pass on retest. Switch between current and all attempts.",
+      "files": [
+        {
+          "name": "retest.stdf",
+          "url": "examples/retest.stdf",
+          "bytes": 5187,
+          "sha256": "d10dcb0440f80a3f1b1cbb71413b4545a421f4412033d31982cc0af3389739da"
+        }
+      ],
+      "expected": {
+        "devices": 24,
+        "attempts": 30,
+        "tests": 3,
+        "observations": 90,
+        "superseded": 6,
+        "currentPassed": 24,
+        "currentFailed": 0,
+        "allPassed": 24,
+        "allFailed": 6
+      },
+      "suggested": {
+        "tab": "devices",
+        "testNumber": 1002
+      }
+    },
+    {
+      "id": "wafer",
+      "title": "Wafer edge failures",
+      "description": "49 dies. High leakage follows the wafer edge.",
+      "files": [
+        {
+          "name": "wafer-edge.stdf",
+          "url": "examples/wafer-edge.stdf",
+          "bytes": 6180,
+          "sha256": "70b2752ab1838d17f85c764d114a675e2438b713850a43349f95357e3363fee3"
+        }
+      ],
+      "expected": {
+        "devices": 49,
+        "attempts": 49,
+        "tests": 2,
+        "observations": 98,
+        "passed": 29,
+        "failed": 20,
+        "wafer": "WAFER-01",
+        "bounds": [
+          -3,
+          3
+        ],
+        "failureRule": "x*x + y*y >= 10"
+      },
+      "suggested": {
+        "tab": "wafers",
+        "testNumber": 1003
+      }
+    },
+    {
+      "id": "mixed",
+      "title": "Pins and digital tests",
+      "description": "24 devices with pin results, scan failures, and missing or invalid readings.",
+      "files": [
+        {
+          "name": "mixed-tests.stdf",
+          "url": "examples/mixed-tests.stdf",
+          "bytes": 5953,
+          "sha256": "b80d62305f620d601f0d9890b8a3deeabf1fd1fd6b8d42576e2cc3b3a28f0c2b"
+        }
+      ],
+      "expected": {
+        "devices": 24,
+        "attempts": 24,
+        "tests": 3,
+        "catalogueRows": 5,
+        "observations": 117,
+        "passed": 17,
+        "failed": 4,
+        "unknown": 3,
+        "leakageRecorded": 21,
+        "leakageValid": 19,
+        "leakageMissingParts": [
+          "D004",
+          "D008",
+          "D012"
+        ],
+        "leakageInvalidParts": [
+          "D006",
+          "D010"
+        ],
+        "pinFailures": [
+          "D005",
+          "D013"
+        ],
+        "digitalFailures": [
+          "D007",
+          "D019"
+        ],
+        "digitalNotExecuted": [
+          "D020"
+        ]
+      },
+      "suggested": {
+        "tab": "devices",
+        "testNumber": 2001
+      }
+    }
+  ]
+}

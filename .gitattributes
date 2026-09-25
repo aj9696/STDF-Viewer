@@ -1,1 +1,3 @@
 web-prototype/THIRD-PARTY-NOTICES.txt text eol=lf
+web-prototype/site/examples/manifest.json text eol=lf
+web-prototype/site/examples/*.stdf binary
