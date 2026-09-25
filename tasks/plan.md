@@ -127,3 +127,15 @@ Completed: bounded test queries, simple explorer, independent Chrome/Edge checks
 library regressions, visual/code review and professional feature/API guides.
 Evidence is preserved in web-prototype/evidence/test-explorer.json. The next
 analytical feature needs a separate population and recorded-field policy.
+
+## 2026-09-25: full upstream browser viewer
+
+The engineer explicitly requested the original GitHub viewer's full working
+feature set. SPEC-browser-viewer.md now defines that scope and supersedes the
+earlier logistics-only/one-feature stop points. Continue through independently
+verified slices without further permission gates. Start with a lossless-source
+derived cache and explicit query contract; build charts, compressed imports and
+independent fixtures in parallel. Then integrate workspace groups, device and
+record inspection, reports, session portability and product navigation. Review
+and qualify each boundary, preserve the actual library, and update the parity
+tracker and professional guides before claiming completion.

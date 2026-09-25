@@ -61,3 +61,13 @@ asset caching and multi-tab collaboration are not implemented.
 Provider, import and transfer contracts are in SPEC-browser-library.md,
 SPEC-browser-imports.md and SPEC-browser-transfer.md. Original native databases
 are not migrated automatically. No release or deployment is implied.
+
+## Full browser viewer (in progress, 2026-09-25)
+
+The engineer now authorized the working feature set of upstream STDF-Viewer.
+This supersedes the earlier restriction to raw inspection and logistics. The
+[viewer specification](SPEC-browser-viewer.md) defines the module dependency
+map, data preservation and numerical policies. The [parity tracker](docs/viewer-parity.md)
+separates planned from verified workflows. The existing retained library stays
+immutable; derived analysis caches provide PTR/MPR/FTR, device, bin, wafer and
+record queries. Workspace, chart and report modules consume those contracts.

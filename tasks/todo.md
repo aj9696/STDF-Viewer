@@ -141,3 +141,20 @@ or implement all remaining frontend workflows at once.
     [evidence](../web-prototype/evidence/test-explorer.json).
   - Limits: PTR inspection only; no large-query latency benchmark or analytical
     policy. Histograms and PAT remain separately specified next features.
+
+## Full upstream browser viewer — authorized 2026-09-25
+
+- [x] **BV-0 — Define baseline and capability map.** Inventory working upstream
+  behavior, preserve native source baseline, specify browser modules and policies.
+- [ ] **BV-1 — Normalize a derived viewer cache.** Bounded PTR/MPR/FTR, effective
+  defaults, metadata/pins/wafer context; retain-v1 compatibility and failure recovery.
+- [ ] **BV-2 — Query explicit populations.** Group/head/site/current/all selection,
+  test/device/record tables, statistics, bounded trends/histograms/bin/wafer maps.
+- [ ] **BV-3 — Integrate investigation UI.** Multi-test selection, interactive
+  charts, failed/low-Cpk markers and complete device drilldown.
+- [ ] **BV-4 — Complete data opening and workspaces.** Compressed imports, product
+  multi-file/folder queue, ordered groups, settings and portable session save/open.
+- [ ] **BV-5 — Export reports and records.** Eight report sections, chart images,
+  selected data and record conversion, with population/source provenance.
+- [ ] **BV-6 — Qualify and document.** Independent numerical fixtures, Chrome/Edge
+  flows, library regressions, 1M/10M behavior, code/visual review and updated guides.
