@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SemiData · Library engineering console</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./foundation.js"></script>
+    <style>
+      .actions { flex-wrap: wrap; }
+      select { max-width: 100%; padding: 9px; font: inherit; }
+      .check { display: flex; gap: 9px; align-items: center; margin-top: 16px; }
+      .check input { width: auto; margin: 0; }
+      pre { overflow: auto; max-height: 380px; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .table-wrap { margin-top: 12px; max-height: 360px; }
+      td { max-width: 500px; overflow-wrap: anywhere; white-space: normal; }
+      #download-links a { display: block; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a href="./">SemiData <span>ENGINEERING CONSOLE</span></a>
+        <span class="badge">Local data logistics</span>
+      </header>
+      <section class="intro">
+        <p class="eyebrow">FRONTEND FOUNDATION · EVALUATION BUILD</p>
+        <h1>Import. Reopen. Inspect.</h1>
+        <p>This console exercises the library API. The production interface and analysis workflows will be designed separately, one feature at a time.</p>
+        <p class="hint">Raw STDF up to 2 GiB per file. Source folders are read-only. Data stays in this browser profile at this exact address; keep exported packages for recovery.</p>
+      </section>
+
+      <section class="panel">
+        <h2>1. Open the browser library</h2>
+        <div class="actions">
+          <button id="open-library" type="button">Open library</button>
+          <button id="close-library" type="button" class="secondary" disabled>Close library</button>
+          <button id="refresh-library" type="button" class="secondary" disabled>Refresh library and jobs</button>
+          <button id="persist-library" type="button" class="secondary">Request persistent storage</button>
+        </div>
+        <p id="storage-status" class="hint">Checking browser storage…</p>
+        <p class="hint">Storage estimates are approximate. Persistence is not a backup; private sessions and clearing site data can remove this library. One tab owns the library at a time.</p>
+        <details><summary>Runtime details</summary><pre id="runtime-details">Library closed.</pre></details>
+      </section>
+
+      <section id="status-panel" class="panel" aria-live="polite" aria-atomic="true">
+        <div class="status-heading"><h2 id="status">Ready to open the library</h2><button id="cancel-operation" type="button" class="secondary" disabled>Cancel operation</button></div>
+        <p id="status-detail">Select sources, review their inventory, then start an import.</p>
+        <p id="worker-progress" class="hint"></p>
+      </section>
+
+      <section class="panel">
+        <h2>2. Select and review sources</h2>
+        <label for="source-files">Choose raw STDF files</label>
+        <input id="source-files" type="file" multiple accept=".stdf,.std,.stf" />
+        <div class="actions">
+          <button id="choose-directory" type="button" class="secondary">Choose a source folder</button>
+          <button id="reconnect-directory" type="button" class="secondary" disabled>Reconnect remembered folder</button>
+          <button id="rescan-directory" type="button" class="secondary" disabled>Rescan selected folder</button>
+        </div>
+        <details>
+          <summary>Folder file-input fallback</summary>
+          <label for="directory-files">Choose a folder when directory handles are unavailable</label>
+          <input id="directory-files" type="file" webkitdirectory multiple />
+          <p class="hint">This fallback cannot reconnect or rescan a saved handle. Choose the folder again to refresh its files.</p>
+        </details>
+        <label class="check"><input id="include-subfolders" type="checkbox" />Include subfolders in this inventory</label>
+        <p id="source-description" class="hint">No sources selected. No folder watching or automatic imports.</p>
+        <p id="folder-status" class="hint"></p>
+        <p id="inventory-summary">No inventory.</p>
+        <div class="table-wrap"><table id="inventory-table"><caption>Inventory preview · first 100 entries</caption></table></div>
+        <div class="actions"><button id="import-files" type="button" disabled>Import reviewed files</button></div>
+        <p id="queue-summary" class="hint"></p>
+        <div class="table-wrap"><table id="queue-table"><caption>Import outcomes · first 100 files</caption></table></div>
+      </section>
+
+      <section class="panel">
+        <h2>3. Inspect retained data</h2>
+        <p id="dataset-summary" class="hint">Open the library to list its datasets.</p>
+        <label for="dataset-select">Dataset · newest 100 shown</label>
+        <select id="dataset-select" disabled><option value="">Select a dataset</option></select>
+        <div class="actions">
+          <button id="inspect-dataset" type="button" class="secondary" disabled>Read metadata</button>
+          <button id="verify-dataset" type="button" class="secondary" disabled>Verify source and database</button>
+          <button id="export-dataset" type="button" disabled>Export dataset package</button>
+        </div>
+        <details open><summary>Dataset metadata</summary><pre id="dataset-details">No dataset selected.</pre></details>
+        <label for="row-table">Retained table</label>
+        <div class="actions">
+          <select id="row-table" disabled><option value="records">Records</option><option value="measurements">Measurements</option><option value="devices">Device attempts</option><option value="definitions">Definitions</option></select>
+          <button id="read-rows" type="button" class="secondary" disabled>Read first 100 rows</button>
+        </div>
+        <p id="rows-summary" class="hint">These are retained observations, with no analytical interpretation.</p>
+        <div class="table-wrap"><table id="rows-table"><caption>Raw retained rows · first 100</caption></table></div>
+      </section>
+
+      <section class="panel">
+        <h2>4. Export and restore</h2>
+        <p class="hint">Export includes the original STDF and its database. Download links use a disk-backed File. Temporary export storage is kept until you explicitly release it after confirming the download finished.</p>
+        <div id="download-links"></div>
+        <div class="table-wrap"><table id="exports-table"><caption>Retained temporary packages · first 100, including previous sessions</caption></table></div>
+        <div class="actions"><button id="release-exports" type="button" class="secondary" disabled>Release listed completed downloads</button></div>
+        <p id="export-status" class="hint">No packages exported in this session.</p>
+        <label for="restore-file">Select a .sdlibrary package to verify and restore</label>
+        <input id="restore-file" type="file" accept=".sdlibrary" disabled />
+        <div class="actions"><button id="restore-package" type="button" disabled>Restore selected package</button></div>
+      </section>
+
+      <section class="panel">
+        <h2>Import and recovery jobs</h2>
+        <p id="jobs-summary" class="hint">Open the library to list recent jobs.</p>
+        <div class="table-wrap"><table id="jobs-table"><caption>Newest 100 jobs</caption></table></div>
+        <label for="incomplete-job">Known incomplete staging</label>
+        <div class="actions">
+          <select id="incomplete-job" disabled><option value="">Select an incomplete job</option></select>
+          <button id="discard-job" type="button" class="secondary" disabled>Discard selected staging</button>
+        </div>
+        <p class="hint">Discard removes only that job's incomplete staging. Completed datasets and job history remain. Retry imports by selecting the source again.</p>
+      </section>
+      <footer>Engineering evaluation console · <a href="./">Parser benchmark</a> · <a href="./storage.html">Synthetic persistence proof</a></footer>
+    </main>
+  </body>
+</html>
