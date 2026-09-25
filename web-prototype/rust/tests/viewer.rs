@@ -450,6 +450,27 @@ fn write_browser_fixtures() {
     let dir = std::env::var("VIEWER_FIXTURE_DIR").expect("Set VIEWER_FIXTURE_DIR");
     std::fs::create_dir_all(&dir).unwrap();
     for big in [false, true] {
+        let mut defaults = start(big);
+        defaults.extend(ptr(
+            7,
+            0,
+            &tail("DEFAULTS", 0, [6, 3, 9], 0., 2., "AMPS", big),
+            0x10,
+            big,
+        ));
+        defaults.extend(pir(1, 2, big));
+        defaults.extend(ptr(7, 1_f32.to_bits(), &[], 0, big));
+        defaults.extend(prr(1, 2, 0, big));
+        defaults.extend(finish(big));
+        let defaults_name = if big {
+            "defaults-only-big.stdf"
+        } else {
+            "defaults-only-little.stdf"
+        };
+        std::fs::write(std::path::Path::new(&dir).join(defaults_name), &defaults).unwrap();
+        std::fs::write(std::path::Path::new(&dir).join(defaults_name.replace(".stdf",".expected.json")),
+            serde_json::to_string_pretty(&json!({"file":defaults_name,"bytes":defaults.len(),"records":7,"defaultOnlyPtr":1,
+                "measurements":1,"definitions":2,"devices":1,"observations":1,"tests":1,"deviceIds":[4],"observationSeqs":[5]})).unwrap()).unwrap();
         let mut r = start(big);
         let mut pcr = vec![1, 2];
         for n in [2_u32, 1, 0, 1, 1] {
@@ -525,7 +546,9 @@ fn write_browser_fixtures() {
         r.extend(mpr(3, big));
         r.extend(ftr(big));
         r.extend(rec(50, 30, &cn("hello wafer"), big));
-        r.extend(rec(50, 10, &[1, 0, 1, 7], big));
+        let mut generic = u16b(1, big).to_vec();
+        generic.extend([1, 7]);
+        r.extend(rec(50, 10, &generic, big));
         r.extend(rec(20, 20, &[], big));
         let mut first_prr = prr(1, 2, 0, big);
         first_prr[15..17].copy_from_slice(&u16b(4, big));

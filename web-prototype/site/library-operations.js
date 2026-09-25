@@ -47,7 +47,7 @@ async function restoreDataset(store, file, context) {
     db.close(); db = null;
     context.checkCancelled();
     // Validate the database even if its source already exists in this library.
-    const duplicate = await store.duplicate(manifest.source.sha256);
+    const duplicate = await store.duplicate(manifest.source.sha256, manifest.parserVersion);
     if (duplicate) {
       store.updateJob(job, "duplicate");
       store.catalog.exec({ sql: "UPDATE jobs SET source_hash=?,dataset_id=? WHERE id=?", bind: [manifest.source.sha256, duplicate.id, job.id] });
@@ -65,7 +65,19 @@ async function restoreDataset(store, file, context) {
 
 export async function runOperation(store, message, context) {
   switch (message.type) {
-    case "importFile": return importSource(store, message.file, message.relativePath ?? message.file?.name, context);
+    case "importFile": {
+      const { prepareSource } = await import('./compressed-source.js');
+      const prepared = await prepareSource(message.file, context);
+      let result;
+      try { result = await importSource(store, prepared.file, message.relativePath ?? message.file?.name, context); return result; }
+      finally {
+        try { await prepared.cleanup(); }
+        catch (error) {
+          // Publication has already succeeded; staging cleanup is not import failure.
+          if (result) result.cleanupWarning = `Dataset saved; temporary expansion cleanup will retry when the library reopens: ${error.message}`;
+        }
+      }
+    }
     case "exportDataset": return exportDataset(store, message.datasetId, context);
     case "restorePackage": return restoreDataset(store, message.file, context);
     case "readRows": return withDataset(store, message.datasetId, ({ db }) => {

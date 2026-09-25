@@ -1,4 +1,5 @@
 // Portable package framing. Names in a manifest are metadata, never paths.
+import { SUPPORTED_PARSERS } from './dataset-schema.js';
 const MAGIC = "SDPKG001";
 const HEADER_LIMIT = 64 * 1024;
 const PACKAGE_LIMIT = 8 * 1024 ** 3;
@@ -18,7 +19,7 @@ function validateHeader(header) {
     fail("INCOMPATIBLE", "Unsupported library package format version.");
   }
   const { manifest, sourceBytes, databaseBytes } = header;
-  if (!isObject(manifest) || manifest.schemaVersion !== 1 || manifest.parserVersion !== "retained-v1") {
+  if (!isObject(manifest) || manifest.schemaVersion !== 1 || !SUPPORTED_PARSERS.includes(manifest.parserVersion)) {
     fail("INCOMPATIBLE", "Unsupported dataset schema or parser version.");
   }
   const source = manifest.source;

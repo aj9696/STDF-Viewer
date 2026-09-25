@@ -301,3 +301,18 @@ export async function prepareSource(file, context) {
     throw libraryError(error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "INVALID_COMPRESSED_SOURCE", `Could not expand this file: ${error.message ?? error}`);
   }
 }
+
+/** Call only while holding the exclusive library lock; children are disposable. */
+export async function cleanupDecompressionStaging(root) {
+  let directory;
+  try { directory = await root.getDirectoryHandle(TEMP_DIRECTORY); }
+  catch (error) { if (error.name === 'NotFoundError') return 0; throw error; }
+  let removed = 0;
+  for await (const [name, handle] of directory.entries()) {
+    if (handle.kind === 'directory' && /^[0-9a-f-]{36}$/.test(name)) {
+      await directory.removeEntry(name, { recursive: true }); removed++;
+    }
+    if (removed >= 10000) break;
+  }
+  return removed;
+}

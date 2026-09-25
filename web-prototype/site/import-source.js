@@ -76,7 +76,7 @@ export async function importSource(store, file, relativePath, context) {
     for (const [table, columns] of [["records", 7], ["definitions", 4], ["measurements", 10], ["devices", 13]]) {
       statements[table] = db.prepare(`INSERT INTO ${table} VALUES(${Array(columns).fill("?").join(",")})`);
     }
-    parser = new runtime.RetainedParser();
+    parser = new runtime.RetainedParserV2();
     db.exec("BEGIN");
     let sinceCommit = 0, lastProgress = 0;
     for (let offset = 0; offset < sourceFile.size; offset += INPUT_BYTES) {

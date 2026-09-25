@@ -62,6 +62,8 @@ pub struct RetainedSummary {
     pub byte_order: &'static str,
     pub record_counts: BTreeMap<String, u64>,
     pub coverage: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_only_ptr: Option<u64>,
 }
 
 pub struct RetainedEngine {
@@ -80,6 +82,8 @@ pub struct RetainedEngine {
     has_mir: bool,
     has_mrr: bool,
     closed: bool,
+    allow_default_only_ptr: bool,
+    default_only_ptr: u64,
 }
 
 impl Default for RetainedEngine {
@@ -100,11 +104,20 @@ impl Default for RetainedEngine {
             has_mir: false,
             has_mrr: false,
             closed: false,
+            allow_default_only_ptr: false,
+            default_only_ptr: 0,
         }
     }
 }
 
 impl RetainedEngine {
+    /// Additive source admission policy. The default engine remains retained-v1.
+    pub fn version_two() -> Self {
+        Self {
+            allow_default_only_ptr: true,
+            ..Self::default()
+        }
+    }
     pub fn push(&mut self, bytes: &[u8]) -> Result<Batch, String> {
         if self.closed {
             return Err("Parser is closed; create a new parser.".into());
@@ -274,7 +287,16 @@ impl RetainedEngine {
             }
             (15, 10) => {
                 validate_ptr(body)?;
-                let id = self.device_for(body[4], body[5])?;
+                self.require_mir()?;
+                let default_only = self.allow_default_only_ptr
+                    && !self.open_devices.contains_key(&(body[4], body[5]))
+                    && body[6] & 0x10 != 0
+                    && body[7] == 0;
+                let id = if default_only {
+                    None
+                } else {
+                    Some(self.device_for(body[4], body[5])?)
+                };
                 let number = uint32(body, order);
                 let definition = match self
                     .definitions
@@ -300,22 +322,28 @@ impl RetainedEngine {
                         id
                     }
                 };
-                let bits = uint32(&body[8..], order);
-                let result = f32::from_bits(bits);
-                batch.measurements.push((
-                    seq,
-                    id,
-                    definition,
-                    number,
-                    body[4],
-                    body[5],
-                    body[6],
-                    body[7],
-                    bits,
-                    result.is_finite().then_some(f64::from(result)),
-                ));
-                self.measurements += 1;
-                device = Some(id);
+                if let Some(id) = id {
+                    let bits = uint32(&body[8..], order);
+                    let result = f32::from_bits(bits);
+                    batch.measurements.push((
+                        seq,
+                        id,
+                        definition,
+                        number,
+                        body[4],
+                        body[5],
+                        body[6],
+                        body[7],
+                        bits,
+                        result.is_finite().then_some(f64::from(result)),
+                    ));
+                    self.measurements += 1;
+                    device = Some(id);
+                } else {
+                    self.default_only_ptr += 1;
+                    decoded = Some(json!({"DEFAULT_ONLY":true,"TEST_NUM":number,"HEAD_NUM":body[4],"SITE_NUM":body[5],
+                        "TEST_FLG":body[6],"PARM_FLG":body[7],"DEFINITION_ID":definition}).to_string());
+                }
             }
             (15, 15) => {
                 // MPR arrays are indexed rather than normalized; verify mandatory payload bounds.
@@ -394,7 +422,7 @@ impl RetainedEngine {
             })
             .map(|(&(typ, sub), &count)| (format!("{typ}/{sub}"), count))
             .collect();
-        Ok(RetainedSummary {
+        let mut summary = RetainedSummary {
             version: 1,
             bytes: self.received,
             records: self.records,
@@ -419,7 +447,13 @@ impl RetainedEngine {
                     "Indexed-only record families are framed but their complete field semantics are not validated.",
                     "PTR declarations preserve omissions; defaults and analytical populations are unresolved."]
             }),
-        })
+            default_only_ptr: self.allow_default_only_ptr.then_some(self.default_only_ptr),
+        };
+        if self.allow_default_only_ptr {
+            summary.coverage["default_only_ptr"] = self.default_only_ptr.into();
+            summary.coverage["default_only_policy"] = "Orphan PTR with TEST_FLG bit 4 set and PARM_FLG zero retains declaration and record without a measurement.".into();
+        }
+        Ok(summary)
     }
 }
 
@@ -462,6 +496,31 @@ mod browser {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
             Self(RetainedEngine::default())
+        }
+        pub fn push(&mut self, bytes: &[u8]) -> Result<String, JsValue> {
+            self.0
+                .push(bytes)
+                .and_then(|batch| serde_json::to_string(&batch).map_err(|e| e.to_string()))
+                .map_err(|e| JsValue::from_str(&e))
+        }
+        pub fn finish(&mut self) -> Result<String, JsValue> {
+            self.0
+                .finish()
+                .and_then(|summary| serde_json::to_string(&summary).map_err(|e| e.to_string()))
+                .map_err(|e| JsValue::from_str(&e))
+        }
+        pub fn memory_bytes(&self) -> usize {
+            core::arch::wasm32::memory_size(0) * 65536
+        }
+    }
+
+    #[wasm_bindgen]
+    pub struct RetainedParserV2(RetainedEngine);
+    #[wasm_bindgen]
+    impl RetainedParserV2 {
+        #[wasm_bindgen(constructor)]
+        pub fn new() -> Self {
+            Self(RetainedEngine::version_two())
         }
         pub fn push(&mut self, bytes: &[u8]) -> Result<String, JsValue> {
             self.0

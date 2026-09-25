@@ -27,9 +27,15 @@ const inventory = await inventoryDirectory(directoryHandle, {
 Both inventory functions return `{ items, skipped }`. An item has
 `{ name, relativePath, size, lastModified, file }` for selected files, or the same
 metadata with `handle` instead of `file` for directory entries. A skipped entry
-has `{ relativePath, code, message }`. Only `.stdf`, `.std`, and `.stf` (case
-insensitive) are candidates; empty files, files larger than 2 GiB, unreadable
+has `{ relativePath, code, message }`. `.stdf`, `.std`, `.stf`, `.gz`, `.bz2` and
+`.zip` (case insensitive) are candidates; empty files, files larger than 2 GiB, unreadable
 files, other extensions, and excluded subfolders are reported as skipped.
+The importer detects raw/compressed content from its signature and validates
+compression checksums. Gzip, bzip2 and single-file unencrypted ZIP are expanded
+through bounded temporary OPFS files with a separate 2 GiB expanded-size cap.
+Identity is the SHA-256 of the expanded STDF plus parser/schema versions; raw
+and compressed copies can therefore reuse the same saved dataset. New imports
+use retained-v2; existing retained-v1 datasets remain readable and restorable.
 
 Paths are relative to the selected directory, use `/`, and preserve case. File
 input `webkitRelativePath` includes the chosen directory's name; this first

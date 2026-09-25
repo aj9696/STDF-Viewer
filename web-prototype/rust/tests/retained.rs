@@ -92,6 +92,84 @@ fn fails(bytes: &[u8]) -> String {
 }
 
 #[test]
+fn version_two_admits_only_flagged_orphan_ptr_defaults_and_keeps_v1_unchanged() {
+    for big in [false, true] {
+        let mut bytes = prefix(big);
+        bytes.extend(ptr(
+            1,
+            2,
+            [0x10, 0],
+            0x7fc01234,
+            &[3, b'V', b'D', b'D'],
+            big,
+        ));
+        bytes.extend(pir(1, 2, big));
+        bytes.extend(ptr(1, 2, [0, 0], 1_f32.to_bits(), &[], big));
+        bytes.extend(prr(1, 2, big));
+        bytes.extend(mrr(big));
+        assert!(RetainedEngine::default().push(&bytes).is_err());
+        for chunk in 1..bytes.len() {
+            let mut engine = RetainedEngine::version_two();
+            let mut rows = Batch::default();
+            for part in bytes.chunks(chunk) {
+                let b = engine.push(part).unwrap();
+                rows.records.extend(b.records);
+                rows.definitions.extend(b.definitions);
+                rows.measurements.extend(b.measurements);
+                rows.devices.extend(b.devices);
+            }
+            let summary = serde_json::to_value(engine.finish().unwrap()).unwrap();
+            assert_eq!(summary["default_only_ptr"], 1);
+            assert_eq!(summary["coverage"]["default_only_ptr"], 1);
+            assert_eq!(summary["records"], 7);
+            assert_eq!(summary["measurements"], 1);
+            assert_eq!(summary["definitions"], 2);
+            assert_eq!(rows.records[2].5, None);
+            assert_eq!(rows.measurements[0].0, 5);
+            assert_eq!(rows.measurements[0].1, 4);
+            let decoded: Value = serde_json::from_str(rows.records[2].6.as_ref().unwrap()).unwrap();
+            assert_eq!(
+                decoded,
+                json!({"DEFAULT_ONLY":true,"TEST_NUM":77,"HEAD_NUM":1,"SITE_NUM":2,"TEST_FLG":16,"PARM_FLG":0,"DEFINITION_ID":1})
+            );
+        }
+        let ordinary = fixture(big);
+        let mut v1 = RetainedEngine::default();
+        let mut v2 = RetainedEngine::version_two();
+        assert_eq!(
+            serde_json::to_value(v1.push(&ordinary).unwrap()).unwrap(),
+            serde_json::to_value(v2.push(&ordinary).unwrap()).unwrap()
+        );
+        let old = serde_json::to_value(v1.finish().unwrap()).unwrap();
+        assert!(old.get("default_only_ptr").is_none());
+        assert_eq!(
+            serde_json::to_value(v2.finish().unwrap()).unwrap()["default_only_ptr"],
+            0
+        );
+    }
+}
+
+#[test]
+fn version_two_still_rejects_unexecuted_parametric_errors_or_other_orphan_families() {
+    for flags in [[0, 0], [0x80, 0], [0x10, 1], [0x10, 0x80]] {
+        let mut bytes = prefix(false);
+        bytes.extend(ptr(1, 2, flags, 0, &[], false));
+        bytes.extend(mrr(false));
+        let mut engine = RetainedEngine::version_two();
+        assert!(engine.push(&bytes).is_err());
+        assert!(engine.finish().is_err());
+    }
+    let mut before_mir = record(0, 10, &[2, 4], false);
+    before_mir.extend(ptr(1, 2, [0x10, 0], 0, &[], false));
+    assert!(RetainedEngine::version_two().push(&before_mir).is_err());
+    for (sub, body) in [(15, vec![0; 12]), (20, vec![0; 7])] {
+        let mut bytes = prefix(false);
+        bytes.extend(record(15, sub, &body, false));
+        assert!(RetainedEngine::version_two().push(&bytes).is_err());
+    }
+}
+
+#[test]
 fn every_chunk_boundary_preserves_known_rows_and_exact_bits() {
     for big in [false, true] {
         let bytes = fixture(big);

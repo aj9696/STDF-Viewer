@@ -1,5 +1,6 @@
 export const SCHEMA_VERSION = 1;
-export const PARSER_VERSION = "retained-v1";
+export const PARSER_VERSION = "retained-v2";
+export const SUPPORTED_PARSERS = ["retained-v1", "retained-v2"];
 export const DATASET_APP_ID = 1396985924;
 export const CATALOG_APP_ID = 1396985923;
 export const MAX_SOURCE_BYTES = 2 * 1024 ** 3;
@@ -50,7 +51,7 @@ export function getManifest(db) {
   const text = db.selectValue("SELECT value FROM meta WHERE key='manifest' AND typeof(value)='text' AND length(value)<=60000");
   if (!text || text.length > 60000) throw libraryError("INCOMPLETE", "Dataset has no complete manifest.");
   const manifest = JSON.parse(text);
-  if (manifest?.schemaVersion !== SCHEMA_VERSION || manifest.parserVersion !== PARSER_VERSION ||
+  if (manifest?.schemaVersion !== SCHEMA_VERSION || !SUPPORTED_PARSERS.includes(manifest.parserVersion) ||
       !manifest.counts || !["records", "measurements", "devices", "definitions"].every((key) => Number.isSafeInteger(manifest.counts[key]) && manifest.counts[key] >= 0) ||
       !manifest.source || !Number.isSafeInteger(manifest.source.size) || manifest.source.size < 1 || manifest.source.size > MAX_SOURCE_BYTES) {
     throw libraryError("INCOMPATIBLE", "Unsupported dataset/parser version.");
@@ -85,6 +86,18 @@ export function verifyDatabase(db, manifest) {
   }
   const bad = db.selectValue("SELECT 1 FROM measurements m LEFT JOIN records r ON r.seq=m.seq LEFT JOIN devices d ON d.id=m.device_id LEFT JOIN definitions t ON t.id=m.definition_id WHERE r.seq IS NULL OR r.type!=15 OR r.subtype!=10 OR r.device_id IS NOT m.device_id OR d.id IS NULL OR t.id IS NULL OR t.test_number!=m.test_number OR m.head!=d.head OR m.site!=d.site OR m.seq<=d.id OR m.seq>=d.prr_seq LIMIT 1");
   if (bad) throw libraryError("CORRUPT", "Measurement references do not match retained records/devices/definitions.");
+    const defaults = db.selectValue('SELECT COUNT(*) FROM records WHERE type=15 AND subtype=10 AND device_id IS NULL');
+    if (defaults !== (manifest.coverage?.default_only_ptr ?? 0)) throw libraryError('CORRUPT', 'Default-only PTR coverage does not match the retained records.');
+  if (defaults) {
+    if (manifest.parserVersion !== 'retained-v2' || defaults !== manifest.coverage?.default_only_ptr) throw libraryError('CORRUPT', 'Unassociated PTR records are not documented default declarations.');
+    const rows = db.prepare('SELECT decoded_json FROM records WHERE type=15 AND subtype=10 AND device_id IS NULL');
+    try {
+      while (rows.step()) {
+        let marker; try { marker = JSON.parse(rows.get(0)); } catch { /* Fail the scalar checks below. */ }
+        if (!marker || marker.DEFAULT_ONLY !== true || !Number.isInteger(marker.TEST_FLG) || marker.TEST_FLG < 0 || marker.TEST_FLG > 255 || !(marker.TEST_FLG & 16) || marker.PARM_FLG !== 0 || !Number.isInteger(marker.HEAD_NUM) || marker.HEAD_NUM < 0 || marker.HEAD_NUM > 255 || !Number.isInteger(marker.SITE_NUM) || marker.SITE_NUM < 0 || marker.SITE_NUM > 255 || !Number.isSafeInteger(marker.DEFINITION_ID) || db.selectValue('SELECT test_number FROM definitions WHERE id=?', [marker.DEFINITION_ID]) !== marker.TEST_NUM) throw libraryError('CORRUPT', 'Invalid default-only PTR metadata.');
+      }
+    } finally { rows.finalize(); }
+  }
   const badDevice = db.selectValue("SELECT 1 FROM devices d LEFT JOIN records pir ON pir.seq=d.id LEFT JOIN records prr ON prr.seq=d.prr_seq WHERE pir.seq IS NULL OR pir.type!=5 OR pir.subtype!=10 OR prr.seq IS NULL OR prr.type!=5 OR prr.subtype!=20 OR pir.device_id IS NOT d.id OR prr.device_id IS NOT d.id LIMIT 1");
   if (badDevice) throw libraryError("CORRUPT", "Device attempts do not match their PIR/PRR records.");
   const badSpan = db.selectValue("SELECT 1 FROM records r LEFT JOIN records previous ON previous.seq=r.seq-1 WHERE (r.seq=1 AND r.offset!=0) OR (r.seq>1 AND (previous.seq IS NULL OR r.offset!=previous.offset+previous.length)) LIMIT 1");

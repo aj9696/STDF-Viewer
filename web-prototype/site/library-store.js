@@ -27,6 +27,10 @@ export class LibraryStore {
         name: "semidata-library-sahpool", directory: ".semidata-library-v1", initialCapacity: 8,
       });
       const root = await navigator.storage.getDirectory();
+      try {
+        const { cleanupDecompressionStaging } = await import('./compressed-source.js');
+        await cleanupDecompressionStaging(root);
+      } catch (error) { this.stagingWarning = `Temporary decompression cleanup could not finish: ${error.message}`; }
       this.sources = await root.getDirectoryHandle("semidata-sources-v1", { create: true });
       this.exports = await root.getDirectoryHandle("semidata-exports-v1", { create: true });
       const files = this.pool.getFileNames();
@@ -55,7 +59,7 @@ export class LibraryStore {
     return { sqliteVersion: this.sqlite3.version.libVersion, schemaVersion: SCHEMA_VERSION,
       parserVersion: PARSER_VERSION, vfs: this.pool.vfsName, poolCapacity: this.pool.getCapacity(),
       poolFiles: this.pool.getFileCount(), sqliteMemoryBytes: this.sqlite3.wasm.heap8u().byteLength,
-      datasets: this.catalog.selectValue("SELECT count(*) FROM datasets"),
+      datasets: this.catalog.selectValue("SELECT count(*) FROM datasets"), stagingWarning: this.stagingWarning ?? null,
       interrupted: this.catalog.selectValue("SELECT count(*) FROM jobs WHERE status='interrupted'") };
   }
   list(table, { offset = 0, limit = 50 } = {}) {
@@ -95,8 +99,8 @@ export class LibraryStore {
       throw libraryError("UNAVAILABLE", `Dataset needs recovery: ${error.message}. Its catalog entry was preserved.`);
     }
   }
-  async duplicate(hash) {
-    const row = this.catalog.selectObject("SELECT * FROM datasets WHERE source_hash=? AND parser_version=? AND schema_version=?", [hash, PARSER_VERSION, SCHEMA_VERSION]);
+  async duplicate(hash, parserVersion = PARSER_VERSION) {
+    const row = this.catalog.selectObject("SELECT * FROM datasets WHERE source_hash=? AND parser_version=? AND schema_version=?", [hash, parserVersion, SCHEMA_VERSION]);
     if (!row) return null;
     const opened = await this.access(row.id);
     opened.db.close();
@@ -122,7 +126,7 @@ export class LibraryStore {
     const id = job.id, time = new Date().toISOString();
     this.catalog.transaction(() => {
       this.catalog.exec({ sql: "INSERT INTO datasets VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        bind: [id, manifest.source.sha256, PARSER_VERSION, SCHEMA_VERSION, job.name, job.relativePath,
+        bind: [id, manifest.source.sha256, manifest.parserVersion, SCHEMA_VERSION, job.name, job.relativePath,
           manifest.source.size, databaseBytes, job.dbPath, job.sourcePath, time, "ready", JSON.stringify(manifest)] });
       this.catalog.exec({ sql: "UPDATE jobs SET status='ready',updated_at=?,source_hash=?,dataset_id=? WHERE id=?",
         bind: [time, manifest.source.sha256, id, job.id] });

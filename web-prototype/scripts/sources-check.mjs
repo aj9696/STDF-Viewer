@@ -26,15 +26,15 @@ const candidates = (...names) => inventoryFiles(names.map((name) => file(name)))
 const resultFor = (value, duplicate = false) => ({ dataset: { id: value.name }, duplicate });
 const withCode = (code) => (error) => error.code === code;
 
-test("inventory filters raw formats, empty/large files, and sorts without a locale", () => {
+test("inventory admits raw/compressed formats, filters empty/large files, and sorts without a locale", () => {
   const huge = file("large.std");
   Object.defineProperty(huge, "size", { value: MAX_SOURCE_BYTES + 1 });
   const exact = file("limit.stf");
   Object.defineProperty(exact, "size", { value: MAX_SOURCE_BYTES });
   const result = inventoryFiles([file("z.std"), file("empty.stf", ""),
-    file("a.STDF"), file("compressed.stdf.gz"), file("B.StF"), huge, exact]);
-  assert.deepEqual(result.items.map((item) => item.name), ["B.StF", "a.STDF", "limit.stf", "z.std"]);
-  assert.deepEqual(result.skipped.map((item) => item.code), ["UNSUPPORTED_EXTENSION", "EMPTY_FILE", "FILE_TOO_LARGE"]);
+    file("a.STDF"), file("compressed.stdf.gz"), file("bzip.stdf.bz2"), file("bundle.zip"), file("notes.txt"), file("B.StF"), huge, exact]);
+  assert.deepEqual(result.items.map((item) => item.name), ["B.StF", "a.STDF", "bundle.zip", "bzip.stdf.bz2", "compressed.stdf.gz", "limit.stf", "z.std"]);
+  assert.deepEqual(result.skipped.map((item) => item.code), ["EMPTY_FILE", "FILE_TOO_LARGE", "UNSUPPORTED_EXTENSION"]);
   assert.equal(result.items[1].file.name, "a.STDF");
 });
 

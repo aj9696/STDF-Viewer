@@ -1,6 +1,6 @@
 export const MAX_SOURCE_BYTES = 2 * 1024 ** 3;
 const MAX_ENTRIES = 10000;
-const RAW_EXTENSION = /\.(stdf|std|stf)$/i;
+const RAW_EXTENSION = /\.(stdf|std|stf|gz|bz2|zip)$/i;
 
 function sourceError(code, message) {
   return Object.assign(new Error(message), { code });
@@ -91,7 +91,7 @@ export function inventoryFiles(files, options = {}) {
     if (!includeSubfolders && relativePath.includes("/")) {
       result.skip(relativePath, "SUBFOLDER_EXCLUDED", "Enable subfolders to include this source.");
     } else if (!RAW_EXTENSION.test(relativePath)) {
-      result.skip(relativePath, "UNSUPPORTED_EXTENSION", "Select a raw .stdf, .std, or .stf file.");
+      result.skip(relativePath, "UNSUPPORTED_EXTENSION", "Select STDF, gzip, bzip2, or single-file ZIP.");
     } else result.add(file, relativePath, { file });
   }
   return result.result();
@@ -121,7 +121,7 @@ export async function inventoryDirectory(handle, options = {}) {
         } else if (entry.kind !== "file") {
           result.skip(relativePath, "INVALID_SOURCE", "Unsupported filesystem entry.");
         } else if (!RAW_EXTENSION.test(entry.name)) {
-          result.skip(relativePath, "UNSUPPORTED_EXTENSION", "Select a raw .stdf, .std, or .stf file.");
+          result.skip(relativePath, "UNSUPPORTED_EXTENSION", "Select STDF, gzip, bzip2, or single-file ZIP.");
         } else {
           let file;
           try { file = await entry.getFile(); }
