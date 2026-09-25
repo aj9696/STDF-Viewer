@@ -1,11 +1,13 @@
 import { DataLibraryClient } from './data-client.js';
 import { inventoryFiles } from './sources.js';
+import { ImportQueue } from './import-queue.js';
 import { $, bytes, count, element, hydrateIcons, renderRows, renderDataset } from './library-home-view.js';
 
 const PAGE_SIZE = 25;
 let library, datasets = [], page = 0, ready = false, busy = false, generation = 0;
 let selected = null, importedId = null, importing = false, cancelling = false;
 let datasetReturnFocus = null, restoreDatasetFocus = false;
+let selectedItems = [], sourceFiles = [], activeQueue = null;
 
 function returnToDataset() {
   if (!restoreDatasetFocus || busy || $('dataset-dialog').open) return;
@@ -28,6 +30,7 @@ function controls() {
   $('retry-open').disabled = busy;
   $('start-import').disabled = !selected || !ready || busy;
   $('source-file').disabled = importing;
+  for (const id of ['source-folder', 'choose-folder', 'include-subfolders']) $(id).disabled = importing;
   $('close-import').disabled = importing;
   $('cancel-import').disabled = !importing || cancelling;
   $('cancel-import').hidden = !importing;
@@ -143,42 +146,44 @@ function importMessage(message, state = '') {
 function showImport() {
   if (!ready || busy) return;
   selected = null; importedId = null;
+  selectedItems = []; sourceFiles = []; $('import-outcomes').replaceChildren(); $('source-folder').value = '';
   $('source-file').value = '';
   $('selected-file').hidden = true;
   $('drop-zone').hidden = false;
   $('import-progress').hidden = true;
   $('open-imported').hidden = true;
   $('start-import').hidden = false;
-  importMessage('Select one completed STDF file to get started.');
+  importMessage('Select completed STDF files, or choose a folder.');
   controls();
   $('import-dialog').showModal();
 }
 function chooseFiles(files) {
   if (importing) return;
   selected = null;
+  sourceFiles = Array.from(files); selectedItems = []; $('import-outcomes').replaceChildren();
   $('selected-file').hidden = true;
   $('import-progress').hidden = true;
   $('open-imported').hidden = true;
   $('start-import').hidden = false;
   try {
-    if (files.length !== 1) throw new Error('Select a single STDF file.');
-    const inventory = inventoryFiles(Array.from(files));
+    const inventory = inventoryFiles(sourceFiles, { includeSubfolders: $('include-subfolders').checked });
     if (!inventory.items.length) throw new Error(inventory.skipped[0]?.message ?? 'Choose a raw STDF file.');
     selected = inventory.items[0].file;
+    selectedItems = inventory.items;
     $('selected-file').hidden = false;
-    $('selected-name').textContent = selected.name;
-    $('selected-size').textContent = bytes(selected.size);
-    importMessage('Ready to import. The original file will stay unchanged.');
+    $('selected-name').textContent = selectedItems.length === 1 ? selected.name : `${selectedItems.length} files selected`;
+    $('selected-size').textContent = bytes(selectedItems.reduce((total, item) => total + item.size, 0));
+    importMessage(`Ready to import. The original files will stay unchanged.${inventory.skipped.length ? ` ${inventory.skipped.length} entries skipped (unsupported, empty, or outside the chosen folder depth).` : ''}`);
   } catch (error) { importMessage(error.message, 'error'); }
   controls();
 }
 function progress(event) {
   if (!importing) return;
-  const labels = { snapshot: 'Copying and identifying your file', parsing: 'Reading test records', validating: 'Checking the saved dataset', publishing: 'Saving to your library' };
+  const labels = { decompressing: 'Expanding your file locally', snapshot: 'Copying and identifying your file', parsing: 'Reading test records', validating: 'Checking the saved dataset', publishing: 'Saving to your library' };
   const phases = Object.keys(labels), index = phases.indexOf(event.phase);
-  $('phase-label').textContent = `${labels[event.phase] ?? event.phase}${event.phase === 'snapshot' || event.phase === 'parsing' ? ` · ${bytes(event.completedBytes)} of ${bytes(event.totalBytes)}` : ''}`;
+  $('phase-label').textContent = `${labels[event.phase] ?? event.phase}${['decompressing', 'snapshot', 'parsing'].includes(event.phase) ? ` · ${bytes(event.completedBytes)} of ${bytes(event.totalBytes)}` : ''}`;
   $('phase-progress').setAttribute('aria-label', labels[event.phase] ?? event.phase);
-  if (['snapshot', 'parsing'].includes(event.phase) && event.totalBytes > 0) $('phase-progress').value = Math.min(100, event.completedBytes / event.totalBytes * 100);
+  if (['decompressing', 'snapshot', 'parsing'].includes(event.phase) && event.totalBytes > 0) $('phase-progress').value = Math.min(100, event.completedBytes / event.totalBytes * 100);
   else $('phase-progress').removeAttribute('value');
   document.querySelectorAll('[data-phase]').forEach((node, position) => {
     node.classList.toggle('active', position === index);
@@ -200,7 +205,20 @@ async function startImport() {
   importMessage('Preparing your file…');
   await operation(async (epoch) => {
     try {
-      const result = await library.importFile(file);
+      if (selectedItems.length > 1) {
+        activeQueue = new ImportQueue(library);
+        const outcomes = await activeQueue.run(selectedItems, { onProgress: (report) => {
+          importMessage(`${report.completed} of ${report.total} files processed.`);
+          $('import-outcomes').replaceChildren(...report.outcomes.slice(0, 100).map((item) => element('li', `${item.relativePath}: ${item.status}${item.error ? ` — ${item.error.message}` : ''}`)));
+        } });
+        const completed = outcomes.filter((item) => item.dataset);
+        importedId = completed.at(-1)?.dataset.id ?? null;
+        importMessage(`${completed.length} saved or reused; ${outcomes.filter((o) => o.status === 'failed').length} failed; ${outcomes.filter((o) => ['cancelled', 'pending'].includes(o.status)).length} cancelled or not started.`, completed.length ? 'success' : '');
+        $('open-imported').hidden = !importedId;
+        if (completed.length !== outcomes.length) { $('drop-zone').hidden = false; $('start-import').hidden = false; }
+        return;
+      }
+      const result = await library.importFile(file, { relativePath: selectedItems[0]?.relativePath ?? file.name });
       if (epoch !== generation) return;
       importedId = result.dataset.id;
       importMessage(result.duplicate ? 'Already in your library. This file matches a saved dataset, so we reused it.' : 'Saved to your library. Your dataset is ready to reopen.', 'success');
@@ -212,7 +230,7 @@ async function startImport() {
       $('start-import').hidden = false;
     } finally {
       if (epoch === generation) {
-        importing = false; cancelling = false;
+        importing = false; cancelling = false; activeQueue = null;
         $('import-progress').hidden = true;
         if (library.worker) await loadCatalog(epoch);
         else { ready = false; showConnectionError({ message: 'The library connection stopped. Reopen it to inspect the import outcome.' }); }
@@ -257,6 +275,9 @@ $('dataset-rows').addEventListener('click', (event) => {
   if (button) void openDataset(button.dataset.datasetId);
 });
 $('source-file').addEventListener('change', (event) => { if (event.target.files.length) chooseFiles(event.target.files); });
+$('choose-folder').addEventListener('click', () => $('source-folder').click());
+$('source-folder').addEventListener('change', (event) => { if (event.target.files.length) chooseFiles(event.target.files); });
+$('include-subfolders').addEventListener('change', () => { if (sourceFiles.length) chooseFiles(sourceFiles); });
 $('drop-zone').addEventListener('dragover', (event) => { event.preventDefault(); if (!importing) $('drop-zone').classList.add('is-dragging'); });
 $('drop-zone').addEventListener('dragleave', () => $('drop-zone').classList.remove('is-dragging'));
 $('drop-zone').addEventListener('drop', (event) => { event.preventDefault(); $('drop-zone').classList.remove('is-dragging'); chooseFiles(event.dataTransfer.files); });
@@ -264,7 +285,7 @@ $('start-import').addEventListener('click', startImport);
 $('cancel-import').addEventListener('click', async () => {
   if (!importing || cancelling) return;
   cancelling = true; controls(); importMessage('Stopping after the current operation. Waiting for the saved outcome…');
-  await library.cancel();
+  await (activeQueue ? activeQueue.cancel() : library.cancel());
 });
 $('close-import').addEventListener('click', () => { if (!importing) $('import-dialog').close(); });
 $('import-dialog').addEventListener('cancel', (event) => { if (importing) event.preventDefault(); });

@@ -214,8 +214,12 @@ try {
   await page.locator("#source-file").setInputFiles({ name: "wrong-extension.txt", mimeType: "text/plain", buffer: Buffer.from("not STDF") });
   assert.equal(await page.locator("#start-import").isDisabled(), true);
   await dropFiles(page, [{ name: "one.stdf", bytes: [0] }, { name: "two.stdf", bytes: [0] }]);
-  assert.equal(await page.locator("#start-import").isDisabled(), true);
-  assert.match(await page.locator("#import-status").innerText(), /one|single/i);
+  assert.equal(await page.locator("#start-import").isDisabled(), false);
+  assert.equal(await page.locator("#selected-name").innerText(), '2 files selected');
+  await page.locator('#start-import').click();
+  await page.waitForFunction(() => /2 failed/.test(document.querySelector('#import-status').textContent));
+  assert.equal(await page.locator('#import-outcomes li').count(), 2);
+  await page.waitForFunction(() => !document.querySelector('#close-import').disabled);
   await countRows(page, 1);
   await page.keyboard.press("Escape");
   await dialogOpen(page, "import-dialog", false);

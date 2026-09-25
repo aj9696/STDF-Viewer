@@ -14,7 +14,7 @@
     <a class="brand" href="./app.html" aria-label="SemiData home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>SemiData<span class="brand-subtitle">TEST DATA WORKSPACE</span></span></a>
     <div class="workspace-label"><span class="workspace-avatar" aria-hidden="true">L</span><div>Local workspace<small>On this device</small></div></div>
     <div class="nav-label">WORKSPACE</div>
-    <nav><a class="nav-item active" href="./app.html" aria-current="page"><span data-icon="library"></span>Data library<span id="sidebar-count" class="nav-count">—</span></a></nav>
+    <nav><a class="nav-item active" href="./app.html" aria-current="page"><span data-icon="library"></span>Data library<span id="sidebar-count" class="nav-count">—</span></a><a class="nav-item" href="./viewer.html">Data viewer</a></nav>
     <div class="sidebar-bottom">
       <div class="local-note"><span data-icon="shield"></span><strong>Your data stays with you.</strong><p>Files are processed and saved in this browser. No uploads.</p></div>
       <a class="tools-link" href="./foundation.html"><span data-icon="settings"></span>Library tools<span aria-hidden="true">↗</span></a>
@@ -45,10 +45,12 @@
   <dialog id="import-dialog" class="modal import-modal" aria-labelledby="import-title">
     <div class="dialog-heading"><div><p class="eyebrow">ADD TO YOUR LIBRARY</p><h2 id="import-title">Import a test file</h2></div><button id="close-import" class="icon-button" type="button" aria-label="Close import"><span data-icon="close"></span></button></div>
     <p class="dialog-intro">We’ll preserve the original and prepare a local dataset.</p>
-    <label id="drop-zone" class="drop-zone" for="source-file"><span class="drop-icon" data-icon="upload"></span><strong>Drop your STDF here</strong><span>or <b>choose a file</b></span><small>.stdf, .std or .stf · Up to 2 GiB</small><input id="source-file" class="sr-only" type="file" accept=".stdf,.std,.stf" /></label>
+    <label id="drop-zone" class="drop-zone" for="source-file"><span class="drop-icon" data-icon="upload"></span><strong>Drop your STDF files here</strong><span>or <b>choose files</b></span><small>STDF, gzip, bzip2 or single-file ZIP · Up to 2 GiB expanded per file</small><input id="source-file" class="sr-only" type="file" accept=".stdf,.std,.stf,.gz,.bz2,.zip" multiple /></label>
+    <div class="dialog-actions"><button id="choose-folder" class="button secondary" type="button">Choose folder</button><label><input id="include-subfolders" type="checkbox" /> Include subfolders</label><input id="source-folder" class="sr-only" type="file" webkitdirectory multiple /></div>
     <div id="selected-file" class="selected-file" hidden><span data-icon="file"></span><div><strong id="selected-name"></strong><small id="selected-size"></small></div></div>
-    <div id="import-progress" class="import-progress" hidden><ol class="phase-list"><li data-phase="snapshot">Copy</li><li data-phase="parsing">Read</li><li data-phase="validating">Check</li><li data-phase="publishing">Save</li></ol><progress id="phase-progress" max="100" aria-label="Current import phase"></progress><p id="phase-label"></p></div>
+    <div id="import-progress" class="import-progress" hidden><ol class="phase-list"><li data-phase="decompressing">Expand</li><li data-phase="snapshot">Copy</li><li data-phase="parsing">Read</li><li data-phase="validating">Check</li><li data-phase="publishing">Save</li></ol><progress id="phase-progress" max="100" aria-label="Current import phase"></progress><p id="phase-label"></p></div>
     <div id="import-status" class="import-status" role="status" aria-live="polite">Select one completed STDF file to get started.</div>
+    <ul id="import-outcomes" class="import-outcomes" aria-label="Import outcomes"></ul>
     <div class="dialog-actions"><span class="privacy-note"><span data-icon="lock"></span>Stays on your device</span><button id="cancel-import" class="button secondary" type="button" hidden>Cancel import</button><button id="start-import" class="button primary" type="button" disabled>Import file<span data-icon="right"></span></button><button id="open-imported" class="button primary" type="button" hidden>Open dataset<span data-icon="right"></span></button></div>
   </dialog>
 

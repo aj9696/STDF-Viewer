@@ -15,7 +15,7 @@ const server = createServer(async (request, response) => {
   if (path === "/") {
     response.setHeader("Content-Type", "text/html");
     response.end('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chart qualification</title><link rel="stylesheet" href="/viewer-charts.css"><style>body{margin:20px;background:#f4f6fa}main{padding:20px;background:white;max-width:1100px;margin:auto;min-width:0}h1{font:24px Segoe UI}section+section{margin-top:36px}</style><main><h1>Viewer chart qualification</h1><div id="chart"></div></main></html>');
-  } else if (["/viewer-charts.js", "/viewer-charts.css"].includes(path)) {
+  } else if (["/viewer-charts.js", "/viewer-charts.css", "/viewer-number.js"].includes(path)) {
     response.setHeader("Content-Type", path.endsWith(".js") ? "text/javascript" : "text/css");
     response.end(await readFile(resolve(base, "site", path.slice(1))));
   } else { response.writeHead(404); response.end(); }
@@ -63,6 +63,17 @@ try {
   assert.equal(png.type, "image/png"); assert.ok(png.size > 1000);
   await page.screenshot({ path: resolve(output, "trend.png"), fullPage: true });
   checks.push("trend semantics, hidden-series scope, reversed-range validation, pointer range, safe labels, PNG");
+  const beforeZoom = await page.evaluate(() => ({ x: [...handle.fullDomain.x], y: [...handle.fullDomain.y], picks: picks.length }));
+  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  const zoom = await page.evaluate(() => handle.viewport); assert.ok(zoom.x[1] - zoom.x[0] < beforeZoom.x[1] - beforeZoom.x[0]);
+  await page.getByRole('button', { name: 'Pan right', exact: true }).click(); assert.ok(await page.evaluate((x) => handle.viewport.x[0] > x, zoom.x[0]));
+  await page.getByLabel('Pointer drag', { exact: true }).selectOption('zoom');
+  await page.mouse.move(canvas.x + 180, canvas.y + 80); await page.mouse.down(); await page.mouse.move(canvas.x + 400, canvas.y + 180); await page.mouse.up();
+  assert.equal(await page.evaluate(() => picks.length), beforeZoom.picks); assert.ok(await page.evaluate((x) => handle.viewport.x[1] - handle.viewport.x[0] < x, zoom.x[1] - zoom.x[0]));
+  await page.getByLabel('Pointer drag', { exact: true }).selectOption('pan');
+  const beforePan = await page.evaluate(() => [...handle.viewport.x]); await page.mouse.move(canvas.x + 400, canvas.y + 160); await page.mouse.down(); await page.mouse.move(canvas.x + 300, canvas.y + 160); await page.mouse.up(); assert.notDeepEqual(await page.evaluate(() => handle.viewport.x), beforePan);
+  await page.getByRole('button', { name: 'Reset chart', exact: true }).click(); assert.equal(await page.evaluate(() => handle.viewport), null);
+  await page.getByLabel('Pointer drag', { exact: true }).selectOption('inspect'); checks.push('Keyboard zoom/pan and pointer rectangle/pan preserve query scope and reset full extent');
   await page.evaluate(() => {
     const previous = handle; makeTrend(); previous.destroy();
   });

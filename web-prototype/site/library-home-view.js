@@ -84,8 +84,11 @@ export function renderDataset(dataset) {
   coverage.append(element('p', `Measurement rows: ${Array.isArray(families) && families.length ? families.join(', ') : 'None declared'}. Other record families are available in the original source.`, 'muted'));
   const identity = element('details', undefined, 'fingerprint');
   identity.append(element('summary', 'File fingerprint'), element('p', 'This content fingerprint identifies duplicate files, even after a rename.'), element('code', dataset.source_hash));
-  const explore = element('a', 'Explore tests', 'button primary');
+  const viewer = element('a', 'Open data viewer', 'button primary');
+  viewer.href = `./viewer.html?dataset=${encodeURIComponent(dataset.id)}`;
+  viewer.append(icon('right'));
+  const explore = element('a', 'Explore tests', 'button secondary');
   explore.href = `./explore.html?dataset=${encodeURIComponent(dataset.id)}`;
   explore.append(icon('right'));
-  $('dataset-info').replaceChildren(explore, grid, source, coverage, identity);
+  $('dataset-info').replaceChildren(viewer, explore, grid, source, coverage, identity);
 }

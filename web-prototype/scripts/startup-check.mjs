@@ -66,7 +66,7 @@ try {
     page.on("requestfailed", (request) => requestFailures.push({ url: request.url(), error: request.failure()?.errorText }));
   });
 
-  for (const filename of ["app.html", "explore.html"]) {
+  for (const filename of ["app.html", "explore.html", "viewer.html"]) {
     const page = activePage = await context.newPage();
     const workers = [], requests = [];
     page.on("worker", (worker) => workers.push(worker.url()));
@@ -76,15 +76,16 @@ try {
     assert.match(await page.locator("#boot-error-text").innerText(), /browser|address|localhost|server|http/i);
     assert.equal(await page.locator("#boot-library").getAttribute("href"), "http://127.0.0.1:8766/app.html");
     assert.equal(await page.locator("#boot-reload").isVisible(), false);
-    assert.equal(await page.locator(filename === "app.html" ? "#connection-status" : "#explorer-status").innerText(), "App not started");
+    assert.equal(await page.locator(filename === "explore.html" ? "#explorer-status" : "#connection-status").innerText(), "App not started");
     if (filename === "app.html") assert.equal(await page.locator("#loading-library").isVisible(), false);
+    if (filename === "viewer.html") assert.equal(await page.locator("#viewer-progress").isVisible(), false);
     assert.deepEqual(workers, []);
-    assert.ok(requests.every((url) => !/\/(library-home|explorer|data-client|data-worker)\.js(?:\?|$)/.test(url)), "File guard must run before importing the application graph");
+    assert.ok(requests.every((url) => !/\/(library-home|explorer|viewer|data-client|data-worker)\.js(?:\?|$)/.test(url)), "File guard must run before importing the application graph");
     await noAutomaticNavigation(page);
     await screenshot(page, `file-${filename}.png`);
     await page.close();
   }
-  checks.push("actual file URLs: library and Explorer show local-server guidance, correct localhost link, no reload button, no application module/worker and no infinite spinner");
+  checks.push("actual file URLs: library, Explorer and viewer show local-server guidance, correct localhost link, no reload button, no application module/worker and no infinite spinner");
 
   const bootSource = await readFile(resolve(site, "boot.js"), "utf8");
   const viewSource = await readFile(resolve(site, "library-home-view.js"), "utf8");
@@ -112,8 +113,8 @@ try {
   await assertSavedDataset(page, datasetId);
   checks.push("normal HTTP: real STDF import completes through the UI and exposes the known saved source hash");
 
-  for (const filename of ["app.html", "explore.html"]) {
-    const target = `${origin}/${filename}${filename === "explore.html" ? `?dataset=${datasetId}` : ""}`;
+  for (const filename of ["app.html", "explore.html", "viewer.html"]) {
+    const target = `${origin}/${filename}${filename !== "app.html" ? `?dataset=${datasetId}` : ""}`;
     for (const mode of ["fetch-failure", "missing-export", "timeout"]) {
       fault = mode;
       await page.goto(target, { waitUntil: "domcontentloaded" });
@@ -121,7 +122,7 @@ try {
       assert.equal(await page.locator("#boot-reload").isVisible(), true);
       assert.equal(await page.locator("#boot-reload").isEnabled(), true);
       assert.equal(await page.locator("#boot-library").evaluate((link) => link.href), `${origin}/app.html`);
-      assert.equal(await page.locator(filename === "app.html" ? "#connection-status" : "#explorer-status").innerText(), "App not started");
+      assert.equal(await page.locator(filename === "explore.html" ? "#explorer-status" : "#connection-status").innerText(), "App not started");
       if (filename === "app.html") assert.equal(await page.locator("#loading-library").isVisible(), false);
       const text = await page.locator("#boot-error-text").innerText();
       assert.ok(text.trim().length > 0);
@@ -132,18 +133,22 @@ try {
       await page.locator("#boot-reload").click();
       if (filename === "app.html") {
         await libraryReady(page); await assertSavedDataset(page, datasetId);
-      } else {
+      } else if (filename === 'explore.html') {
         await explorerReady(page);
         assert.equal(await page.locator("#explorer-dataset").innerText(), "golden-little.stdf");
         await page.locator('[data-test-number="77"]').click(); await explorerReady(page);
         assert.match(await page.locator("#test-summary").innerText(), /5 observations.*3 recorded declarations/);
+      } else {
+        await page.waitForFunction(() => document.querySelector('#main')?.getAttribute('aria-busy') === 'false' && !document.querySelector('#tab-devices')?.disabled);
+        assert.equal(await page.locator('#viewer-error').isVisible(), false);
+        assert.match(await page.locator('#viewer-panel').innerText(), /golden-little\.stdf/);
       }
       assert.equal(await page.locator("#boot-error").isVisible(), false);
     }
   }
   await page.goto(`${origin}/app.html`); await libraryReady(page);
   await assertSavedDataset(page, datasetId);
-  checks.push("HTTP boot recovery on both pages: failed dependency, stale missing export and bounded module timeout show explicit reload; successful retry preserves dataset ID/hash and readable observations");
+  checks.push("HTTP boot recovery on all three pages: failed dependency, stale missing export and bounded module timeout show explicit reload; successful retry preserves dataset ID/hash and readable observations");
   assert.deepEqual(pageErrors, []);
   const report = { recordedAt: new Date().toISOString(), channel, browserVersion: context.browser().version(),
     checks, datasetId, sourceSha256: expected.sourceSha256, faultEvidence, requestFailures, pageErrors,

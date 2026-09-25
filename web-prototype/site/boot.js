@@ -9,7 +9,7 @@
   const libraryLink = document.getElementById('boot-library');
   const reload = document.getElementById('boot-reload');
   const status = document.getElementById('connection-status') ?? document.getElementById('explorer-status');
-  const loader = document.getElementById('loading-library');
+  const loader = document.getElementById('loading-library') ?? document.getElementById('viewer-progress');
 
   function explain(heading, detail) {
     title.textContent = heading;
@@ -17,6 +17,9 @@
     notice.hidden = false;
     if (loader) loader.hidden = true;
     if (status) status.textContent = 'App not started';
+    document.getElementById('main')?.setAttribute('aria-busy', 'false');
+    const viewer = document.getElementById('viewer-panel');
+    if (viewer) viewer.textContent = 'Waiting for the app to start. Use the launch guidance above.';
     const dataset = document.getElementById('explorer-dataset');
     if (dataset) dataset.textContent = 'Open a dataset from Data library.';
     const caption = document.getElementById('library-caption') ?? document.getElementById('test-count');
@@ -27,7 +30,7 @@
     libraryLink.href = 'http://127.0.0.1:8766/app.html';
     reload.hidden = true;
     explain('Open SemiData from its local app address',
-      'This HTML file cannot run directly from disk. Select Open Data library below, then choose a saved dataset and Explore tests. If that address is unavailable, start the local server using the browser app README. Each browser profile has its own saved library.');
+      'This HTML file cannot run directly from disk. Select Open Data library below, then choose a saved dataset and Open data viewer. If that address is unavailable, start the local server using the browser app README. Each browser profile has its own saved library.');
     return;
   }
 
