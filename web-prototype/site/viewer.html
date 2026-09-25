@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./app.css" />
   <link rel="stylesheet" href="./viewer.css" />
   <link rel="stylesheet" href="./viewer-charts.css" />
+  <link rel="stylesheet" href="./viewer-studies.css" />
   <script defer src="./boot.js" data-entry="./viewer.js" onerror="document.getElementById('boot-error').hidden=false"></script>
 </head>
 <body class="data-viewer">
@@ -36,6 +37,7 @@
           <details class="viewer-health viewer-detail"><summary>Find failing tests</summary><button id="viewer-scan-health" class="button secondary" data-ready disabled>Scan test health</button><p id="viewer-health-status" class="viewer-help">Check failures and low Cpk for all tests.</p></details>
         </aside>
         <section class="viewer-content" aria-label="Investigation">
+          <div class="viewer-tool-row"><label id="viewer-tool-label" for="viewer-tool">Tools</label><select id="viewer-tool" data-ready disabled><option value="">Choose a tool…</option></select></div>
           <div class="viewer-tabs" role="tablist" aria-label="Data views">
             <button role="tab" data-tab="histogram" aria-selected="false" aria-controls="viewer-panel" id="tab-histogram" data-ready disabled>Histogram</button><button role="tab" data-tab="trend" aria-selected="false" aria-controls="viewer-panel" id="tab-trend" data-ready disabled>Trend</button><button role="tab" data-tab="tests" aria-selected="false" aria-controls="viewer-panel" id="tab-tests" data-ready disabled>Statistics</button><button role="tab" data-tab="devices" aria-selected="false" aria-controls="viewer-panel" id="tab-devices" data-ready disabled>Devices</button><button role="tab" data-tab="bins" aria-selected="false" aria-controls="viewer-panel" id="tab-bins" data-ready disabled>Bins</button><button role="tab" data-tab="wafers" aria-selected="false" aria-controls="viewer-panel" id="tab-wafers" data-ready disabled>Wafers</button><button role="tab" data-tab="overview" aria-selected="true" aria-controls="viewer-panel" id="tab-overview" data-ready disabled>File info</button><button role="tab" data-tab="records" aria-selected="false" aria-controls="viewer-panel" id="tab-records" data-ready disabled>Records</button>
           </div>
