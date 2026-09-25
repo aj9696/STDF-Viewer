@@ -2,6 +2,9 @@
 
 ## Browser preview — unreleased
 
+- Explain direct `file://` launches before opening storage; replace app-module
+  loading failures with explicit recovery guidance instead of a permanent spinner.
+
 - Add Test Explorer to the saved-dataset overview: literal test search, recorded
   PTR declarations and paged observations with attempt IDs and raw flags.
 - Preserve omitted/empty fields and IEEE-754 special values in the display;

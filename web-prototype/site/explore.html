@@ -7,7 +7,7 @@
   <title>SemiData · Test Explorer</title>
   <link rel="stylesheet" href="./app.css" />
   <link rel="stylesheet" href="./explorer.css" />
-  <script type="module" src="./explorer.js"></script>
+  <script defer src="./boot.js" data-entry="./explorer.js"></script>
 </head>
 <body class="explorer">
   <a class="skip-link" href="#main">Skip to Test Explorer</a>
@@ -22,6 +22,7 @@
     <header class="topbar"><div class="breadcrumb"><a href="./app.html">Data library</a><span aria-hidden="true">/</span><strong>Test Explorer</strong></div><span id="explorer-status" role="status">Opening library…</span></header>
     <main id="main" tabindex="-1">
       <div class="page-heading"><div><p class="eyebrow">INSIDE YOUR DATA</p><h1 id="explorer-title">Test Explorer<span class="title-dot">.</span></h1><p id="explorer-dataset" class="page-description">Opening the saved dataset…</p></div><a class="button secondary" href="./app.html"><span data-icon="left"></span>Back to library</a></div>
+      <div id="boot-error" class="notice error-notice" role="alert" hidden><div><strong id="boot-error-title"></strong><p id="boot-error-text"></p></div><a id="boot-library" class="button secondary" href="http://127.0.0.1:8766/app.html">Open Data library</a><button id="boot-reload" class="button secondary" type="button">Reload app</button></div>
       <div id="explorer-error" class="notice error-notice" role="alert" hidden><div><strong>Unable to read the dataset</strong><p id="explorer-error-text"></p></div><button id="explorer-retry" class="button secondary" type="button">Try again</button></div>
       <div class="explorer-layout">
         <section class="library-panel test-catalog" aria-labelledby="tests-heading">

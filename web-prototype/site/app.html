@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#142331" />
   <title>SemiData · Your data library</title>
   <link rel="stylesheet" href="./app.css" />
-  <script type="module" src="./library-home.js"></script>
+  <script defer src="./boot.js" data-entry="./library-home.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to library</a>
@@ -25,6 +25,7 @@
     <header class="topbar"><div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong>Data library</strong></div><button class="local-status quiet-button" id="show-storage" type="button" aria-label="Show library storage details"><span class="status-dot"></span><span id="connection-status" role="status">Opening library…</span><span data-icon="chevron"></span></button></header>
     <main id="main" tabindex="-1">
       <div class="page-heading"><div><p class="eyebrow">YOUR WORKSPACE, ON YOUR TERMS</p><h1>Data library<span class="title-dot">.</span></h1><p class="page-description">Your test files. Organized, preserved, ready for what’s next.</p></div><button id="add-file" class="button primary" type="button" disabled><span data-icon="plus"></span>Import STDF</button></div>
+      <div id="boot-error" class="notice error-notice" role="alert" hidden><div><strong id="boot-error-title"></strong><p id="boot-error-text"></p></div><a id="boot-library" class="button secondary" href="http://127.0.0.1:8766/app.html">Open Data library</a><button id="boot-reload" class="button secondary" type="button">Reload app</button></div>
       <div id="connection-error" class="notice error-notice" role="alert" hidden><div><strong id="connection-error-title"></strong><p id="connection-error-text"></p></div><button id="retry-open" class="button secondary" type="button">Try again</button></div>
       <div id="library-notice" class="notice" role="status" hidden></div>
       <div class="library-summary" aria-label="Library summary"><div><span>Saved datasets</span><strong id="total-datasets">—</strong></div><div><span>Measurements</span><strong id="total-measurements">—</strong></div><div><span>Source data</span><strong id="total-bytes">—</strong></div><div class="summary-note"><span data-icon="fingerprint"></span><p>Same file, new name?<br><strong>We’ll recognize it.</strong></p></div></div>
