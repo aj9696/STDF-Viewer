@@ -4,6 +4,9 @@ This module inventories local sources and runs a sequential import queue. It has
 no UI, parser, database, analytics, folder watcher, or upload behavior. Source
 handles are used only for reading. The library client owns content hashing,
 duplicate detection, snapshot creation, parsing, persistence, and recovery.
+The [engineering console](../site/foundation.html) integrates these modules.
+Its inventory and outcome tables show the first 100 entries, while a reviewed
+queue can contain all eligible entries within the inventory limit.
 
 ## Inventory API
 
@@ -51,6 +54,9 @@ importing a different selection. Selected `File` objects retain browser snapshot
 semantics; metadata checks cannot prove the underlying file stayed unchanged.
 The importer's own bounded snapshot, stream validation, and content hash remain
 necessary. Rescans are explicit, and each produces a new inventory.
+Wait for the producing test system to finish writing an STDF before importing.
+Metadata checks do not provide an atomic filesystem snapshot or guarantee that
+a concurrently rewritten file with the same size/timestamp cannot change.
 
 ## Remembering a directory
 
@@ -71,6 +77,15 @@ calling reconnect because the gesture may expire. A denied permission is a
 normal result to display; an unsupported API or failed request throws an error.
 Remembered handles remain specific to the browser profile and origin, separate
 from the library's SQLite storage. No filenames or bytes leave the browser.
+
+Folder selection and saved-dataset persistence are independent. A completed
+dataset includes an app-managed source snapshot and database; reopening it does
+not require renewed access to the original folder. Conversely, saving a folder
+handle does not import its files or save a queue. A reload loses selected File
+objects, inventory, and queue state. The file-input fallback cannot remember a
+directory handle: select its folder again to refresh the browser's File objects.
+The console remembers one directory and explicitly checks/reconnects read
+permission. It does not start a background watcher or rescan automatically.
 
 ## Queue API
 
@@ -111,6 +126,11 @@ Cancelling during source acquisition avoids starting that import and marks it
 `cancelled`. Repeated cancellation calls share the first request. A later run
 resets cancellation and replaces previous outcomes. Concurrent runs reject with
 `QUEUE_BUSY`; individual queue instances must not share a client concurrently.
+The queue is session state, not a durable scheduler. The library independently
+records import jobs. After a browser stop, inspect those jobs and published
+datasets; do not infer outcome from the last displayed queue snapshot. Rescan
+and start a new queue deliberately. Successful sources become content duplicates,
+and changed content becomes another dataset even if its filename is unchanged.
 
 Public errors expose a stable string `code`; messages are for people. Inventory
 validation errors include `INVALID_OPTIONS`, `INVALID_SOURCE`, `INVALID_PATH`,
@@ -127,3 +147,15 @@ clients. They cover boundaries, deterministic inventories, changes, permission
 modes, sequential outcomes, cancellation races, and progress isolation.
 Real IndexedDB handle serialization and permission prompts require browser
 integration coverage; Node mocks cannot establish browser permission behavior.
+`source-browser-check.mjs chrome` and `source-browser-check.mjs msedge` exercise
+real OPFS-created directory handles, read permission queries, IndexedDB storage
+across a full browser restart, changed-file/rescan behavior, and the console's
+actual `webkitdirectory` input. Run them with the same `node web-prototype/scripts/`
+prefix after generating the golden fixtures as documented in the README.
+They use only disposable profiles and small fixtures. OPFS handles have different
+permission behavior from native folders: native picker UI and persistent native
+read grants/denials remain separate manual qualifications.
+For recorded browser evidence and remaining manual checks, use
+[LIBRARY-VALIDATION.md](../LIBRARY-VALIDATION.md). Do not interpret passing
+mock-based tests as proof of native folder-picker support in every browser or
+the embedded app browser.

@@ -1,14 +1,111 @@
-# Browser STDF and storage prototypes
+# Browser STDF library and engineering labs
 
-This isolated experiment runs the upstream Rust STDF record parser as WebAssembly
-in a dedicated browser worker. It evaluates bounded ingestion before a browser
-product architecture is selected. The existing SemiData application is unchanged.
+The browser foundation imports raw STDF into local SQLite databases, retains
+exact source snapshots, reopens saved records, and exports/restores portable
+packages. A Rust/WASM decoder and SQLite run in a dedicated worker. Source files
+are read-only; no test-data upload or backend data service is involved. This
+remains an engineering evaluation build, separate from the existing native
+SemiData application. Production frontend design and analysis are future work.
 
-The contract and acceptance criteria are in [SPEC.md](SPEC.md).
-The [next data-logistics proposal](../docs/browser-data-workflow.md) covers
-SQLite persistence, reopen/recovery, export and folder batches. The parser still
-performs summary scans only. The separate BL-1 storage proof below saves one
-synthetic note; it does not yet persist parsed STDF records.
+| Page | Purpose | What it retains |
+| --- | --- | --- |
+| [Library engineering console](http://127.0.0.1:8766/foundation.html) | Evaluate imports, folders, recovery, saved rows, and portability | Source snapshots, per-source databases, catalog and job history |
+| [Summary parser lab](http://127.0.0.1:8766/) | Measure a streaming summary scan | In-memory summaries; optional JSON download |
+| [Synthetic storage proof](http://127.0.0.1:8766/storage.html) | Reproduce the original SQLite persistence experiment | One note in an independent SQLite pool |
+
+Start with the [frontend handoff](docs/FRONTEND-HANDOFF.md) for the console
+workflow and feature boundaries. The [frontend API](docs/FRONTEND-CONTRACT.md)
+and [source/queue API](docs/SOURCES.md) define the integration surfaces. The
+[library validation record](LIBRARY-VALIDATION.md) distinguishes tested behavior
+from remaining qualifications. The original summary experiment has its own
+[specification](SPEC.md) and [validation record](VALIDATION.md).
+
+## Run the library foundation
+
+From the repository root, with Node.js 22 or later and the repository's local
+Python/Rust environment available:
+
+```powershell
+npm.cmd --prefix web-prototype ci --ignore-scripts
+npm.cmd --prefix web-prototype run build:storage
+./web-prototype/build.ps1
+.venv/Scripts/python.exe -m http.server 8766 --bind 127.0.0.1 --directory web-prototype/site
+```
+
+If port 8766 already serves this directory, keep that server running. Open
+[foundation.html](http://127.0.0.1:8766/foundation.html), select **Open library**,
+choose raw files or a source folder, review the inventory, then choose **Import
+reviewed files**. Close/reopen the library or browser at the same origin/profile
+to inspect retained records without selecting the originals again.
+
+The library normalizes PTR measurements and preserves repeated observations,
+flags, result bits, device attempts, declarations, record order, and source byte
+offsets. MPR/FTR and other unnormalized families remain accessible through raw
+record indexes and the original bytes. Effective defaults, eligibility, retest
+consolidation, yield, PAT, and charting are outside this foundation. Check each
+dataset's `manifest.coverage` before designing any analytical feature.
+
+The database creates test/device indexes before inserting rows and maintains
+them within bounded write transactions. This avoids a later whole-dataset index
+sort. Import `writeMs` therefore includes index maintenance; `validationMs`
+measures manifest/data checks, not a post-import index build. End-to-end
+`totalMs` includes additional setup, final commit and publication work. See the
+[API's metrics definitions](docs/FRONTEND-CONTRACT.md#storage-schema-and-memory)
+when interpreting measurements.
+
+Use **Export dataset package**, save the resulting `.sdlibrary` download, and
+confirm it finished before **Release listed completed downloads**. Restore
+checks package hashes and the staged database, including duplicate packages;
+it does not overwrite an existing completed dataset. Package downloads stay
+disk-backed. Temporary exports, including interrupted ones, remain discoverable
+for explicit cleanup. See the [handoff](docs/FRONTEND-HANDOFF.md) for recovery.
+
+SQLite storage belongs to the exact origin and browser profile, independently
+of the source folder. Changing the port or browser profile opens another library.
+Persistence requests are not backups or reserved disk space. Closing a page
+terminates its worker; unfinished work must be inspected after reopening.
+No service worker or offline-startup guarantee is provided.
+
+### Foundation verification
+
+```powershell
+. .venv/runtime-environment.ps1
+cargo test --locked --manifest-path web-prototype/rust/Cargo.toml
+.venv/Scripts/python.exe web-prototype/scripts/make-library-fixtures.py
+node web-prototype/scripts/retained-check.mjs .venv/library-fixtures/golden-little.stdf
+node web-prototype/scripts/retained-check.mjs .venv/library-fixtures/golden-big.stdf
+node web-prototype/scripts/sources-check.mjs
+node web-prototype/scripts/source-browser-check.mjs chrome
+node web-prototype/scripts/source-browser-check.mjs msedge
+node web-prototype/scripts/transfer-check.mjs
+node web-prototype/scripts/library-check.mjs chrome
+node web-prototype/scripts/library-check.mjs msedge
+```
+
+The retained-parser checks require the built `site/pkg/` assets. Browser checks
+use installed Chrome/Edge, a temporary loopback server, and disposable profiles
+under ignored `web-prototype/results/`; no browser is downloaded automatically.
+The browser harness also requires the external evaluation fixture at
+`../semidata-evaluation.stdf` relative to the repository, with SHA-256
+`792afbf3596d3b4b19fb861131310f42b9b712d6c039d359594cee3e2df7aa01`.
+That file is not committed or downloaded by these commands. The generated
+little/big-endian fixtures and source/transfer checks do not require it.
+`source-browser-check.mjs` uses the small generated golden fixture, real OPFS
+directory handles/IndexedDB, a full browser restart, and the actual folder-input
+fallback in the console. It does not drive or qualify native OS picker prompts.
+
+For the recovery harness, also generate its 1M-measurement input:
+
+```powershell
+.venv/Scripts/python.exe -m benchmarks.generate --duts 10000 --tests 100
+node web-prototype/scripts/library-recovery-check.mjs chrome
+node web-prototype/scripts/library-recovery-check.mjs msedge
+```
+
+Fault injection is confined to the harness's disposable profile. See
+[LIBRARY-VALIDATION.md](LIBRARY-VALIDATION.md) for evidence, exact test scope, and
+remaining browser/volume limits. Summary scan timings below are not import or
+portability measurements.
 
 ## Run the storage proof
 
@@ -53,7 +150,7 @@ No browser download is automatic. Raw results and small SQLite backups remain
 beside those profiles; they are ignored by Git. See
 [STORAGE-VALIDATION.md](STORAGE-VALIDATION.md) for results and untested cases.
 
-## Run the experiment
+## Run the summary parser experiment
 
 From the repository root in PowerShell, using the repository's local Rust setup:
 
@@ -75,9 +172,9 @@ and a native comparison executable into `.venv/toolchain/web-target/release/`.
 No Python packages or global toolchains are modified. Generated parser assets
 are ignored by Git and rebuilt from the committed Cargo lockfile. The parser
 has no npm runtime dependency, bundler, CDN, or backend API; the separate storage
-proof uses the locally copied SQLite assets.
+proof and persistent library use the locally copied SQLite assets.
 
-## What the numbers mean
+## What the summary numbers mean
 
 The summary counts every completely framed record by type/subtype. Only PTR
 measurement fields are decoded; other record contents are not fully validated.
@@ -103,7 +200,7 @@ no preceding PTR identity means unknown identity. Non-PTR record identities do
 not participate. This label policy is separate from STDF's optional-field
 defaults, which begin after OPT_FLAG.
 
-## Why memory does not grow with the measurement count
+## Why summary-parser state does not grow with measurement count
 
 The worker awaits one `File.slice()` read at a time, using at most 4 MiB per read.
 wasm-bindgen copies that input slice into WASM for one `push` call. Complete
@@ -123,7 +220,7 @@ slice and browser/runtime overhead. Worker termination releases its runtime.
 This design bounds live parser state independently of file length; measured RSS
 and throughput still depend on file composition, browser, machine, and GC.
 
-## Validation commands
+## Summary-parser validation commands
 
 ```powershell
 . .venv/runtime-environment.ps1
@@ -156,7 +253,10 @@ without simultaneous builds or native import benchmarks. **These timings are
 not comparable to full database import timings:** this proof does no database
 writes, indexes, retest resolution, persisted history, or full-record decoding.
 
-## Boundaries and next decisions
+## Summary-lab boundaries
+
+These boundaries apply to the summary page, not the separate persistent library
+at `foundation.html`:
 
 - Raw IEEE STDF v4 only; no gzip/ZIP/bzip2, VAX floats, or browser persistence.
 - Structural validation covers record framing and present PTR fields. It is not
@@ -164,11 +264,12 @@ writes, indexes, retest resolution, persisted history, or full-record decoding.
 - No database, PAT, charting, or replacement for the existing application.
 - Native/WASM same-source parity alone cannot validate the underlying algorithm;
   the independent reference and known-result fixtures address that limitation.
-- A production browser product would still need indexed/columnar persistence,
-  queries, test metadata policy, retest semantics, compressed input, browser
-  storage quota handling, and a larger real-world correctness corpus.
+- Production analytical features still need a separately designed test-metadata
+  policy, retest semantics, compressed input support, and a larger real-world
+  correctness corpus. The library API supplies retained evidence, not these
+  decisions.
 
-## Observed browser results
+## Historical summary-scan observations
 
 Actual local-file uploads were verified in the Codex in-app browser on the
 development machine (Ryzen 7 7700X / Windows 11). The STDF.io and 1M files were
