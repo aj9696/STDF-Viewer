@@ -2,6 +2,8 @@
 pub mod hashing;
 pub mod retained;
 mod retained_fields;
+pub mod viewer;
+mod viewer_fields;
 use rust_stdf::{ByteOrder, RecordHeader, StdfRecordView};
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
