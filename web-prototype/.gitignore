@@ -3,3 +3,4 @@ site/pkg/
 results/
 node_modules/
 site/sqlite/
+site/vendor/
