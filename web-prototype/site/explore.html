@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#142331" />
+  <title>SemiData · Test Explorer</title>
+  <link rel="stylesheet" href="./app.css" />
+  <link rel="stylesheet" href="./explorer.css" />
+  <script type="module" src="./explorer.js"></script>
+</head>
+<body class="explorer">
+  <a class="skip-link" href="#main">Skip to Test Explorer</a>
+  <aside class="sidebar" aria-label="Workspace navigation">
+    <a class="brand" href="./app.html" aria-label="SemiData home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>SemiData<span class="brand-subtitle">TEST DATA WORKSPACE</span></span></a>
+    <div class="workspace-label"><span class="workspace-avatar" aria-hidden="true">L</span><div>Local workspace<small>On this device</small></div></div>
+    <div class="nav-label">WORKSPACE</div>
+    <nav><a class="nav-item" href="./app.html"><span data-icon="library"></span>Data library</a></nav>
+    <div class="sidebar-bottom"><div class="local-note"><span data-icon="shield"></span><strong>Your data stays with you.</strong><p>Explore your saved data in this browser. No uploads.</p></div><a class="tools-link" href="./foundation.html"><span data-icon="settings"></span>Library tools<span aria-hidden="true">↗</span></a><div class="build-label">OPEN SOURCE <span>·</span> EARLY PREVIEW</div></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><div class="breadcrumb"><a href="./app.html">Data library</a><span aria-hidden="true">/</span><strong>Test Explorer</strong></div><span id="explorer-status" role="status">Opening library…</span></header>
+    <main id="main" tabindex="-1">
+      <div class="page-heading"><div><p class="eyebrow">INSIDE YOUR DATA</p><h1 id="explorer-title">Test Explorer<span class="title-dot">.</span></h1><p id="explorer-dataset" class="page-description">Opening the saved dataset…</p></div><a class="button secondary" href="./app.html"><span data-icon="left"></span>Back to library</a></div>
+      <div id="explorer-error" class="notice error-notice" role="alert" hidden><div><strong>Unable to read the dataset</strong><p id="explorer-error-text"></p></div><button id="explorer-retry" class="button secondary" type="button">Try again</button></div>
+      <div class="explorer-layout">
+        <section class="library-panel test-catalog" aria-labelledby="tests-heading">
+          <div class="panel-heading"><div><h2 id="tests-heading">Tests</h2><p id="test-count">Opening test list…</p></div></div>
+          <form id="test-search"><label for="test-query">Find a test number or name</label><div><input id="test-query" type="search" maxlength="128" placeholder="Number or name…" disabled /><button id="test-search-submit" class="button secondary" type="submit" disabled>Search</button></div></form>
+          <div id="tests-body" class="test-list" aria-label="Test numbers"></div>
+          <p id="test-list-message" class="list-message" hidden></p>
+          <div class="explorer-pagination"><span id="tests-page"></span><div><button id="tests-previous" type="button" class="quiet-button" disabled>Previous tests</button><button id="tests-next" type="button" class="quiet-button" disabled>Next tests</button></div></div>
+        </section>
+        <div class="test-content">
+          <section id="test-empty" class="library-panel explorer-empty"><span data-icon="search"></span><h2>Select a test</h2><p>Inspect its recorded declarations and observations.</p><p>Tests are grouped by number. A number can have several names, units or limit declarations.</p></section>
+          <div id="test-detail" hidden>
+            <div class="test-heading"><h2 id="selected-test" tabindex="-1"></h2><p id="selected-name"></p><p id="test-summary"></p></div>
+            <p class="recorded-note">Recorded fields are shown as stored. Inherited defaults and scale exponents are not applied. All observations are included, with their original flags and repeated attempts.</p>
+            <section class="library-panel data-panel" aria-labelledby="definitions-heading">
+              <div class="panel-heading"><div><h2 id="definitions-heading">Recorded declarations</h2><p>“Not recorded” and an explicitly empty field are different.</p></div></div>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="Recorded declarations table"><table class="explorer-table"><thead><tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">Units</th><th scope="col">Low limit</th><th scope="col">High limit</th><th scope="col"><abbr title="RES_SCAL: recorded result scale exponent">RES_SCAL</abbr></th><th scope="col"><abbr title="LLM_SCAL: recorded low-limit scale exponent">LLM_SCAL</abbr></th><th scope="col"><abbr title="HLM_SCAL: recorded high-limit scale exponent">HLM_SCAL</abbr></th><th scope="col">OPT_FLAG</th></tr></thead><tbody id="definitions-body"></tbody></table></div>
+              <div class="explorer-pagination"><span id="definitions-page"></span><div><button id="definitions-previous" type="button" class="quiet-button" disabled>Previous declarations</button><button id="definitions-next" type="button" class="quiet-button" disabled>Next declarations</button></div></div>
+            </section>
+            <section class="library-panel data-panel" aria-labelledby="measurements-heading">
+              <div class="panel-heading"><div><h2 id="measurements-heading">Observations</h2><p>Attempt IDs identify test attempts, including retests of the same part.</p></div></div>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="Observations table"><table class="explorer-table"><thead><tr><th scope="col">Source seq.</th><th scope="col">Attempt ID</th><th scope="col">Part ID</th><th scope="col">Head / site</th><th scope="col">Recorded result</th><th scope="col">Declaration ID</th><th scope="col">TEST_FLG</th><th scope="col">PARM_FLG</th></tr></thead><tbody id="measurements-body"></tbody></table></div>
+              <div class="explorer-pagination"><span id="measurements-page"></span><div><button id="measurements-previous" type="button" class="quiet-button" disabled>Previous observations</button><button id="measurements-next" type="button" class="quiet-button" disabled>Next observations</button></div></div>
+            </section>
+          </div>
+        </div>
+      </div>
+      <footer class="workspace-footer"><span><span data-icon="lock"></span>Reading saved PTR measurements · on this device</span></footer>
+    </main>
+  </div>
+</body>
+</html>

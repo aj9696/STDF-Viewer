@@ -1,0 +1,60 @@
+/* Test Explorer reuses the library frame; tables own their horizontal overflow. */
+.explorer main { max-width: 1880px; padding: 30px; }
+.explorer .workspace, .explorer .page-heading > div { min-width: 0; }
+.explorer .page-description { overflow-wrap: anywhere; }
+#explorer-status { color: var(--muted); font-size: 12px; text-align: right; }
+.explorer-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); align-items: start; gap: 22px; margin-top: 28px; }
+.test-catalog, .test-content, .data-panel { min-width: 0; }
+.test-catalog .panel-heading { padding: 19px 18px 13px; }
+#test-search { padding: 0 18px 16px; border-bottom: 1px solid var(--border); }
+#test-search label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 12px; }
+#test-search > div { display: flex; gap: 7px; }
+#test-query { width: 100%; padding: 7px 9px; border: 1px solid #dce2eb; border-radius: 6px; }
+#test-search .button { min-height: 35px; padding: 6px 10px; font-size: 12px; }
+.test-list { max-height: 62vh; overflow-y: auto; overscroll-behavior: contain; padding: 5px; }
+.test-choice { display: block; width: 100%; padding: 11px 13px; border-radius: 5px; text-align: left; background: #fff; }
+.test-choice:hover:not(:disabled) { background: #f4f6fb; }
+.test-choice[aria-pressed="true"] { background: #edf2ff; box-shadow: inset 3px 0 var(--blue); }
+.test-choice strong { font-variant-numeric: tabular-nums; color: #263c61; }
+.test-choice span { display: block; overflow-wrap: anywhere; line-height: 1.4; margin-top: 3px; }
+.test-choice small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.test-choice:focus-visible { outline-offset: -3px; }
+.list-message { padding: 20px; color: var(--muted); }
+.explorer-empty { padding: 38px 28px; color: var(--muted); }
+.explorer-empty > [data-icon] { margin-bottom: 16px; color: #7590c0; }
+.explorer-empty h2 { margin-bottom: 10px; font-size: 20px; color: var(--ink); }
+.explorer-empty p + p { margin-top: 18px; max-width: 470px; font-size: 13px; }
+.test-heading { margin: 0 0 16px; }
+.test-heading h2 { color: var(--ink); font-size: 24px; letter-spacing: -.5px; }
+#selected-name { margin-top: 5px; overflow-wrap: anywhere; }
+#test-summary { margin-top: 8px; color: var(--muted); font-size: 13px; }
+.recorded-note { margin-bottom: 22px; padding-left: 12px; border-left: 3px solid #aebee5; color: #56667c; font-size: 13px; line-height: 1.7; }
+.data-panel + .data-panel { margin-top: 22px; }
+.data-panel .panel-heading { padding: 18px 20px; }
+.data-panel .table-scroll { max-height: 460px; overflow: auto; }
+.explorer-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+.explorer-table th { position: sticky; top: 0; z-index: 1; padding: 10px 14px; background: #f7f9fc; color: #627187; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.explorer-table td { padding: 11px 14px; border-top: 1px solid var(--border); vertical-align: top; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.explorer-table td.text-cell { min-width: 130px; max-width: 260px; white-space: normal; overflow-wrap: anywhere; }
+.explorer-table .field-error { color: #9a463b; }
+.explorer-table abbr { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+.explorer-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 7px 16px; padding: 12px 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; }
+.explorer-pagination > div { display: flex; flex-wrap: wrap; gap: 16px; }
+.explorer-pagination .quiet-button { font-size: 12px; }
+.table-scroll:focus-visible { outline-offset: -3px; }
+@media (max-width: 1150px) {
+  .explorer main { padding: 28px 22px; }
+  .explorer-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 18px; }
+}
+@media (max-width: 900px) {
+  .explorer-layout { grid-template-columns: minmax(0, 1fr); }
+  .test-list { max-height: 260px; }
+}
+@media (max-width: 480px) {
+  .explorer main { padding: 25px 16px 20px; }
+  .explorer .topbar { gap: 10px; }
+  #explorer-status { max-width: 108px; font-size: 11px; }
+  .explorer .page-heading > .button { margin-top: 0; }
+  .explorer-empty { padding: 25px 20px; }
+  .explorer-pagination { padding: 12px 16px; }
+}
