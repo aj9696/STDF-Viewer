@@ -18,7 +18,8 @@ and session settings remain later slices. Existing engineering tools stay usable
 
 ## Interface and structure
 
-Add `web-prototype/site/app.html`, `app.css`, `app.js`, and `app-view.js`.
+Add `web-prototype/site/app.html`, `app.css`, `library-home.js`, and `library-home-view.js`.
+The existing `app.js` belongs to the summary parser and remains unchanged.
 Keep current parser `index.html`, synthetic proof and engineering console routes.
 Use the same origin/library and DataLibraryClient; no SQL/OPFS/schema changes,
 dependencies, frameworks, external fonts/CDNs or network data service.
@@ -80,8 +81,8 @@ Two-space indentation, named helpers; no generic UI framework or worker bypass.
 
 Commands from repository root:
 ```powershell
-node --check web-prototype/site/app.js
-node --check web-prototype/site/app-view.js
+node --check web-prototype/site/library-home.js
+node --check web-prototype/site/library-home-view.js
 .venv/Scripts/python.exe web-prototype/scripts/make-library-fixtures.py
 node web-prototype/scripts/frontend-check.mjs chrome
 node web-prototype/scripts/frontend-check.mjs msedge
