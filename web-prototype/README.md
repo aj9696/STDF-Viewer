@@ -39,6 +39,13 @@ npm.cmd --prefix web-prototype run build:storage
 
 If port 8766 already serves this directory, keep that server running. Open
 [Data library](http://127.0.0.1:8766/app.html) for the first frontend feature.
+Use this HTTP address instead of opening `site/app.html` or `site/explore.html`
+directly from File Explorer. A `file://` launch cannot load the application's
+module graph or provide its normal storage origin. Both product pages now show
+launch guidance for this case before creating any library worker. Select a
+dataset in Data library and choose **Explore tests**; its URL includes the saved
+dataset ID. Chrome, Edge and Codex each have separate browser-profile libraries.
+
 For folder queues, raw row inspection, recovery and package transfer, open
 [foundation.html](http://127.0.0.1:8766/foundation.html), select **Open library**,
 choose raw files or a source folder, review the inventory, then choose **Import

@@ -13,6 +13,11 @@ For storage and the complete API, see [FRONTEND-CONTRACT.md](FRONTEND-CONTRACT.m
 Build and serve the existing application using the
 [README instructions](../README.md#run-the-library-foundation).
 
+Do not open `site/explore.html` directly from File Explorer. Its `file://` URL
+cannot run the application modules. Open the HTTP Data library address below;
+selecting **Explore tests** supplies the saved dataset ID. Direct file launches
+now show this guidance instead of remaining on the initial loading screen.
+
 1. Open [Data library](http://127.0.0.1:8766/app.html) in the browser/profile that
    holds your saved datasets. Import an STDF if the library is empty.
 2. Select a dataset's filename to open its overview, then select **Explore tests**.

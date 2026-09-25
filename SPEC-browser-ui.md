@@ -91,6 +91,15 @@ node web-prototype/scripts/frontend-check.mjs msedge
 
 ## Plan and boundaries
 
+Startup correction, 2026-09-25: direct `file://` opens must explain the local HTTP
+launch address before importing application modules or creating a worker. Both
+library home and Test Explorer use a classic bootstrap for this preflight.
+App-module load errors and a 15-second module-load delay show deliberate reload
+guidance; a late success clears that notice. This does not impose deadlines on
+database operations or imports. Verify actual file URLs and HTTP failure/reload
+recovery against a saved fixture in Chrome and Edge using
+`node web-prototype/scripts/startup-check.mjs chrome` (and `msedge`).
+
 1. Record scope, then build markup/view/controller/styles against existing APIs.
 2. Test actual first-import/reopen workflow and targeted UI failure states;
    independently review lifecycle and rendering. Commit the verified slice.

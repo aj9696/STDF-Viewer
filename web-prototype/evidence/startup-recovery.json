@@ -1,0 +1,178 @@
+{
+  "issue": "Opening library remains on its initial loader when product HTML is opened by file:// in Chrome",
+  "correction": "Classic bootstrap explains HTTP launch before importing controllers; dynamic module failures and 15-second module delays expose manual recovery.",
+  "runs": [
+    {
+      "recordedAt": "2026-09-25T10:50:45.675Z",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "actual file URLs: library and Explorer show local-server guidance, correct localhost link, no reload button, no application module/worker and no infinite spinner",
+        "normal HTTP: real STDF import completes through the UI and exposes the known saved source hash",
+        "HTTP boot recovery on both pages: failed dependency, stale missing export and bounded module timeout show explicit reload; successful retry preserves dataset ID/hash and readable observations"
+      ],
+      "datasetId": "21047334-4828-4662-aaeb-eb9b11c3de2f",
+      "sourceSha256": "a5805b32f7416bbd357265040cf1219ebcea7edae688dea31a0e47cf9b0265ea",
+      "faultEvidence": [
+        {
+          "filename": "app.html",
+          "mode": "fetch-failure",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "app.html",
+          "mode": "missing-export",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "app.html",
+          "mode": "timeout",
+          "message": "Check that the local server is running, then reload the app. This has not reset your saved library."
+        },
+        {
+          "filename": "explore.html",
+          "mode": "fetch-failure",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "explore.html",
+          "mode": "missing-export",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "explore.html",
+          "mode": "timeout",
+          "message": "Check that the local server is running, then reload the app. This has not reset your saved library."
+        }
+      ],
+      "requestFailures": [
+        {
+          "url": "http://127.0.0.1:64048/library-home-view.js",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "http://127.0.0.1:64048/library-home-view.js",
+          "error": "net::ERR_FAILED"
+        }
+      ],
+      "pageErrors": [],
+      "deadlineTest": "Only module-load timeout was shortened to 200 ms in a routed test copy; production default is 15 seconds. Worker requests and imports have no new deadline.",
+      "sourceReport": "results/startup-chrome-1790333437249/results.json"
+    },
+    {
+      "recordedAt": "2026-09-25T10:50:46.125Z",
+      "channel": "msedge",
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "actual file URLs: library and Explorer show local-server guidance, correct localhost link, no reload button, no application module/worker and no infinite spinner",
+        "normal HTTP: real STDF import completes through the UI and exposes the known saved source hash",
+        "HTTP boot recovery on both pages: failed dependency, stale missing export and bounded module timeout show explicit reload; successful retry preserves dataset ID/hash and readable observations"
+      ],
+      "datasetId": "5108775c-3671-4a04-a595-30c54fcdc31d",
+      "sourceSha256": "a5805b32f7416bbd357265040cf1219ebcea7edae688dea31a0e47cf9b0265ea",
+      "faultEvidence": [
+        {
+          "filename": "app.html",
+          "mode": "fetch-failure",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "app.html",
+          "mode": "missing-export",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "app.html",
+          "mode": "timeout",
+          "message": "Check that the local server is running, then reload the app. This has not reset your saved library."
+        },
+        {
+          "filename": "explore.html",
+          "mode": "fetch-failure",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "explore.html",
+          "mode": "missing-export",
+          "message": "Check that the local server is running, then reload the app. Your saved library has not been reset."
+        },
+        {
+          "filename": "explore.html",
+          "mode": "timeout",
+          "message": "Check that the local server is running, then reload the app. This has not reset your saved library."
+        }
+      ],
+      "requestFailures": [
+        {
+          "url": "http://127.0.0.1:64049/library-home-view.js",
+          "error": "net::ERR_FAILED"
+        },
+        {
+          "url": "http://127.0.0.1:64049/library-home-view.js",
+          "error": "net::ERR_FAILED"
+        }
+      ],
+      "pageErrors": [],
+      "deadlineTest": "Only module-load timeout was shortened to 200 ms in a routed test copy; production default is 15 seconds. Worker requests and imports have no new deadline.",
+      "sourceReport": "results/startup-msedge-1790333437427/results.json"
+    }
+  ],
+  "regressions": [
+    {
+      "recordedAt": "2026-09-25T10:49:47.271Z",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ],
+      "pageErrors": [],
+      "sourceReport": "results/frontend-chrome-1790333381560/results.json"
+    },
+    {
+      "recordedAt": "2026-09-25T10:50:07.509Z",
+      "channel": "chrome",
+      "queriesOnly": false,
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "real SQLite: both-endian golden groups, exact declaration metadata, all selected observations/attempt joins, zero/max test numbers, sparse keyset cursors, literal search and no-PTR empty dataset",
+        "real SQLite: default page sizes and strict invalid search/test/cursor/limit rejection, including NaN, infinity, fractions and wrong types",
+        "test-only large Unicode metadata in real SQLite: 2MiB byte cap truncates a short page and resumes without lost/duplicate declarations; original metadata restored",
+        "test-only oversized restored inventory: all four queries reject 20,001 actual declarations despite a smaller manifest; only inserted rows removed and original dataset/source verification passes",
+        "test-only observation of actual SQL: measurement pages/counts use measurements_test, attempt joins use INTEGER PRIMARY KEY, group search never scans measurements",
+        "real UI: dataset overview opens Explorer in the same tab; 58-test inventory pages 50/8 and test zero is selectable",
+        "real UI: literal search retains all declaration variants; recorded limits/scales/flags distinguish omitted, empty and special floats; 25/100-row paging preserves every observation and attempt",
+        "real UI: keyboard search and page navigation restore focus after async disable; final/first page moves focus to the available direction, test selection focuses its heading",
+        "real UI: 390px layout fits, search resets cursors, max-u32 test works, no-results state, reload and browser Back reopen retained data",
+        "real UI: exclusive-owner BUSY retry, no-PTR empty state and missing/invalid dataset recovery are actionable",
+        "test-only malformed metadata in real SQLite: bad JSON, non-object, wrong types, unknown/duplicate presence and invalid undisplayed fields are reported; originals restored",
+        "test-only injected real-worker exception: loading settles into disabled error state, retry reconnects and observations remain readable",
+        "test-only adapter failures: unsupported and unavailable states show recovery guidance without stale loading text or data loss"
+      ],
+      "pageErrors": [],
+      "sourceReport": "results/explorer-chrome-1790333401600/results.json"
+    }
+  ],
+  "review": [
+    "Independent Chrome checks also verified 360/500/800px notice layout and late module success clearing the watchdog notice.",
+    "Existing embedded-browser dataset semidata-evaluation.stdf reopened successfully on unchanged origin http://127.0.0.1:8766."
+  ],
+  "scopeLimits": [
+    "No new timeouts for worker/storage requests, imports or transfers.",
+    "Bootstrap file download itself is outside the module watchdog.",
+    "Browser profiles have separate libraries; file guidance does not migrate data or start a server."
+  ]
+}

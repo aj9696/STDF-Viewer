@@ -10,6 +10,12 @@ Follow the [build instructions](../README.md#run-the-library-foundation), then o
 [Data library](http://127.0.0.1:8766/app.html). Keep the same address and browser
 profile to use the existing library. The screen opens its library automatically.
 
+Open the HTTP address, not the HTML file from disk. A direct `file://` launch
+shows **Open SemiData from its local app address** and links to the running local
+server. It does not attempt to open storage. A module-load failure offers an
+explicit reload; the module loader also reports a 15-second delay. These checks
+cover app-module startup, not long-running imports or all worker/storage stalls.
+
 1. Select **Import STDF**, choose or drop one completed raw `.stdf`, `.std` or
    `.stf` file, then select **Import file**. The current limit is 2 GiB per source.
 2. Watch Copy, Read, Check and Save. Byte progress describes the current phase;
@@ -70,6 +76,7 @@ The module contract is [SPEC-browser-ui.md](../../SPEC-browser-ui.md).
 | File | Responsibility |
 | --- | --- |
 | `site/app.html` | Semantic page, table, import dialog, dataset drawer and storage dialog |
+| `site/boot.js` | File-launch guidance and app-module loading/error handling, shared with Test Explorer |
 | `site/app.css` | Workspace design, responsive layout, focus and reduced-motion styling |
 | `site/library-home.js` | Serialized client operations, UI state, progress and page lifecycle |
 | `site/library-home-view.js` | Text-safe rendering, icons and count/size/date formatting |
@@ -90,6 +97,8 @@ node --check web-prototype/site/library-home.js
 node --check web-prototype/site/library-home-view.js
 node web-prototype/scripts/frontend-check.mjs chrome
 node web-prototype/scripts/frontend-check.mjs msedge
+node web-prototype/scripts/startup-check.mjs chrome
+node web-prototype/scripts/startup-check.mjs msedge
 ```
 
 The harness requires the repository's `.venv/Scripts/python.exe`, Node.js 22+
@@ -113,3 +122,10 @@ Tests use file-input automation rather than qualifying native Windows file-picke
 prompts. They do not requalify large import throughput or all storage recovery
 faults; those remain covered by the [foundation validation](../LIBRARY-VALIDATION.md).
 No new analysis behavior is claimed by this feature.
+
+The 2026-09-25 startup correction passed real file-URL checks in Chrome and Edge.
+Six controlled HTTP module-failure/reload cases per browser preserved a saved
+dataset's ID and source hash. Chrome's existing library and Explorer suites also
+passed after the change. See [startup evidence](../evidence/startup-recovery.json).
+The external bootstrap's own download and a nonresponding database worker remain
+outside this module-loading repair; no automatic reload or storage reset occurs.
