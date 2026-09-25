@@ -38,7 +38,7 @@ const report = { recordedAt: new Date().toISOString(), channel, origin, checks: 
     "The saved handle originates in OPFS; it exercises browser serialization and read APIs, not native filesystem permission persistence."] };
 let context;
 function passed(name, evidence = {}) {
-  report.checks.push({ name, ...evidence });
+  report.checks.push({ ...evidence, name });
   console.log(`PASS: ${name}`);
 }
 async function pageReady() {

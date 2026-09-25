@@ -1,30 +1,31 @@
 # Browser data workflow
 
-Status: logistics roadmap, 2026-09-24. BL-1 is implemented as a separate
-[SQLite storage proof](../web-prototype/README.md#run-the-storage-proof) with a
-synthetic note. The dataset/folder workflow below remains proposed. Analysis
-design remains with the engineer.
+Status: implemented logistics foundation, 2026-09-24. Open the
+[library engineering console](http://127.0.0.1:8766/foundation.html) after following
+[the build/run instructions](../web-prototype/README.md). This is a functional
+console for the data interfaces; the product frontend comes next, one feature
+at a time. Analysis design remains with the engineer.
 
-## The next useful result
+## What is ready
 
-Import one STDF, close the browser, reopen the same application, and find the
-saved dataset ready without selecting or parsing the original again. Prove
-that small workflow before adding a folder containing hundreds of files.
+Import raw STDF, close/reopen the library, and inspect saved records without
+selecting or parsing the original again. Review multiple files or a source
+folder, run a sequential queue, inspect failed/interrupted jobs, and transfer
+source-plus-database packages between browser profiles.
 
-The browser parser lab keeps summaries in memory; the separate storage proof
-can save and reopen its synthetic note. The workbench has a native SQLite
-library. This plan adds a retained-record library to the browser application;
-it does not automatically migrate the native workspace.
+The parser summary lab and synthetic SQLite proof remain separate. The native
+workbench also remains runnable; its databases and analytical policies are not
+automatically migrated into this browser library.
 
 ## Two places with different jobs
 
-| Place | Purpose | Proposed behavior |
+| Place | Purpose | Behavior |
 | --- | --- | --- |
 | Source folder | Your original STDF files | Read access only; originals are never renamed, edited, or deleted |
 | Browser library | Saved datasets and import history | SQLite in browser-managed local storage, with copied source bytes for reproducibility |
 | Export destination | A portable copy you control | Explicit export/restore; independent of a remembered source-folder permission |
 
-The candidate storage is the browser's Origin Private File System (OPFS).
+Storage uses the browser's Origin Private File System (OPFS).
 It belongs to a browser profile and website origin, not the selected folder,
 and is not directly visible as a normal folder in File Explorer.
 [MDN's OPFS explanation](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system).
@@ -33,16 +34,16 @@ Origin includes the hostname, scheme, and port: our current `127.0.0.1:8765`
 and `127.0.0.1:8766` addresses represent different browser stores. Choose a
 stable application address before retaining working libraries. Browser storage
 can be cleared; a persistence request can reduce automatic eviction but is not
-a backup. The interface should show storage estimates and persistence status.
+a backup. The console shows storage estimates and persistence status.
 [Browser storage policy](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria).
 
-## The intended engineer workflow
+## The engineer workflow
 
 1. **Open library.** See completed imports and any interrupted jobs.
-2. **Add files.** Start with one file; later choose several or a source folder.
+2. **Add files.** Choose one or several files, or a source folder.
 3. **Review selection.** See names, relative paths, sizes, and supported formats.
    Folder selection inventories candidates before starting an import.
-4. **Import.** Copy/hash the source, skip verified duplicates, parse into bounded
+4. **Import.** Copy/hash the source, skip already-ready identical content, parse into bounded
    batches, validate, then publish the dataset. Progress distinguishes these
    phases. Start with one file at a time.
 5. **Return later.** Open stored datasets without reading their source folder.
@@ -61,7 +62,9 @@ its window is closed.
 
 Initial target: desktop Chrome and Edge, with feature detection. A supported
 directory picker can retain a folder handle, but permission may need renewal.
-Other browsers can use file/folder input controls and ask for selection again.
+Browsers meeting the OPFS/Web Locks storage requirements can use file/folder
+input controls when the directory picker is unavailable, asking for selection
+again. The fallback solves picker availability, not missing storage APIs.
 [Directory picker requirements](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker),
 [Chrome's permission model](https://developer.chrome.com/blog/persistent-permissions-for-the-file-system-access-api).
 
@@ -84,7 +87,28 @@ derived metrics, or cross-file device identity.
 | 4. Folder batches | Review a folder, import a queue, rescan, and skip duplicates |
 | 5. Volume checks | Repeat at 1M and 10M measurements with storage included |
 
-SQLite is the candidate to test, not a proven browser-storage result yet. The
-earlier 3.6–6.0 second summary scans do not predict database-import times. The
-[provider specification](../SPEC-browser-library.md) and
-[ordered tasks](../tasks/todo.md#browser-data-logistics-proposed) define the next checks.
+Full database imports and portable recovery are measured separately from the
+earlier summary-only scans. See [validation and limits](../web-prototype/LIBRARY-VALIDATION.md)
+for measured sizes, timings, browser versions, memory evidence and remaining
+qualification gaps. The [frontend handoff](../web-prototype/docs/FRONTEND-HANDOFF.md)
+describes how the next interface should use the tested modules.
+
+Each import snapshots and hashes source bytes before parsing. Ready means that
+initial validation passed; access checks existence, size, schema and manifests.
+Use **Verify source and database** to run a current full integrity/hash check.
+Known unavailable data cannot be treated as a duplicate. Recover using a verified
+package in a separate profile/origin; there is no in-place repair or reset button.
+
+Exports first create a temporary package in browser storage. Save its download,
+then explicitly release listed temporary packages. A restarted console inventories
+abandoned exports too. Discarding a known failed/interrupted job removes only its
+unpublished source/database/journal staging and retains job history. Retrying
+starts at the beginning; successful earlier queue items remain ready.
+
+Current envelope: raw IEEE STDF V4, 2 GiB per source, 20,000 exact definitions,
+16 MiB definition-tail cache, 10,000 inventory entries/jobs, 1,000 datasets and
+8 GiB packages. These are guards, not claims that all boundary combinations are
+qualified. Browser quota must also accommodate staging, journals and exports.
+PTR measurements are normalized; MPR/FTR and unsupported families retain original
+record bytes and coverage labels. Compression and automatic folder watching
+remain future work.

@@ -93,16 +93,22 @@ test identity, superseded attempts, repeated PTRs, units, flags, and Cpk policy.
 
 ## Adding a feature
 
-The next proposed browser-only increment is documented separately in
-[Browser data workflow](browser-data-workflow.md) and
-[SPEC-browser-library.md](../SPEC-browser-library.md). It adds a persistence
-experiment before folder imports. The isolated BL-1 SQLite probe is implemented;
-see [storage validation](../web-prototype/STORAGE-VALIDATION.md). Retained STDF
-storage and folder imports are still planned. The architecture above describes
-the delivered native workbench.
+The browser-only foundation is implemented separately under `web-prototype/`.
+Its Rust/WASM parser feeds bounded batches to one SQLite owner worker. Each
+immutable dataset has a source snapshot and database; the catalog publishes it
+only after validation. Browser-managed storage is scoped to an exact origin and
+profile. Portable packages preserve source bytes and database pages.
+
+See [Browser data workflow](browser-data-workflow.md),
+[frontend contract](../web-prototype/docs/FRONTEND-CONTRACT.md), and
+[full-path validation](../web-prototype/LIBRARY-VALIDATION.md). The native service
+and analysis architecture above remains unchanged. Future browser UI work must
+consume this new contract; native analytical semantics are not silently applied
+to the retained raw evidence.
 
 1. Update the relevant module spec and acceptance checks.
-2. Record API changes in api.md before adding UI consumers.
+2. Record native API changes in api.md, or browser contracts in
+   web-prototype/docs/FRONTEND-CONTRACT.md and SOURCES.md, before adding UI consumers.
 3. Keep the calculation in its domain module; add known-answer tests.
 4. Exercise one full engineer workflow, including empty/error states.
 5. Update the engineer guide, calculation reference, and changelog together.

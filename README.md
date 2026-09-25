@@ -48,8 +48,8 @@ and [Architecture](docs/architecture.md) for precise boundaries and resource cap
 - [Native build and troubleshooting](docs/runtime-build.md)
 - [Release verification](docs/release-verification.md)
 - [Measured import performance](docs/import-performance.md) · [Why STDF looks this way](docs/stdf-format.md)
-- [Rust/WebAssembly browser parser experiment](web-prototype/README.md)
-- [Proposed browser storage and folder workflow](docs/browser-data-workflow.md)
+- [Rust/WebAssembly browser data foundation](web-prototype/README.md)
+- [Browser storage and folder workflow](docs/browser-data-workflow.md)
 - [Contribution guide](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 - [Capability map](CAPABILITIES.md) · [Implementation checklist](tasks/todo.md)
 
