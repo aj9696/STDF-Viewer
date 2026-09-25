@@ -104,7 +104,8 @@ try {
         window.faultHit = progress;
         void window.library.cancel();
       } else if ((window.faultMode === "terminate-parsing" && progress.phase === "parsing") ||
-                 (window.faultMode === "terminate-export" && progress.phase === "export")) {
+                 (window.faultMode === "terminate-export" && progress.phase === "export") ||
+                 (window.faultMode === "terminate-restore" && progress.phase === "restore")) {
         window.faultHit = progress;
         window.library.terminate();
       }
@@ -211,6 +212,35 @@ try {
   await unchanged();
   assert.equal((await request(page, "verifyDataset", { datasetId })).verified, true);
   passed("interrupted export remains discoverable and removable without touching source/database", { orphanBytes: staleExports.items[0].bytes });
+
+  const restoreExport = await page.evaluate(async (id) => {
+    window.recoveryPackage = await window.library.exportDataset(id);
+    return { bytes: window.recoveryPackage.bytes, exportToken: window.recoveryPackage.exportToken };
+  }, datasetId);
+  const priorJobs = new Set((await request(page, "listJobs")).items.map((job) => job.id));
+  await faultMode(page, "terminate-restore");
+  const restoreOutcome = await page.evaluate(async () => {
+    try { await window.library.restorePackage(window.recoveryPackage.file); return { ok: true }; }
+    catch (error) { return { ok: false, code: error.code }; }
+  });
+  assert.equal(restoreOutcome.code, "WORKER_STOPPED");
+  const restoreHit = await page.evaluate(() => window.faultHit);
+  assert.equal(restoreHit.phase, "restore");
+  assert.ok(restoreHit.completedBytes < restoreHit.totalBytes);
+  await faultMode(page, null);
+  assert.equal((await reopen(page)).interrupted, 1);
+  const restoreJob = (await request(page, "listJobs")).items.find((job) => !priorJobs.has(job.id) && job.kind === "restore");
+  assert.equal(restoreJob.status, "interrupted");
+  await request(page, "discardJob", { jobId: restoreJob.id });
+  assert.equal((await request(page, "listJobs")).items.find((job) => job.id === restoreJob.id).status, "discarded");
+  assert.deepEqual(await sourceNames(page), baselineSources);
+  assert.equal((await reopen(page)).poolFiles, baselinePoolFiles);
+  await request(page, "releaseExport", { exportToken: restoreExport.exportToken });
+  assert.equal((await request(page, "listExports")).items.length, 0);
+  await unchanged();
+  assert.equal((await request(page, "verifyDataset", { datasetId })).verified, true);
+  passed("interrupted package restore becomes recoverable and discards staging while preserving the ready dataset",
+    { packageBytes: restoreExport.bytes, terminatedAtBytes: restoreHit.completedBytes });
 
   // Simulate equal-length source corruption inside this isolated test library.
   // The previous cases first proved the original dataset intact.

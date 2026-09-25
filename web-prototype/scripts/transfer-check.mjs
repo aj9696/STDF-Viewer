@@ -111,6 +111,28 @@ assert.equal(failedDb.active, false); assert.equal(failedDb.finalized, true);
 assert.equal(liveHashers, 0);
 console.log("PASS: byte-identical export, bounded writes, awaited backpressure, and failed-write cleanup.");
 
+// Distinct page contents expose missing/reordered bytes and buffer reuse before
+// an asynchronous sink has consumed them. The final group is deliberately short.
+const pageDatabase = Buffer.alloc(35 * 4096);
+for (let page = 0; page < 35; ++page) pageDatabase.fill((page * 13 + 17) % 256, page * 4096, (page + 1) * 4096);
+pageDatabase.write("SQLite format 3\0");
+for (const chunkBytes of [undefined, 1000, 1024 * 1024]) {
+  const target = sink(), db = fakeDb(pageDatabase, target);
+  db.pageSize = 4096;
+  const result = await exportPackage({ db, sourceFile: new Blob([source]), manifest,
+    createHasher, writable: target, ...(chunkBytes ? { chunkBytes } : {}) });
+  const expected = packageBytes({}, source, pageDatabase);
+  assert.deepEqual(Buffer.concat(target.chunks), expected);
+  assert.equal(result.sha256, digest(expected.subarray(0, -64)));
+  const budget = chunkBytes ?? 65536;
+  const dataWrites = target.chunks.slice(3, -1); // prefix, header, source; footer
+  assert.equal(dataWrites.length, Math.ceil(pageDatabase.length / budget));
+  assert.ok(dataWrites.every((chunk, index) => chunk.length === Math.min(budget, pageDatabase.length - index * budget)));
+  assert.equal(db.active, false); assert.equal(db.finalized, true);
+}
+assert.equal(liveHashers, 0);
+console.log("PASS: SQLite pages coalesce into bounded awaited writes with exact ordering and final tails.");
+
 function fakePool(names = []) {
   return { calls: 0, chunks: [], getFileNames: () => names,
     async importDb(name, callback) {

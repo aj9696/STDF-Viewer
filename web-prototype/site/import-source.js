@@ -70,6 +70,9 @@ export async function importSource(store, file, relativePath, context) {
     db = new store.pool.OpfsSAHPoolDb(job.dbPath, "c");
     configureDatabase(store.sqlite3, db);
     createSchema(db, DATASET_APP_ID, TABLES);
+    // Maintain indexes within bounded insert transactions. Building them over
+    // millions of rows afterward makes SQLite's in-memory sorter grow with N.
+    for (const sql of Object.values(INDEXES)) db.exec(sql);
     for (const [table, columns] of [["records", 7], ["definitions", 4], ["measurements", 10], ["devices", 13]]) {
       statements[table] = db.prepare(`INSERT INTO ${table} VALUES(${Array(columns).fill("?").join(",")})`);
     }
@@ -105,7 +108,6 @@ export async function importSource(store, file, relativePath, context) {
     context.progress({ phase: "validating", jobId: job.id, completedBytes: file.size, totalBytes: file.size });
     await new Promise((resolve) => setTimeout(resolve, 0));
     context.checkCancelled();
-    for (const sql of Object.values(INDEXES)) db.exec(sql);
     const manifest = { schemaVersion: SCHEMA_VERSION, parserVersion: PARSER_VERSION,
       source: { name: file.name, relativePath, size: file.size, sha256: sourceHash },
       counts: { records: summary.records, measurements: summary.measurements, devices: summary.devices, definitions: summary.definitions },

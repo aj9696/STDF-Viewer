@@ -194,16 +194,28 @@ export async function exportPackage(input) {
       fail("INVALID_PACKAGE", "Stored source digest does not match its manifest.");
     }
     statement = db.prepare("SELECT pgno, data FROM sqlite_dbpage('main') ORDER BY pgno");
-    let pages = 0;
+    // OPFS writes are relatively costly. Coalesce small SQLite pages without
+    // retaining the database or reusing this buffer before the sink consumes it.
+    const pageBuffer = new Uint8Array(settings.chunkBytes);
+    let pages = 0, bufferedBytes = 0;
     while (statement.step()) {
       settings.checkCancelled();
       if (statement.get(0) !== ++pages || pages > pageCount) fail("TRANSFER_ERROR", "SQLite export pages are not sequential.");
       const page = statement.getBlob(1);
       if (!(page instanceof Uint8Array) || page.byteLength !== pageSize) fail("TRANSFER_ERROR", "SQLite export page has an invalid size.");
       if (pages === 1) validateSqlitePrefix(page);
-      await write(page);
+      for (let offset = 0; offset < page.byteLength;) {
+        const take = Math.min(page.byteLength - offset, pageBuffer.byteLength - bufferedBytes);
+        pageBuffer.set(page.subarray(offset, offset + take), bufferedBytes);
+        bufferedBytes += take; offset += take;
+        if (bufferedBytes === pageBuffer.byteLength) {
+          await write(pageBuffer);
+          bufferedBytes = 0;
+        }
+      }
     }
     if (pages !== pageCount) fail("TRANSFER_ERROR", "SQLite export page count changed.");
+    if (bufferedBytes) await write(pageBuffer.subarray(0, bufferedBytes));
     const sha256 = finishHash(packageHasher);
     await write(encoder.encode(sha256), false);
     settings.checkCancelled();
