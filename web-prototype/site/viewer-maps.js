@@ -103,7 +103,7 @@ export async function waferMap(view, options) {
     if (values[0] > values[1]) invalid('Invalid wafer viewport.');
     conditions.push(`d.${axis} BETWEEN ? AND ?`); bind.push(...values);
   }
-  const cells = new Map(); let attempts = 0, coordinateBins = 0;
+  const cells = new Map(), binTotals = new Map(), outcomes = { passed:0, failed:0, unknown:0 }; let attempts = 0, coordinateBins = 0;
   // Counts are commutative. Track the last attempt explicitly, avoiding a
   // population-sized SQLite TEMP sort before the bounded coordinate guard.
   await eachRow(view, `SELECT d.x,d.y,d.soft_bin,d.part_flags,d.id,d.dataset_id,d.source,d.prr_seq FROM v_devices d WHERE ${conditions.join(' AND ')}`, bind, (row) => {
@@ -113,6 +113,9 @@ export async function waferMap(view, options) {
       cells.set(key, { x: row.x, y: row.y, count: 0, failed: 0, attempts: 0, bin: row.soft_bin, bins: new Set(), lastSource: -1, lastPrr: -1 });
     }
     const cell = cells.get(key); cell.attempts++; attempts++;
+    const outcome = deviceOutcome(row.part_flags), field = { pass:'passed', fail:'failed', unknown:'unknown' }[outcome]; outcomes[field]++;
+    if (!binTotals.has(row.soft_bin)) binTotals.set(row.soft_bin,{number:row.soft_bin,count:0,passed:0,failed:0,unknown:0});
+    const bin = binTotals.get(row.soft_bin); bin.count++; bin[field]++;
     cell.failed += deviceOutcome(row.part_flags) === 'fail' ? 1 : 0;
     cell.count = stacked ? cell.failed : cell.attempts;
     if (!cell.bins.has(row.soft_bin)) {
@@ -125,6 +128,8 @@ export async function waferMap(view, options) {
     }
   });
   return { stacked, wafer: selected ?? null, orientation: selected?.orientation ?? orientation(), attempts,
+    summary: { attempts, coordinates:cells.size,...outcomes,yield:outcomes.passed+outcomes.failed?outcomes.passed/(outcomes.passed+outcomes.failed):null },
+    binSummary:[...binTotals.values()].sort((a,b)=>a.number-b.number),
     dies: [...cells.values()].map(({ bins, lastSource, lastPrr, ...cell }) => ({ ...cell, bins: [...bins], ambiguous: bins.size > 1 })),
     warnings: [
       ...(stacked ? ['Stacked colors count failed attempts across the selected wafers; coordinates stay in recorded die space.'] : []),

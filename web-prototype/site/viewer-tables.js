@@ -114,6 +114,7 @@ export function deviceFilter(view, options) {
 }
 
 export async function listDevices(view, options) {
+  if (options.sortTest) return (await import('./viewer-numeric-order.js')).listDevicesByTest(view, options);
   const { offset, limit } = pageOptions(options), filter = deviceFilter(view, options);
   const sorts = { index: 'd.group_id,d.x_index', part: 'd.part_id', head: 'd.head', site: 'd.site', hard_bin: 'd.hard_bin', soft_bin: 'd.soft_bin', time: 'd.test_time', x: 'd.x', y: 'd.y', status: 'd.part_flags', tests: 'd.num_tests' };
   const sort = options.sort ?? 'index', direction = options.direction ?? 'asc';
@@ -158,10 +159,23 @@ export async function listDevices(view, options) {
     }
   } finally { for (const cursor of cursors) cursor.statement.finalize(); }
   attachDeviceResults(view, items, options.tests ?? []);
+  if(options.failureSummary === true) await attachFailureSummary(view, items);
   return { items, total, offset, nextOffset: offset + items.length < total ? offset + items.length : null };
 }
 
-function attachDeviceResults(view, items, tests) {
+export async function attachFailureSummary(view, items) {
+  for (const row of items) { row.failedTests=[]; row.failedExecutions=0; row.failureNamesTruncated=false; }
+  for (const source of view.sources) {
+    const page=items.filter(row=>row.source===source.source);if(!page.length)continue;
+    const lookup=new Map(page.map(row=>[row.id,row])),names=new Map(page.map(row=>[row.id,new Set()]));
+    await eachRow(view,`SELECT o.device_id,t.number,t.name FROM ${source.alias}.observations o INDEXED BY observations_device JOIN ${source.alias}.tests t ON t.id=o.test_id WHERE o.device_id IN(${page.map(()=>'?').join(',')}) AND (o.test_flags&208)=128 ORDER BY o.device_id,o.seq,o.ordinal`,page.map(row=>row.id),observation=>{
+      const row=lookup.get(observation.device_id),seen=names.get(observation.device_id),key=JSON.stringify([observation.number,observation.name]);row.failedExecutions++;
+      if(!seen.has(key)){if(seen.size<20){seen.add(key);row.failedTests.push({number:observation.number,name:observation.name});}else row.failureNamesTruncated=true;}
+    });
+  }
+}
+
+export function attachDeviceResults(view, items, tests) {
   if (!Array.isArray(tests) || tests.length > 12) invalid('Select up to twelve tests for the device matrix.');
   for (const row of items) row.testResults = {};
   // One indexed query per source/test/page, joining by device ID rather than row position.
@@ -174,7 +188,7 @@ function attachDeviceResults(view, items, tests) {
       const identity = test.identity === 'resolved' ? 'resolved' : test.identity.split(':').at(-1);
       const testId = view.db.selectValue(`SELECT id FROM ${source.alias}.tests WHERE family=? AND number=? AND name=? AND identity=?`, [test.family, test.number, test.name, identity]);
       if (!testId) continue;
-      const results = rowsBounded(view.db, `SELECT o.device_id,o.seq,o.ordinal,o.value,o.raw_bits,o.test_flags,o.parm_flags FROM ${source.alias}.observations o INDEXED BY observations_device WHERE o.test_id=? AND o.unit=? AND o.channel=? AND o.device_id IN (${pageRows.map(() => '?').join(',')}) ORDER BY o.device_id,o.seq,o.ordinal LIMIT 10001`, [testId, test.unit, test.channel, ...pageRows.map((r) => r.id)]);
+      const results = rowsBounded(view.db, `SELECT o.device_id,o.seq,o.ordinal,o.value,o.raw_bits,o.test_flags,o.parm_flags,o.low,o.high,o.metadata_id FROM ${source.alias}.observations o INDEXED BY observations_device WHERE o.test_id=? AND o.unit=? AND o.channel=? AND o.device_id IN (${pageRows.map(() => '?').join(',')}) ORDER BY o.device_id,o.seq,o.ordinal LIMIT 10001`, [testId, test.unit, test.channel, ...pageRows.map((r) => r.id)]);
       if (results.length > 10000) invalid('This device matrix contains too many repeated executions. Select fewer devices.');
       const lookup = new Map(pageRows.map((r) => [r.id, r]));
       for (const result of results) (lookup.get(result.device_id).testResults[key] ??= []).push(result);
@@ -188,12 +202,13 @@ function attachDeviceResults(view, items, tests) {
  * executions. Keyset pages hold at most 100 attempts, perform no COUNT/OFFSET,
  * and finalize their SQL statements before yielding to the report writer.
  */
-export async function* iterateReportDevices(view, { tests = [] } = {}) {
+export async function* iterateReportDevices(view, { tests = [], sourceFilter = null } = {}) {
   if (!Array.isArray(tests) || tests.length > 12) invalid('Select up to twelve tests for the device matrix.');
   tests.forEach(parseTestKey);
   const filter = deviceFilter(view, {});
   let rows = 0;
   for (const source of view.sources) {
+    if (sourceFilter && !sourceFilter(source)) continue;
     const projection = `SELECT d.*,${source.source} source,${source.groupId} group_id,${source.sourceIndex} source_index,ss.dataset_id,ss.name source_name,d.dut_index+ss.attempt_offset x_index,CASE WHEN ${retiredExpression(view, source)} THEN 1 ELSE 0 END retired FROM ${source.alias}.devices d JOIN source_scope ss ON ss.source=${source.source}`;
     const sql = `SELECT d.* FROM(${projection}) d WHERE ${filter.sql} AND d.id>? ORDER BY d.id LIMIT 100`;
     let after = 0;

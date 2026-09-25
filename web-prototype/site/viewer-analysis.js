@@ -38,7 +38,7 @@ export async function analyzeTest(view, options) {
       if (series.size >= 64) invalid('This selection produces more than 64 series. Select fewer heads/sites or use aggregate series.');
       const [group, head, site] = JSON.parse(key);
       series.set(key, { key, group, head, site, label: `${view.selection.groups[group].name} · Head ${head} · ${site === null ? 'All selected sites' : `Site ${site}`}`,
-        moments: new PopulationStats(test.family), sampler: new TrendSampler(128), medianValues: [], seen: 0 });
+        moments: new PopulationStats(test.family), sampler: new TrendSampler(128), medianValues: [], seen: 0, trendSegment: 0, pendingGap: false, lastSource: null, gapRuns: 0 });
     }
     return series.get(key);
   };
@@ -60,8 +60,13 @@ export async function analyzeTest(view, options) {
       physicalRows++;
       for (const key of keysFor(source, row)) {
         const item = getSeries(key);
-        if (item.moments.add(row)) item.sampler.add({ x: row.x_index, value: row.value, lsl: row.low, usl: row.high,
-          datasetId: source.datasetId, deviceId: row.device_id, seq: row.seq, ordinal: row.ordinal });
+        if (item.lastSource !== source.source) { if (item.lastSource !== null) item.trendSegment++; item.lastSource = source.source; }
+        if (item.moments.add(row)) {
+          if (item.pendingGap) { item.trendSegment++; item.pendingGap = false; }
+          item.sampler.add({ x: row.x_index, value: row.value, lsl: row.low, usl: row.high,
+            testFlags: row.test_flags, failed: !(row.test_flags & 0x50) && !!(row.test_flags & 0x80), segment: item.trendSegment,
+            datasetId: source.datasetId, deviceId: row.device_id, seq: row.seq, ordinal: row.ordinal });
+        } else if (!item.pendingGap) { item.pendingGap = true; item.gapRuns++; }
       }
     });
   }
@@ -99,7 +104,7 @@ export async function analyzeTest(view, options) {
       }
     }
   } finally { for (const cursor of cursors) cursor.statement.finalize(); }
-  const output = [...series.values()].map(({ moments, sampler, medianValues, seen, ...item }) => {
+  const output = [...series.values()].map(({ moments, sampler, medianValues, seen, trendSegment, pendingGap, lastSource, ...item }) => {
     const median = medianValues.length ? medianValues.reduce((sum, value) => sum + value / medianValues.length, 0) : null;
     return { ...item, count: moments.total, stats: moments.finish(median), points: sampler.finish(), reduced: sampler.total > sampler.finish().length };
   });
