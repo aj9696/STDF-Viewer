@@ -1,0 +1,62 @@
+{
+  "feature": "browser-ui library home",
+  "scope": "Single-file import, saved-dataset inventory and metadata reopen",
+  "automatedRuns": [
+    {
+      "recordedAt": "2026-09-25T02:48:31.223Z",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ],
+      "pageErrors": []
+    },
+    {
+      "recordedAt": "2026-09-25T02:48:31.506Z",
+      "channel": "msedge",
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ],
+      "pageErrors": []
+    }
+  ],
+  "manualReview": [
+    "Codex in-app browser at the existing development origin: real saved evaluation dataset, populated library, import dialog, dataset drawer and storage details",
+    "Inspected isolated-test screenshots for empty state, import progress and narrow layouts"
+  ],
+  "limitations": [
+    "Catalog scale and unavailable/unsupported error states use explicit test-only client fixtures",
+    "File-input automation does not qualify native Windows picker prompts",
+    "Narrow viewport checks do not qualify mobile storage",
+    "No new large-file throughput or full storage-recovery qualification; see library-foundation.json"
+  ]
+}

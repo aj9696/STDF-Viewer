@@ -1,0 +1,111 @@
+# Library home: first frontend feature
+
+Status: local engineering preview, 2026-09-24. This screen connects the browser
+library to its first product workflow: import one STDF, see the saved dataset,
+and reopen its metadata. It uses the same library as the engineering console.
+
+## Try it as a test engineer
+
+Follow the [build instructions](../README.md#run-the-library-foundation), then open
+[Data library](http://127.0.0.1:8766/app.html). Keep the same address and browser
+profile to use the existing library. The screen opens its library automatically.
+
+1. Select **Import STDF**, choose or drop one completed raw `.stdf`, `.std` or
+   `.stf` file, then select **Import file**. The current limit is 2 GiB per source.
+2. Watch Copy, Read, Check and Save. Byte progress describes the current phase;
+   it is not a percentage of total import time. **Cancel import** waits for the
+   worker's actual outcome. Closing the modal is disabled while importing.
+3. Select **Open dataset**, or select a filename in the library. The overview
+   shows saved measurement, device-attempt, declaration and record counts,
+   source/database sizes, retained coverage and the source fingerprint.
+4. Search by filename or recorded relative path. Sort by import date, filename
+   or source size; use the arrow controls to page through 25 rows at a time.
+5. Reload the page and reopen the dataset without selecting its original file.
+   Importing the same bytes with another filename should reuse that dataset.
+   Changed content creates another dataset even if its filename is unchanged.
+6. Open **Storage details** in the footer to inspect this origin, estimated
+   usage/quota and the browser's persistence grant. A persistence request can be
+   declined. Persistence is not a backup or a reservation of disk space.
+
+File selection does not upload data or modify the original source. Imported
+snapshots and databases live in this browser profile's origin-private storage.
+Browser data clearing can remove them. The library has one owning tab at a time;
+close the other library page or its console connection, then select **Try again**
+if it is busy. **Library tools** opens the engineering console in the same tab,
+releasing this page's connection.
+
+## What this feature includes
+
+The page shows actual saved catalog metadata, with no demo datasets or fabricated
+statistics. Its overview reports device **attempts**, not unique devices. Only
+PTR records currently produce normalized measurement rows; consult the displayed
+coverage before interpreting that count. Raw source records remain preserved.
+
+The client loads catalog metadata in pages of 100, with a 1,000-dataset inventory
+limit, then searches/sorts the loaded inventory. It renders at most 25 table rows.
+Opening the overview checks saved availability and metadata through the existing
+API; it does not read every measurement or perform a complete integrity scan.
+
+Interrupted imports and unavailable datasets get explicit guidance and remain
+inspectable through Library tools. No screen action silently resets the library.
+Long or untrusted filenames and errors are rendered as text. Native dialogs
+support keyboard navigation and Escape; Escape cannot dismiss an active import.
+
+Folder batches, save/open workspace, recovery controls, dataset deletion,
+measurement browsing, charts, yield and PAT are later product features. Existing
+console tools remain available for folder imports and individual `.sdlibrary`
+package export/restore. A package contains one dataset, not an entire workspace.
+There is no offline-startup guarantee, account, hosted data service or multi-tab
+collaboration. Desktop Chrome and Edge are the qualified browsers for this slice;
+narrow-layout checks do not establish mobile storage support.
+
+## Implementation and maintenance
+
+The module contract is [SPEC-browser-ui.md](../../SPEC-browser-ui.md).
+
+| File | Responsibility |
+| --- | --- |
+| `site/app.html` | Semantic page, table, import dialog, dataset drawer and storage dialog |
+| `site/app.css` | Workspace design, responsive layout, focus and reduced-motion styling |
+| `site/library-home.js` | Serialized client operations, UI state, progress and page lifecycle |
+| `site/library-home-view.js` | Text-safe rendering, icons and count/size/date formatting |
+| `scripts/frontend-check.mjs` | Isolated browser workflow and UI failure-state checks |
+
+The screen consumes `DataLibraryClient` and `inventoryFiles`. It does not open
+SQLite, issue SQL or manipulate OPFS directly. The library, import and transfer
+contracts remain unchanged. There are no added runtime dependencies, external
+fonts, CDN resources or frontend framework. The existing summary parser's
+`site/app.js` and root route remain separate.
+
+## Verification
+
+From the repository root, after building the existing WASM/SQLite assets:
+
+```powershell
+node --check web-prototype/site/library-home.js
+node --check web-prototype/site/library-home-view.js
+node web-prototype/scripts/frontend-check.mjs chrome
+node web-prototype/scripts/frontend-check.mjs msedge
+```
+
+The harness requires the repository's `.venv/Scripts/python.exe`, Node.js 22+
+and the installed browser. It creates small known-answer synthetic STDFs and
+uses or generates a 1M-measurement synthetic source for cancellation. It never
+uses the engineer's browser profile. Reports, screenshots and disposable profiles
+are written beneath ignored `web-prototype/results/frontend-*` directories.
+
+Chrome 153.0.8010.48 and Edge 153.0.4234.48 each passed 15 grouped checks with
+zero page errors. The [portable evidence record](../evidence/library-home.json)
+preserves both reports. The checks cover:
+
+| Evidence type | Scope |
+| --- | --- |
+| Real worker, WASM and OPFS | Empty/open, known-answer import and metadata, SHA-256 identity, renamed duplicate, invalid input, malformed STDF, cancellation, hostile filename, reload/reopen, navigation and second-tab ownership |
+| Actual page and DOM | Keyboard dialogs/focus, fresh progress between imports, live phase feedback, 360/390-pixel page width and desktop screenshots |
+| Explicit test-only client fixtures | 123-entry catalog pagination, full-inventory search/sort, missing dataset, unsupported storage and open failures |
+| Manual embedded-browser review | Existing evaluation dataset, library and detail layouts, import and storage dialogs |
+
+Tests use file-input automation rather than qualifying native Windows file-picker
+prompts. They do not requalify large import throughput or all storage recovery
+faults; those remain covered by the [foundation validation](../LIBRARY-VALIDATION.md).
+No new analysis behavior is claimed by this feature.

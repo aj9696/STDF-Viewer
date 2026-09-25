@@ -5,15 +5,18 @@ exact source snapshots, reopens saved records, and exports/restores portable
 packages. A Rust/WASM decoder and SQLite run in a dedicated worker. Source files
 are read-only; no test-data upload or backend data service is involved. This
 remains an engineering evaluation build, separate from the existing native
-SemiData application. Production frontend design and analysis are future work.
+SemiData application. The first product screen is the library home; additional
+frontend workflows and analysis will be developed one feature at a time.
 
 | Page | Purpose | What it retains |
 | --- | --- | --- |
+| [Data library](http://127.0.0.1:8766/app.html) | Import one STDF, search saved datasets and reopen their metadata | The same retained library as the engineering console |
 | [Library engineering console](http://127.0.0.1:8766/foundation.html) | Evaluate imports, folders, recovery, saved rows, and portability | Source snapshots, per-source databases, catalog and job history |
 | [Summary parser lab](http://127.0.0.1:8766/) | Measure a streaming summary scan | In-memory summaries; optional JSON download |
 | [Synthetic storage proof](http://127.0.0.1:8766/storage.html) | Reproduce the original SQLite persistence experiment | One note in an independent SQLite pool |
 
-Start with the [frontend handoff](docs/FRONTEND-HANDOFF.md) for the console
+Start with the [library home guide](docs/LIBRARY-HOME.md) to try the first product
+feature. Use the [frontend handoff](docs/FRONTEND-HANDOFF.md) for the console
 workflow and feature boundaries. The [frontend API](docs/FRONTEND-CONTRACT.md)
 and [source/queue API](docs/SOURCES.md) define the integration surfaces. The
 [library validation record](LIBRARY-VALIDATION.md) distinguishes tested behavior
@@ -33,6 +36,8 @@ npm.cmd --prefix web-prototype run build:storage
 ```
 
 If port 8766 already serves this directory, keep that server running. Open
+[Data library](http://127.0.0.1:8766/app.html) for the first frontend feature.
+For folder queues, raw row inspection, recovery and package transfer, open
 [foundation.html](http://127.0.0.1:8766/foundation.html), select **Open library**,
 choose raw files or a source folder, review the inventory, then choose **Import
 reviewed files**. Close/reopen the library or browser at the same origin/profile

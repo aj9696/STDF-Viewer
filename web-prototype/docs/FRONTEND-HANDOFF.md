@@ -2,9 +2,10 @@
 
 Status: engineering foundation, 2026-09-24. The next product work can use a
 documented browser library API instead of building storage into UI components.
-The current console demonstrates the integration; it does not set the final
-visual design or analytical behavior. Develop and review one user-facing feature
-at a time with the test engineer.
+The console demonstrates the full logistics integration. The first product
+feature is now [library home](LIBRARY-HOME.md): single-file import, saved-dataset
+search and metadata reopen. Develop and review one user-facing feature at a time
+with the test engineer; analytical behavior remains a separate design task.
 
 ## What is available
 
@@ -117,10 +118,10 @@ when no download needs them. The app cannot detect browser download completion.
   databases, journals, restore staging, and retained exports. No quota reservation
   or offline-startup guarantee is provided.
 
-Start production UX with the library open/reopen flow and a saved-dataset list.
-Review that feature with the engineer before adding source selection and import
-feedback. Keep folder batches, portability, and recovery as separately reviewable
-user journeys backed by the existing methods.
+The library home implements open/reopen, saved-dataset search and single-file
+import feedback. Review that feature with the engineer before expanding it.
+Keep folder batches, portability and recovery as separately reviewable user
+journeys backed by the existing methods.
 
 ## Analytical boundary and evidence
 
