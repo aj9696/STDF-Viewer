@@ -1,0 +1,554 @@
+{
+  "feature": "browser-ui Test Explorer",
+  "implementationCommit": "a69c139",
+  "scope": "One saved PTR dataset: literal test search, recorded declarations and paged observations. No analytical policy.",
+  "automatedRuns": [
+    {
+      "recordedAt": "2026-09-25T04:25:37.010Z",
+      "channel": "chrome",
+      "queriesOnly": false,
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "real SQLite: both-endian golden groups, exact declaration metadata, all selected observations/attempt joins, zero/max test numbers, sparse keyset cursors, literal search and no-PTR empty dataset",
+        "real SQLite: default page sizes and strict invalid search/test/cursor/limit rejection, including NaN, infinity, fractions and wrong types",
+        "test-only large Unicode metadata in real SQLite: 2MiB byte cap truncates a short page and resumes without lost/duplicate declarations; original metadata restored",
+        "test-only oversized restored inventory: all four queries reject 20,001 actual declarations despite a smaller manifest; only inserted rows removed and original dataset/source verification passes",
+        "test-only observation of actual SQL: measurement pages/counts use measurements_test, attempt joins use INTEGER PRIMARY KEY, group search never scans measurements",
+        "real UI: dataset overview opens Explorer in the same tab; 58-test inventory pages 50/8 and test zero is selectable",
+        "real UI: literal search retains all declaration variants; recorded limits/scales/flags distinguish omitted, empty and special floats; 25/100-row paging preserves every observation and attempt",
+        "real UI: keyboard search and page navigation restore focus after async disable; final/first page moves focus to the available direction, test selection focuses its heading",
+        "real UI: 390px layout fits, search resets cursors, max-u32 test works, no-results state, reload and browser Back reopen retained data",
+        "real UI: exclusive-owner BUSY retry, no-PTR empty state and missing/invalid dataset recovery are actionable",
+        "test-only malformed metadata in real SQLite: bad JSON, non-object, wrong types, unknown/duplicate presence and invalid undisplayed fields are reported; originals restored",
+        "test-only injected real-worker exception: loading settles into disabled error state, retry reconnects and observations remain readable",
+        "test-only adapter failures: unsupported and unavailable states show recovery guidance without stale loading text or data loss"
+      ],
+      "pageErrors": [],
+      "sourceReport": "results/explorer-chrome-1790310330572/results.json",
+      "sourceReportSha256": "98596e35053f3edd8ebf09db61645afd3c40a2fa3a20913baf6e07288ff638dd",
+      "capturedQueryPlanCount": 367,
+      "uniqueQueryPlans": [
+        {
+          "sql": "SELECT id FROM definitions LIMIT 1 OFFSET ?",
+          "rows": [
+            {
+              "id": 6,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "WITH test_groups AS (\n  SELECT test_number, MIN(NULLIF(name, '')) AS name, COUNT(*) AS definition_count,\n    MAX(instr(lower(COALESCE(name, '')), lower(?)) > 0\n      OR instr(CAST(test_number AS TEXT), ?) > 0) AS matched\n  FROM definitions GROUP BY test_number\n)\n    SELECT COUNT(*) AS totalTests, COALESCE(SUM(matched), 0) AS matchedTests\n    FROM test_groups",
+          "rows": [
+            {
+              "id": 2,
+              "parent": 0,
+              "notused": 0,
+              "detail": "CO-ROUTINE test_groups"
+            },
+            {
+              "id": 8,
+              "parent": 2,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            },
+            {
+              "id": 10,
+              "parent": 2,
+              "notused": 0,
+              "detail": "USE TEMP B-TREE FOR GROUP BY"
+            },
+            {
+              "id": 74,
+              "parent": 0,
+              "notused": 82,
+              "detail": "SCAN test_groups"
+            }
+          ]
+        },
+        {
+          "sql": "WITH test_groups AS (\n  SELECT test_number, MIN(NULLIF(name, '')) AS name, COUNT(*) AS definition_count,\n    MAX(instr(lower(COALESCE(name, '')), lower(?)) > 0\n      OR instr(CAST(test_number AS TEXT), ?) > 0) AS matched\n  FROM definitions GROUP BY test_number\n)\n    SELECT test_number, name, definition_count FROM test_groups\n    WHERE matched=1 AND (? IS NULL OR test_number>?)\n    ORDER BY test_number LIMIT ?",
+          "rows": [
+            {
+              "id": 2,
+              "parent": 0,
+              "notused": 0,
+              "detail": "CO-ROUTINE test_groups"
+            },
+            {
+              "id": 8,
+              "parent": 2,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            },
+            {
+              "id": 13,
+              "parent": 2,
+              "notused": 0,
+              "detail": "USE TEMP B-TREE FOR GROUP BY"
+            },
+            {
+              "id": 79,
+              "parent": 0,
+              "notused": 82,
+              "detail": "SCAN test_groups"
+            },
+            {
+              "id": 98,
+              "parent": 0,
+              "notused": 0,
+              "detail": "USE TEMP B-TREE FOR ORDER BY"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT COUNT(*) FROM definitions WHERE test_number=?",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT COUNT(*) FROM measurements WHERE test_number=?",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 54,
+              "detail": "SEARCH measurements USING COVERING INDEX measurements_test (test_number=?)"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT * FROM definitions WHERE test_number=? AND id>? ORDER BY id LIMIT ?",
+          "rows": [
+            {
+              "id": 4,
+              "parent": 0,
+              "notused": 196,
+              "detail": "SEARCH definitions USING INTEGER PRIMARY KEY (rowid>?)"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT m.*, d.part_id, d.hard_bin, d.soft_bin, d.part_flags\n    FROM measurements m LEFT JOIN devices d ON d.id=m.device_id\n    WHERE m.test_number=? AND m.seq>? ORDER BY m.seq LIMIT ?",
+          "rows": [
+            {
+              "id": 6,
+              "parent": 0,
+              "notused": 50,
+              "detail": "SEARCH m USING INDEX measurements_test (test_number=? AND seq>?)"
+            },
+            {
+              "id": 15,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH d USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT count(*) FROM measurements",
+          "rows": [
+            {
+              "id": 4,
+              "parent": 0,
+              "notused": 0,
+              "detail": "SCAN measurements USING COVERING INDEX measurements_device"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT 1 FROM measurements WHERE typeof(seq)!='integer' OR typeof(device_id)!='integer' OR typeof(definition_id)!='integer' OR typeof(test_number)!='integer' OR typeof(head)!='integer' OR typeof(site)!='integer' OR typeof(test_flags)!='integer' OR typeof(parm_flags)!='integer' OR typeof(result_bits)!='integer' OR typeof(result) NOT IN ('null','integer','real') OR seq<=0 OR device_id<=0 OR definition_id<=0 OR test_number NOT BETWEEN 0 AND 4294967295 OR head NOT BETWEEN 0 AND 255 OR site NOT BETWEEN 0 AND 255 OR test_flags NOT BETWEEN 0 AND 255 OR parm_flags NOT BETWEEN 0 AND 255 OR result_bits NOT BETWEEN 0 AND 4294967295 LIMIT 1",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN measurements"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT count(*) FROM definitions",
+          "rows": [
+            {
+              "id": 4,
+              "parent": 0,
+              "notused": 0,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT 1 FROM definitions WHERE typeof(id)!='integer' OR typeof(test_number)!='integer' OR typeof(name) NOT IN ('null','text') OR length(name)>1024 OR typeof(metadata_json)!='text' OR length(metadata_json)>16384 OR id<=0 OR test_number NOT BETWEEN 0 AND 4294967295 LIMIT 1",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT 1 FROM measurements m LEFT JOIN records r ON r.seq=m.seq LEFT JOIN devices d ON d.id=m.device_id LEFT JOIN definitions t ON t.id=m.definition_id WHERE r.seq IS NULL OR r.type!=15 OR r.subtype!=10 OR r.device_id IS NOT m.device_id OR d.id IS NULL OR t.id IS NULL OR t.test_number!=m.test_number OR m.head!=d.head OR m.site!=d.site OR m.seq<=d.id OR m.seq>=d.prr_seq LIMIT 1",
+          "rows": [
+            {
+              "id": 6,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN m"
+            },
+            {
+              "id": 8,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH r USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            },
+            {
+              "id": 13,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH d USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            },
+            {
+              "id": 18,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH t USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "recordedAt": "2026-09-25T04:25:37.328Z",
+      "channel": "msedge",
+      "queriesOnly": false,
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "real SQLite: both-endian golden groups, exact declaration metadata, all selected observations/attempt joins, zero/max test numbers, sparse keyset cursors, literal search and no-PTR empty dataset",
+        "real SQLite: default page sizes and strict invalid search/test/cursor/limit rejection, including NaN, infinity, fractions and wrong types",
+        "test-only large Unicode metadata in real SQLite: 2MiB byte cap truncates a short page and resumes without lost/duplicate declarations; original metadata restored",
+        "test-only oversized restored inventory: all four queries reject 20,001 actual declarations despite a smaller manifest; only inserted rows removed and original dataset/source verification passes",
+        "test-only observation of actual SQL: measurement pages/counts use measurements_test, attempt joins use INTEGER PRIMARY KEY, group search never scans measurements",
+        "real UI: dataset overview opens Explorer in the same tab; 58-test inventory pages 50/8 and test zero is selectable",
+        "real UI: literal search retains all declaration variants; recorded limits/scales/flags distinguish omitted, empty and special floats; 25/100-row paging preserves every observation and attempt",
+        "real UI: keyboard search and page navigation restore focus after async disable; final/first page moves focus to the available direction, test selection focuses its heading",
+        "real UI: 390px layout fits, search resets cursors, max-u32 test works, no-results state, reload and browser Back reopen retained data",
+        "real UI: exclusive-owner BUSY retry, no-PTR empty state and missing/invalid dataset recovery are actionable",
+        "test-only malformed metadata in real SQLite: bad JSON, non-object, wrong types, unknown/duplicate presence and invalid undisplayed fields are reported; originals restored",
+        "test-only injected real-worker exception: loading settles into disabled error state, retry reconnects and observations remain readable",
+        "test-only adapter failures: unsupported and unavailable states show recovery guidance without stale loading text or data loss"
+      ],
+      "pageErrors": [],
+      "sourceReport": "results/explorer-msedge-1790310330571/results.json",
+      "sourceReportSha256": "511be984e01aa38b65b8bd9b98a507b74f0d1cac55809242af35170653a4c294",
+      "capturedQueryPlanCount": 367,
+      "uniqueQueryPlans": [
+        {
+          "sql": "SELECT id FROM definitions LIMIT 1 OFFSET ?",
+          "rows": [
+            {
+              "id": 6,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "WITH test_groups AS (\n  SELECT test_number, MIN(NULLIF(name, '')) AS name, COUNT(*) AS definition_count,\n    MAX(instr(lower(COALESCE(name, '')), lower(?)) > 0\n      OR instr(CAST(test_number AS TEXT), ?) > 0) AS matched\n  FROM definitions GROUP BY test_number\n)\n    SELECT COUNT(*) AS totalTests, COALESCE(SUM(matched), 0) AS matchedTests\n    FROM test_groups",
+          "rows": [
+            {
+              "id": 2,
+              "parent": 0,
+              "notused": 0,
+              "detail": "CO-ROUTINE test_groups"
+            },
+            {
+              "id": 8,
+              "parent": 2,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            },
+            {
+              "id": 10,
+              "parent": 2,
+              "notused": 0,
+              "detail": "USE TEMP B-TREE FOR GROUP BY"
+            },
+            {
+              "id": 74,
+              "parent": 0,
+              "notused": 82,
+              "detail": "SCAN test_groups"
+            }
+          ]
+        },
+        {
+          "sql": "WITH test_groups AS (\n  SELECT test_number, MIN(NULLIF(name, '')) AS name, COUNT(*) AS definition_count,\n    MAX(instr(lower(COALESCE(name, '')), lower(?)) > 0\n      OR instr(CAST(test_number AS TEXT), ?) > 0) AS matched\n  FROM definitions GROUP BY test_number\n)\n    SELECT test_number, name, definition_count FROM test_groups\n    WHERE matched=1 AND (? IS NULL OR test_number>?)\n    ORDER BY test_number LIMIT ?",
+          "rows": [
+            {
+              "id": 2,
+              "parent": 0,
+              "notused": 0,
+              "detail": "CO-ROUTINE test_groups"
+            },
+            {
+              "id": 8,
+              "parent": 2,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            },
+            {
+              "id": 13,
+              "parent": 2,
+              "notused": 0,
+              "detail": "USE TEMP B-TREE FOR GROUP BY"
+            },
+            {
+              "id": 79,
+              "parent": 0,
+              "notused": 82,
+              "detail": "SCAN test_groups"
+            },
+            {
+              "id": 98,
+              "parent": 0,
+              "notused": 0,
+              "detail": "USE TEMP B-TREE FOR ORDER BY"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT COUNT(*) FROM definitions WHERE test_number=?",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT COUNT(*) FROM measurements WHERE test_number=?",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 54,
+              "detail": "SEARCH measurements USING COVERING INDEX measurements_test (test_number=?)"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT * FROM definitions WHERE test_number=? AND id>? ORDER BY id LIMIT ?",
+          "rows": [
+            {
+              "id": 4,
+              "parent": 0,
+              "notused": 196,
+              "detail": "SEARCH definitions USING INTEGER PRIMARY KEY (rowid>?)"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT m.*, d.part_id, d.hard_bin, d.soft_bin, d.part_flags\n    FROM measurements m LEFT JOIN devices d ON d.id=m.device_id\n    WHERE m.test_number=? AND m.seq>? ORDER BY m.seq LIMIT ?",
+          "rows": [
+            {
+              "id": 6,
+              "parent": 0,
+              "notused": 50,
+              "detail": "SEARCH m USING INDEX measurements_test (test_number=? AND seq>?)"
+            },
+            {
+              "id": 15,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH d USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT count(*) FROM measurements",
+          "rows": [
+            {
+              "id": 4,
+              "parent": 0,
+              "notused": 0,
+              "detail": "SCAN measurements USING COVERING INDEX measurements_device"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT 1 FROM measurements WHERE typeof(seq)!='integer' OR typeof(device_id)!='integer' OR typeof(definition_id)!='integer' OR typeof(test_number)!='integer' OR typeof(head)!='integer' OR typeof(site)!='integer' OR typeof(test_flags)!='integer' OR typeof(parm_flags)!='integer' OR typeof(result_bits)!='integer' OR typeof(result) NOT IN ('null','integer','real') OR seq<=0 OR device_id<=0 OR definition_id<=0 OR test_number NOT BETWEEN 0 AND 4294967295 OR head NOT BETWEEN 0 AND 255 OR site NOT BETWEEN 0 AND 255 OR test_flags NOT BETWEEN 0 AND 255 OR parm_flags NOT BETWEEN 0 AND 255 OR result_bits NOT BETWEEN 0 AND 4294967295 LIMIT 1",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN measurements"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT count(*) FROM definitions",
+          "rows": [
+            {
+              "id": 4,
+              "parent": 0,
+              "notused": 0,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT 1 FROM definitions WHERE typeof(id)!='integer' OR typeof(test_number)!='integer' OR typeof(name) NOT IN ('null','text') OR length(name)>1024 OR typeof(metadata_json)!='text' OR length(metadata_json)>16384 OR id<=0 OR test_number NOT BETWEEN 0 AND 4294967295 LIMIT 1",
+          "rows": [
+            {
+              "id": 3,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN definitions"
+            }
+          ]
+        },
+        {
+          "sql": "SELECT 1 FROM measurements m LEFT JOIN records r ON r.seq=m.seq LEFT JOIN devices d ON d.id=m.device_id LEFT JOIN definitions t ON t.id=m.definition_id WHERE r.seq IS NULL OR r.type!=15 OR r.subtype!=10 OR r.device_id IS NOT m.device_id OR d.id IS NULL OR t.id IS NULL OR t.test_number!=m.test_number OR m.head!=d.head OR m.site!=d.site OR m.seq<=d.id OR m.seq>=d.prr_seq LIMIT 1",
+          "rows": [
+            {
+              "id": 6,
+              "parent": 0,
+              "notused": 216,
+              "detail": "SCAN m"
+            },
+            {
+              "id": 8,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH r USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            },
+            {
+              "id": 13,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH d USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            },
+            {
+              "id": 18,
+              "parent": 0,
+              "notused": 45,
+              "detail": "SEARCH t USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "libraryRegressionRuns": [
+    {
+      "recordedAt": "2026-09-25T04:25:03.109Z",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ],
+      "pageErrors": [],
+      "sourceReport": "results/frontend-chrome-1790310296873/results.json"
+    },
+    {
+      "recordedAt": "2026-09-25T04:25:03.180Z",
+      "channel": "msedge",
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ],
+      "pageErrors": [],
+      "sourceReport": "results/frontend-msedge-1790310296881/results.json"
+    }
+  ],
+  "fixtures": {
+    "explorer-little.stdf": {
+      "sourceBytes": 10025,
+      "sourceSha256": "1d36a2c67eeb0396f0c09271cb25d7374c7b3a0b45cf3c16dae6443eb0ad04fc",
+      "byteOrder": "little",
+      "counts": {
+        "records": 254,
+        "measurements": 212,
+        "devices": 7,
+        "definitions": 120
+      }
+    },
+    "explorer-big.stdf": {
+      "sourceBytes": 10025,
+      "sourceSha256": "a81bdc954295d70868d62684b46a4b38d4f9cb1de167d932c4107bab924bab86",
+      "byteOrder": "big",
+      "counts": {
+        "records": 254,
+        "measurements": 212,
+        "devices": 7,
+        "definitions": 120
+      }
+    },
+    "explorer-no-ptr.stdf": {
+      "sourceBytes": 106,
+      "sourceSha256": "b4304ab0ed928bd34347fedcfbf71bc3c1767a7bc44801c9eefb6bcde934ad32",
+      "byteOrder": "little",
+      "counts": {
+        "records": 7,
+        "measurements": 0,
+        "devices": 1,
+        "definitions": 0
+      }
+    }
+  },
+  "formatterCheck": "node web-prototype/scripts/explorer-format-check.mjs passed: IEEE-754 special values/subnormal, omitted/empty, raw scales/flags, invalid/unknown metadata including coercible non-string presence entries.",
+  "manualReview": [
+    "Existing embedded-browser semidata-evaluation.stdf opened from library overview on the unchanged port8766; 20 tests, 40 declarations and 44,800 observations; selected Test1000 showed 2,240 observations and omitted declarations separately.",
+    "Desktop embedded-browser layout and generated 390px narrow screenshot reviewed; tables contain overflow and declarations/observations remain readable.",
+    "Independent code review found and resolved keyboard focus loss, unknown metadata acceptance and a restored-inventory declaration-bound gap."
+  ],
+  "limitations": [
+    "Large-dataset query latency was not benchmarked; executed SQL plans verify the selected-test index and device primary-key join.",
+    "Narrow layout checks do not qualify mobile browser storage; desktop Chrome and Edge are the tested runtimes.",
+    "Fault cases use explicit instrumentation in isolated profiles. No production query hooks or source uploads were added.",
+    "No histogram, PAT, yield, effective-default/scaling or retest policy is qualified by this phase."
+  ]
+}

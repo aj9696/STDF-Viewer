@@ -122,3 +122,8 @@ implementation and independent fixture/browser checks can run alongside UI work
 after the contract is fixed. Validate existing library behavior, inspect actual
 browser visuals, document coverage and commit each verified slice. No statistical
 population, default-inheritance or retest policy is decided in this phase.
+
+Completed: bounded test queries, simple explorer, independent Chrome/Edge checks,
+library regressions, visual/code review and professional feature/API guides.
+Evidence is preserved in web-prototype/evidence/test-explorer.json. The next
+analytical feature needs a separate population and recorded-field policy.

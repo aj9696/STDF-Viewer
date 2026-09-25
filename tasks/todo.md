@@ -126,11 +126,18 @@ or implement all remaining frontend workflows at once.
 
 ## Test Explorer
 
-- [ ] **TE-1 — Read-only query boundary.** Add listTests/getTest and paged
+- [x] **TE-1 — Read-only query boundary.** Add listTests/getTest and paged
   declarations/observations; validate input, index use and independent goldens.
   Files: test-queries.js, data-worker.js, data-client.js, query/browser harness.
-- [ ] **TE-2 — Simple explorer UI.** Same-tab dataset navigation, test search,
+- [x] **TE-2 — Simple explorer UI.** Same-tab dataset navigation, test search,
   declaration inspection and observation paging; keyboard/reopen/error states.
   Files: explore.html, explorer.js, explorer-view.js, explorer.css, overview link.
-- [ ] **TE-3 — Qualify and document.** Chrome/Edge explorer and library regressions,
+- [x] **TE-3 — Qualify and document.** Chrome/Edge explorer and library regressions,
   independent review, manual visuals, guide and feature-status updates.
+  - Delivered: 13 grouped explorer checks and 15 library regressions per browser,
+    zero page errors; independent source fixtures and executed index plans.
+    Review fixes cover keyboard focus, unknown metadata and restored-inventory
+    bounds. Read the [guide](../web-prototype/docs/TEST-EXPLORER.md) and
+    [evidence](../web-prototype/evidence/test-explorer.json).
+  - Limits: PTR inspection only; no large-query latency benchmark or analytical
+    policy. Histograms and PAT remain separately specified next features.
