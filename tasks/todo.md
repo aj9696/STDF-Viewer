@@ -119,7 +119,18 @@ design remain with the engineer; hosted CI remains open until publication.
     screenshot review found and fixed stale progress and narrow-page overflow.
   - Docs: [Library home guide](../web-prototype/docs/LIBRARY-HOME.md),
     [specification](../SPEC-browser-ui.md) and frontend browser harness.
-- [ ] Engineer evaluation of UI-1; select the next frontend feature together.
+- [x] Engineer evaluation of UI-1; selected Test Explorer as the next feature.
 
 Do not interpret this checkpoint as authorization to design analytical policy
 or implement all remaining frontend workflows at once.
+
+## Test Explorer
+
+- [ ] **TE-1 — Read-only query boundary.** Add listTests/getTest and paged
+  declarations/observations; validate input, index use and independent goldens.
+  Files: test-queries.js, data-worker.js, data-client.js, query/browser harness.
+- [ ] **TE-2 — Simple explorer UI.** Same-tab dataset navigation, test search,
+  declaration inspection and observation paging; keyboard/reopen/error states.
+  Files: explore.html, explorer.js, explorer-view.js, explorer.css, overview link.
+- [ ] **TE-3 — Qualify and document.** Chrome/Edge explorer and library regressions,
+  independent review, manual visuals, guide and feature-status updates.

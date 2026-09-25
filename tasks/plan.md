@@ -112,3 +112,13 @@ and browser workflow checks against the agreed markup; independently review
 focus/lifecycle and text rendering. Record a user guide and browser evidence.
 Stop after this runnable feature for engineer evaluation. Folder UX, workspace
 save/open and all analytical workflows remain separate future increments.
+
+## 2026-09-24: Test Explorer
+
+The engineer approved the first basic phase and autonomous continuation through
+completion. Follow SPEC-test-explorer.md. Define bounded read-only query methods,
+then implement the saved-dataset test/declaration/measurement explorer. Query
+implementation and independent fixture/browser checks can run alongside UI work
+after the contract is fixed. Validate existing library behavior, inspect actual
+browser visuals, document coverage and commit each verified slice. No statistical
+population, default-inheritance or retest policy is decided in this phase.
