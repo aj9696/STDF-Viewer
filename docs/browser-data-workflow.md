@@ -3,7 +3,9 @@
 Status: implemented logistics foundation, 2026-09-24. Open the
 [library engineering console](http://127.0.0.1:8766/foundation.html) after following
 [the build/run instructions](../web-prototype/README.md). This is a functional
-console for the data interfaces; the product frontend comes next, one feature
+console for the data interfaces. The first product screen is
+[library home](../web-prototype/docs/LIBRARY-HOME.md). The
+[feature comparison](feature-landscape.md) supports choosing later features one
 at a time. Analysis design remains with the engineer.
 
 ## What is ready
