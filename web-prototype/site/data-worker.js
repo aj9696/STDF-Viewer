@@ -14,6 +14,10 @@ async function dispatch(message, context) {
     const opened = await store.access(message.datasetId);
     try { return store.present(opened.dataset); } finally { opened.db.close(); }
   }
+  if (["listTests", "getTest", "readTestDefinitions", "readTestMeasurements"].includes(message.type)) {
+    const { runTestQuery } = await import("./test-queries.js");
+    return runTestQuery(store, message);
+  }
   const { runOperation } = await import("./library-operations.js");
   return runOperation(store, message, context);
 }

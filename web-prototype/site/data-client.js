@@ -63,6 +63,10 @@ export class DataLibraryClient {
   listDatasets(options = {}) { return this.request("listDatasets", options); }
   listJobs(options = {}) { return this.request("listJobs", options); }
   getDataset(datasetId) { return this.request("getDataset", { datasetId }); }
+  listTests(datasetId, options = {}) { return this.request("listTests", { ...options, datasetId }); }
+  getTest(datasetId, testNumber) { return this.request("getTest", { datasetId, testNumber }); }
+  readTestDefinitions(datasetId, testNumber, options = {}) { return this.request("readTestDefinitions", { ...options, datasetId, testNumber }); }
+  readTestMeasurements(datasetId, testNumber, options = {}) { return this.request("readTestMeasurements", { ...options, datasetId, testNumber }); }
   readRows(datasetId, table, options = {}) { return this.request("readRows", { datasetId, table, ...options }); }
   readRecord(datasetId, seq) { return this.request("readRecord", { datasetId, seq }); }
   verifyDataset(datasetId) { return this.request("verifyDataset", { datasetId }); }
