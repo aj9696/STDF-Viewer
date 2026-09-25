@@ -4,57 +4,45 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#142331" />
-  <title>SemiData · Your data library</title>
+  <title>SemiData · Library</title>
   <link rel="stylesheet" href="./app.css" />
   <script defer src="./boot.js" data-entry="./library-home.js"></script>
 </head>
-<body>
+<body class="library-home">
   <a class="skip-link" href="#main">Skip to library</a>
-  <aside class="sidebar" aria-label="Workspace navigation">
-    <a class="brand" href="./app.html" aria-label="SemiData home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>SemiData<span class="brand-subtitle">TEST DATA WORKSPACE</span></span></a>
-    <div class="workspace-label"><span class="workspace-avatar" aria-hidden="true">L</span><div>Local workspace<small>On this device</small></div></div>
-    <div class="nav-label">WORKSPACE</div>
-    <nav><a class="nav-item active" href="./app.html" aria-current="page"><span data-icon="library"></span>Data library<span id="sidebar-count" class="nav-count">—</span></a><a class="nav-item" href="./viewer.html">Data viewer</a></nav>
-    <div class="sidebar-bottom">
-      <div class="local-note"><span data-icon="shield"></span><strong>Your data stays with you.</strong><p>Files are processed and saved in this browser. No uploads.</p></div>
-      <a class="tools-link" href="./foundation.html"><span data-icon="settings"></span>Library tools<span aria-hidden="true">↗</span></a>
-      <div class="build-label">OPEN SOURCE <span>·</span> EARLY PREVIEW</div>
-    </div>
-  </aside>
   <div class="workspace">
-    <header class="topbar"><div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong>Data library</strong></div><button class="local-status quiet-button" id="show-storage" type="button" aria-label="Show library storage details"><span class="status-dot"></span><span id="connection-status" role="status">Opening library…</span><span data-icon="chevron"></span></button></header>
+    <header class="topbar"><a class="library-brand" href="./app.html">SemiData</a><nav aria-label="Workspace navigation"><a href="./app.html" aria-current="page">Library <span id="sidebar-count" class="count-pill">—</span></a><a href="./viewer.html">Viewer</a></nav><button class="local-status quiet-button" id="show-storage" type="button" aria-label="Show library storage details"><span class="status-dot"></span><span id="connection-status" role="status">Opening library…</span></button></header>
     <main id="main" tabindex="-1">
-      <div class="page-heading"><div><p class="eyebrow">YOUR WORKSPACE, ON YOUR TERMS</p><h1>Data library<span class="title-dot">.</span></h1><p class="page-description">Your test files. Organized, preserved, ready for what’s next.</p></div><button id="add-file" class="button primary" type="button" disabled><span data-icon="plus"></span>Import STDF</button></div>
+      <div class="page-heading"><h1>Library</h1><div class="library-actions"><button id="try-examples" class="button secondary" type="button" disabled>Try example data</button><button id="add-file" class="button primary" type="button" disabled><span data-icon="plus"></span>Import STDF</button></div></div>
       <div id="boot-error" class="notice error-notice" role="alert" hidden><div><strong id="boot-error-title"></strong><p id="boot-error-text"></p></div><a id="boot-library" class="button secondary" href="http://127.0.0.1:8766/app.html">Open Data library</a><button id="boot-reload" class="button secondary" type="button">Reload app</button></div>
       <div id="connection-error" class="notice error-notice" role="alert" hidden><div><strong id="connection-error-title"></strong><p id="connection-error-text"></p></div><button id="retry-open" class="button secondary" type="button">Try again</button></div>
       <div id="library-notice" class="notice" role="status" hidden></div>
-      <div class="library-summary" aria-label="Library summary"><div><span>Saved datasets</span><strong id="total-datasets">—</strong></div><div><span>Measurements</span><strong id="total-measurements">—</strong></div><div><span>Source data</span><strong id="total-bytes">—</strong></div><div class="summary-note"><span data-icon="fingerprint"></span><p>Same file, new name?<br><strong>We’ll recognize it.</strong></p></div></div>
+      <div class="library-summary" aria-label="Library summary"><div><strong id="total-datasets">—</strong><span>files</span></div><div><strong id="total-measurements">—</strong><span>PTR measurements</span></div><div><strong id="total-bytes">—</strong><span>source data</span></div></div>
       <section class="library-panel" aria-labelledby="files-heading">
-        <div class="panel-heading"><div><h2 id="files-heading">All datasets <span id="file-count" class="count-pill">0</span></h2><p id="library-caption">Opening your saved library…</p></div><button id="refresh-files" class="icon-button" type="button" aria-label="Refresh library" title="Refresh library" disabled><span data-icon="refresh"></span></button></div>
+        <div class="panel-heading"><div><h2 id="files-heading">Files <span id="file-count" class="count-pill">0</span></h2><p id="library-caption" class="sr-only" role="status">Opening library…</p></div><button id="refresh-files" class="icon-button" type="button" aria-label="Refresh library" title="Refresh library" disabled><span data-icon="refresh"></span></button></div>
         <div class="library-toolbar"><label class="search-field"><span data-icon="search"></span><input id="search-files" type="search" placeholder="Find a file…" aria-label="Find a file" disabled /></label><label class="sort-field"><span>Sort by</span><select id="sort-files" aria-label="Sort datasets" disabled><option value="newest">Recently imported</option><option value="name">File name</option><option value="size">Largest source</option></select></label></div>
         <div id="loading-library" class="loading-state" role="status"><span class="spinner"></span>Opening your library</div>
-        <div id="empty-library" class="empty-state" hidden><div class="empty-illustration" aria-hidden="true"><div class="file-illustration"><span data-icon="file"></span><b>STDF</b><i></i><i></i><i></i></div><span class="illustration-plus">+</span></div><p class="eyebrow">A CLEAR START</p><h3>Bring your first test file.</h3><p>Import an STDF to create your local library.<br>It’ll be here when you come back.</p><button id="empty-import" class="button primary" type="button"><span data-icon="plus"></span>Import your first STDF</button><small>.stdf, .std or .stf · Up to 2 GiB per file</small></div>
+        <div id="empty-library" class="empty-state" hidden><h3>No files yet</h3><p>Import an STDF or try a small example.</p><button id="empty-import" class="button primary" type="button">Import STDF</button></div>
         <div id="no-results" class="empty-state compact" hidden><span data-icon="search"></span><h3>No matching files</h3><p>Try another filename or clear your search.</p><button id="clear-search" class="button secondary" type="button">Clear search</button></div>
-        <div id="files-table-wrap" class="table-scroll" hidden><table class="file-table"><thead><tr><th scope="col">File name</th><th scope="col">Measurements</th><th scope="col">Source size</th><th scope="col">Imported</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Open dataset</span></th></tr></thead><tbody id="dataset-rows"></tbody></table></div>
+        <div id="files-table-wrap" class="table-scroll" hidden><table class="file-table"><thead><tr><th scope="col">File name</th><th scope="col" title="Retained PTR rows. MPR and FTR observations are shown in Viewer.">PTR measurements</th><th scope="col">Size</th><th scope="col">Imported</th><th scope="col">Status</th><th scope="col"><span class="sr-only">File details</span></th></tr></thead><tbody id="dataset-rows"></tbody></table></div>
         <div id="pagination" class="pagination" hidden><span id="page-label"></span><div><button id="previous-page" class="icon-button" type="button" aria-label="Previous page"><span data-icon="left"></span></button><button id="next-page" class="icon-button" type="button" aria-label="Next page"><span data-icon="right"></span></button></div></div>
       </section>
-      <footer class="workspace-footer"><span><span data-icon="lock"></span>Saved in this browser on this device</span><button id="storage-summary" class="quiet-button" type="button">Checking local storage…</button></footer>
+      <footer class="workspace-footer"><a class="tools-link" href="./foundation.html">Library tools</a><button id="storage-summary" class="quiet-button" type="button">Storage details</button></footer>
     </main>
   </div>
 
   <dialog id="import-dialog" class="modal import-modal" aria-labelledby="import-title">
-    <div class="dialog-heading"><div><p class="eyebrow">ADD TO YOUR LIBRARY</p><h2 id="import-title">Import a test file</h2></div><button id="close-import" class="icon-button" type="button" aria-label="Close import"><span data-icon="close"></span></button></div>
-    <p class="dialog-intro">We’ll preserve the original and prepare a local dataset.</p>
+    <div class="dialog-heading"><h2 id="import-title">Import STDF</h2><button id="close-import" class="icon-button" type="button" aria-label="Close import"><span data-icon="close"></span></button></div>
     <label id="drop-zone" class="drop-zone" for="source-file"><span class="drop-icon" data-icon="upload"></span><strong>Drop your STDF files here</strong><span>or <b>choose files</b></span><small>STDF, gzip, bzip2 or single-file ZIP · Up to 2 GiB expanded per file</small><input id="source-file" class="sr-only" type="file" accept=".stdf,.std,.stf,.gz,.bz2,.zip" multiple /></label>
     <div class="dialog-actions"><button id="choose-folder" class="button secondary" type="button">Choose folder</button><label><input id="include-subfolders" type="checkbox" /> Include subfolders</label><input id="source-folder" class="sr-only" type="file" webkitdirectory multiple /></div>
     <div id="selected-file" class="selected-file" hidden><span data-icon="file"></span><div><strong id="selected-name"></strong><small id="selected-size"></small></div></div>
     <div id="import-progress" class="import-progress" hidden><ol class="phase-list"><li data-phase="decompressing">Expand</li><li data-phase="snapshot">Copy</li><li data-phase="parsing">Read</li><li data-phase="validating">Check</li><li data-phase="publishing">Save</li></ol><progress id="phase-progress" max="100" aria-label="Current import phase"></progress><p id="phase-label"></p></div>
-    <div id="import-status" class="import-status" role="status" aria-live="polite">Select one completed STDF file to get started.</div>
+    <div id="import-status" class="import-status" role="status" aria-live="polite"></div>
     <ul id="import-outcomes" class="import-outcomes" aria-label="Import outcomes"></ul>
-    <div class="dialog-actions"><span class="privacy-note"><span data-icon="lock"></span>Stays on your device</span><button id="cancel-import" class="button secondary" type="button" hidden>Cancel import</button><button id="start-import" class="button primary" type="button" disabled>Import file<span data-icon="right"></span></button><button id="open-imported" class="button primary" type="button" hidden>Open dataset<span data-icon="right"></span></button></div>
+    <div class="dialog-actions"><button id="cancel-import" class="button secondary" type="button" hidden>Cancel import</button><button id="start-import" class="button primary" type="button" disabled>Import file<span data-icon="right"></span></button><button id="open-imported" class="button primary" type="button" hidden>Open viewer<span data-icon="right"></span></button></div>
   </dialog>
 
-  <dialog id="dataset-dialog" class="detail-modal" aria-labelledby="dataset-name"><div class="dialog-heading"><p class="eyebrow">DATASET OVERVIEW</p><button id="close-dataset" class="icon-button" type="button" aria-label="Close dataset details"><span data-icon="close"></span></button></div><div class="detail-file-icon" data-icon="file"></div><h2 id="dataset-name"></h2><p id="dataset-subtitle" class="detail-subtitle"></p><div id="dataset-info"></div></dialog>
+  <dialog id="dataset-dialog" class="detail-modal" aria-labelledby="dataset-name"><div class="dialog-heading"><span>File details</span><button id="close-dataset" class="icon-button" type="button" aria-label="Close dataset details"><span data-icon="close"></span></button></div><h2 id="dataset-name"></h2><p id="dataset-subtitle" class="detail-subtitle"></p><div id="dataset-info"></div></dialog>
 
   <dialog id="storage-details" class="modal storage-modal" aria-labelledby="storage-title"><div class="dialog-heading"><div><p class="eyebrow">ON THIS DEVICE</p><h2 id="storage-title">Your local library</h2></div><button id="close-storage" class="icon-button" type="button" aria-label="Close storage details"><span data-icon="close"></span></button></div><p>Your files stay in this browser profile. Use the same browser and address to return to this library.</p><dl class="storage-facts"><div><dt>App address</dt><dd id="storage-origin"></dd></div><div><dt>Space used by this app</dt><dd id="storage-used">Checking…</dd></div><div><dt>Browser storage allowance</dt><dd id="storage-quota">Checking…</dd></div><div><dt>Protection from automatic cleanup</dt><dd id="storage-persistence">Checking…</dd></div></dl><p class="muted">Storage estimates can change. Clearing this site’s data removes its library. Keep exported copies of important datasets using Library tools.</p><p id="persistence-result" role="status"></p><div class="dialog-actions"><button id="persist-storage" class="button primary" type="button">Request persistent storage</button></div></dialog>
 </body>

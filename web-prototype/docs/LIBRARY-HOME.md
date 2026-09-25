@@ -2,7 +2,7 @@
 
 Status: local engineering preview, updated 2026-09-25. This screen connects the browser
 library to its product workflow: import STDF files or folders, see saved datasets,
-and reopen its metadata. It uses the same library as the engineering console.
+and open the data viewer. It uses the same library as the engineering console.
 
 ## Try it as a test engineer
 
@@ -23,13 +23,11 @@ cover app-module startup, not long-running imports or all worker/storage stalls.
 2. Watch Copy, Read, Check and Save. Byte progress describes the current phase;
    it is not a percentage of total import time. **Cancel import** waits for the
    worker's actual outcome. Closing the modal is disabled while importing.
-3. Select **Open dataset**, or select a filename in the library. The overview
-   shows saved measurement, device-attempt, declaration and record counts,
-   source/database sizes, retained coverage and the source fingerprint.
-   **Open data viewer** opens the [full investigation UI](VIEWER-UI.md).
-   **Explore tests** opens [Test Explorer](TEST-EXPLORER.md) in the same tab to
-   search test numbers/names and page through recorded declarations and PTR
-   observations. Its own guide describes scope and qualification evidence.
+3. Select **Open viewer**, or select a filename in the library, to go directly to
+   the [investigation UI](VIEWER-UI.md). New selections show a histogram and the
+   first available test. **Details** beside a file opens retained PTR counts,
+   device attempts, source/database sizes, coverage and SHA-256. Its **Raw records**
+   link opens the older [Test Explorer](TEST-EXPLORER.md).
 4. Search by filename or recorded relative path. Sort by import date, filename
    or source size; use the arrow controls to page through 25 rows at a time.
 5. Reload the page and reopen the dataset without selecting its original file.
@@ -50,10 +48,17 @@ releasing this page's connection.
 
 ## What this feature includes
 
-The page shows actual saved catalog metadata, with no demo datasets or fabricated
-statistics. Its overview reports device **attempts**, not unique devices. Only
-PTR records currently produce normalized measurement rows; consult the displayed
-coverage before interpreting that count. Raw source records remain preserved.
+The page shows actual saved catalog metadata. **Try example data** offers five
+small synthetic cases: clean lot, site shift, fail-to-pass retests, wafer-edge
+failures, and mixed pin/digital tests. Choosing **Open** imports the actual STDF
+files and opens the suggested view; download links also provide the files
+directly. Nothing is imported until an example is selected. The two-file site
+shift opens independent comparison groups. Reopening examples reuses matching
+saved sources. See [example data and expected results](EXAMPLES.md).
+
+Counts report device **attempts**, not unique devices. The library labels its
+measurement count as **PTR measurements**; full MPR/FTR observations are available
+in Viewer. Raw source records remain preserved.
 
 The client loads catalog metadata in pages of 100, with a 1,000-dataset inventory
 limit, then searches/sorts the loaded inventory. It renders at most 25 table rows.
@@ -86,6 +91,7 @@ The module contract is [SPEC-browser-ui.md](../../SPEC-browser-ui.md).
 | `site/app.css` | Workspace design, responsive layout, focus and reduced-motion styling |
 | `site/library-home.js` | Serialized client operations, UI state, progress and page lifecycle |
 | `site/library-home-view.js` | Text-safe rendering, icons and count/size/date formatting |
+| `site/example-picker.js` | Bundled example selection, source validation and ordinary import flow |
 | `scripts/frontend-check.mjs` | Isolated browser workflow and UI failure-state checks |
 
 The screen consumes `DataLibraryClient` and `inventoryFiles`. It does not open
@@ -113,9 +119,14 @@ uses or generates a 1M-measurement synthetic source for cancellation. It never
 uses the engineer's browser profile. Reports, screenshots and disposable profiles
 are written beneath ignored `web-prototype/results/frontend-*` directories.
 
-Chrome 153.0.8010.48 and Edge 153.0.4234.48 each passed 15 grouped checks with
-zero page errors. The [portable evidence record](../evidence/library-home.json)
-preserves both reports. The checks cover:
+After the UI simplification, Chrome 153.0.8010.48 and Edge 153.0.4234.48 each
+passed 15 grouped checks with zero page errors. Local results are
+`frontend-chrome-1790352018948` and `frontend-msedge-1790352060717` under
+`web-prototype/results/`. They include direct filename navigation, separate file
+details, import-to-viewer navigation and keyboard focus return. The
+[original evidence record](../evidence/library-home.json) describes the earlier
+metadata-first flow; [example evidence](../evidence/examples.json) records the
+new picker and five scenario workflows. The checks cover:
 
 | Evidence type | Scope |
 | --- | --- |

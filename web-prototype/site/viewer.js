@@ -1,13 +1,13 @@
 import { DataLibraryClient } from './data-client.js';
-import { element, hydrateIcons } from './library-home-view.js';
+import { element } from './library-home-view.js';
 import { validateSelection, parseTestKey } from './viewer-model.js';
 import { loadSettings, validateSettings, saveSettings, applyFont, editSettings } from './viewer-settings.js';
 import { editGroups } from './viewer-groups.js';
 import { renderTrend, renderHistogram, renderBins, renderWafer } from './viewer-charts.js';
 import { installViewerActions } from './viewer-actions.js';
-import { $, fmt, hex, button, empty, section, detail, warnings, table, pager, selectField, testTitle, renderCatalog, renderOverview, renderStats, renderDevices, renderObservations, renderRecord } from './viewer-view.js';
+import { $, fmt, hex, button, empty, section, detail, disclosure, compactChart, renderStatSummary, warnings, table, pager, selectField, testTitle, renderCatalog, renderOverview, renderStats, renderDevices, renderObservations, renderRecord } from './viewer-view.js';
 
-const PAGE = 50, WORKSPACE_KEY = 'semidata.viewer.workspace.v1';
+const PAGE = 50, WORKSPACE_KEY = 'semidata.viewer.workspace.v1', TABS = ['histogram', 'trend', 'tests', 'devices', 'bins', 'wafers', 'overview', 'records'];
 const state = { ready: false, opened: false, busy: false, datasets: [], selection: null, settings: loadSettings(), selected: new Map(),
   tab: 'overview', overview: null, catalog: { items: [], total: 0, offset: 0, nextOffset: null }, testQuery: '', testOrder: 'original', wildcard: false,
   seriesBy: 'aggregate', includeAggregate: false, deviceOffset: 0, deviceQuery: '', deviceSort: 'index', deviceDirection: 'asc', pick: null,
@@ -19,7 +19,11 @@ const actions = {};
 const actionButtons = [['viewer-export', 'export'], ['viewer-save-session', 'saveSession'], ['viewer-open-session', 'openSession'], ['viewer-manage-downloads', 'manageDownloads']];
 function runAction(work) { return run(async () => { actionRunning = true; try { await work(); } finally { actionRunning = false; } }); }
 function changed() {
-  try { localStorage.setItem(WORKSPACE_KEY, JSON.stringify({ version: 1, selection: state.selection, tests: [...state.selected.keys()] })); } catch { /* Data operations remain usable when preference storage is full. */ }
+  const saved = { version: 1, ...snapshot() };
+  try { localStorage.setItem(WORKSPACE_KEY, JSON.stringify(saved)); } catch { /* Data operations remain usable when preference storage is full. */ }
+  // An explicit file/example URL initializes a new history entry once. Reloading
+  // that entry resumes its edited selection instead of reapplying the preset.
+  try { history.replaceState({ ...history.state, semidataViewer: saved }, ''); } catch { /* Restricted history storage does not block analysis. */ }
   window.dispatchEvent(new CustomEvent('viewer-statechange', { detail: snapshot() }));
 }
 function snapshot() { return structuredClone({ selection: state.selection, settings: state.settings, tests: [...state.selected.keys()], tab: state.tab, seriesBy: state.seriesBy, includeAggregate: state.includeAggregate }); }
@@ -47,12 +51,12 @@ function run(work) {
   if (state.busy || disposed) return running;
   retryWork = work; state.busy = true; cancelRequested = false; $('viewer-error').hidden = true; $('viewer-progress').hidden = false;
   document.querySelectorAll('[data-operation-error]').forEach((notice) => notice.remove());
-  $('viewer-progress-title').textContent = state.ready ? 'Reading your selection' : 'Opening local data'; $('viewer-progress-text').textContent = 'Processing locally. You can cancel without removing saved source data.';
+  $('viewer-progress-title').textContent = state.ready ? 'Loading…' : 'Opening data…'; $('viewer-progress-text').textContent = '';
   const active = document.activeElement, disabled = [];
   for (const el of document.querySelectorAll('#viewer-panel button,#viewer-panel input,#viewer-panel select,#viewer-tests input,#viewer-selected button,#viewer-device-body button,#viewer-record-body button')) { disabled.push([el, el.disabled]); el.disabled = true; }
   controls();
   running = (async () => {
-    try { await work(); if (!disposed) $('connection-status').textContent = 'Ready · local data'; }
+    try { await work(); if (!disposed) $('connection-status').textContent = 'Ready'; }
     catch (error) { if (!disposed) showError(error); }
     finally {
       state.busy = false;
@@ -89,8 +93,13 @@ function renderFilterOptions() {
     for (const value of ['all', ...choices]) { const option = element('option', value === 'all' ? 'All' : String(value)); option.value = value; option.selected = value === 'all' ? !selected : selected?.includes(value); select.append(option); }
   }
   $('viewer-attempts').value = state.selection.attempts;
-  $('viewer-subtitle').textContent = state.selection.groups.map((group) => `${group.name} (${group.datasetIds.length} file${group.datasetIds.length === 1 ? '' : 's'})`).join(' · ');
+  $('viewer-subtitle').textContent = state.selection.groups.map((group) => group.datasetIds.length > 1 ? `${group.name} (${group.datasetIds.length} files)` : group.name).join(' · ');
+  renderFilterSummary();
   $('viewer-raw').href = `./explore.html?dataset=${encodeURIComponent(state.selection.groups[0].datasetIds[0])}`;
+}
+function renderFilterSummary() {
+  const { heads, sites, attempts } = state.selection;
+  $('viewer-filter-summary').textContent = [heads ? `Head ${heads.join(', ')}` : 'All heads', sites ? `Site ${sites.join(', ')}` : 'All sites', attempts === 'all' ? 'All attempts' : 'Current attempts', state.seriesBy === 'site' ? state.includeAggregate ? 'Combined + site series' : 'Separate sites' : ''].filter(Boolean).join(' · ');
 }
 function drawCatalog() {
   const activeKey = document.activeElement?.dataset?.testKey;
@@ -105,12 +114,17 @@ function drawCatalog() {
 async function loadCatalog(offset = 0) {
   state.catalog = await query('tests', { query: state.testQuery, wildcard: state.wildcard, order: state.testOrder, offset, limit: PAGE }); drawCatalog();
 }
-async function reloadWorkspace() {
+async function reloadWorkspace({ selectFirst = false, testNumber = null } = {}) {
   clearHealth(); state.analyses.clear(); state.deviceOffset = 0; state.recordOffset = 0; state.pick = null; disposeCharts();
   await query('prepare'); state.overview = await query('overview'); state.ready = true; renderFilterOptions();
-  await loadCatalog(0); await renderPanel(); changed();
+  await loadCatalog(0);
+  if (selectFirst && !state.selected.size) {
+    const test = state.catalog.items.find((item) => item.number === testNumber && item.observations > 0) ?? state.catalog.items.find((item) => item.observations > 0 && item.family !== 20) ?? state.catalog.items.find((item) => item.observations > 0);
+    if (test) { state.selected.set(test.key, test); drawCatalog(); }
+  }
+  await renderPanel(); changed();
 }
-function clearHealth() { state.health.clear(); $('viewer-health-status').textContent = 'Scan all test identities for failures and low Cpk in the current population.'; }
+function clearHealth() { state.health.clear(); $('viewer-health-status').textContent = 'Check failures and low Cpk for all tests.'; }
 async function scanHealth() {
   clearHealth(); let offset = 0, total = 0, complete = false;
   try {
@@ -122,13 +136,13 @@ async function scanHealth() {
         const cpks = result.series.map((s) => s.stats.cpk).filter(Number.isFinite);
         state.health.set(test.key, { fails: result.series.some((s) => s.stats.fail > 0), cpk: cpks.length ? Math.min(...cpks) : null });
         if (state.selected.has(test.key)) state.analyses.set(test.key, result);
-        $('viewer-progress-title').textContent = 'Scanning test health'; $('viewer-progress-text').textContent = `${state.health.size.toLocaleString()} of ${total.toLocaleString()} test identities. Current heads, sites and attempt policy; full-population statistics.`;
+        $('viewer-progress-title').textContent = 'Scanning tests…'; $('viewer-progress-text').textContent = `${state.health.size.toLocaleString()} / ${total.toLocaleString()}`;
       }
       offset = catalog.nextOffset;
     } while (offset != null);
     complete = true;
   } finally {
-    $('viewer-health-status').textContent = `${complete ? 'Complete' : 'Partial'} scan: ${state.health.size.toLocaleString()} / ${total.toLocaleString()} identities · ${state.selection.attempts} attempts · selected heads/sites · Cpk < ${state.settings.cpkThreshold}. Cpk markers use the lowest defined series value.`;
+    $('viewer-health-status').textContent = `${complete ? 'Complete' : 'Partial'} scan: ${state.health.size.toLocaleString()} / ${total.toLocaleString()} tests · Cpk < ${state.settings.cpkThreshold}. Uses current filters and the lowest series Cpk.`;
     drawCatalog();
   }
 }
@@ -155,8 +169,8 @@ function drawDeviceToolbar(container, matrix) {
   addSearch(toolbar, 'Part ID, part text or index', state.deviceQuery, (value) => { state.deviceQuery = value; state.deviceOffset = 0; run(renderPanel); });
   selectField(toolbar, 'Sort devices', [['index', 'Test order'], ['part', 'Part ID'], ['head', 'Head'], ['site', 'Site'], ['hard_bin', 'Hardware bin'], ['soft_bin', 'Software bin'], ['time', 'Test time'], ['tests', 'Test count'], ['status', 'Outcome'], ['x', 'X'], ['y', 'Y']], state.deviceSort, (value) => { state.deviceSort = value; state.deviceOffset = 0; run(renderPanel); });
   selectField(toolbar, 'Direction', [['asc', 'Ascending'], ['desc', 'Descending']], state.deviceDirection, (value) => { state.deviceDirection = value; state.deviceOffset = 0; run(renderPanel); });
-  if (state.pick) { container.append(element('p', 'Showing a plot selection within the current source/head/site/attempt population.', 'viewer-help')); toolbar.append(button('Clear plot selection', () => { state.pick = null; state.deviceOffset = 0; run(renderPanel); })); }
-  if (matrix) container.append(element('p', 'Values join by original device identity. Repeated executions remain separate; open a device to inspect every recorded result and flag.', 'viewer-help'));
+  if (state.pick) { container.append(element('p', 'Plot selection', 'viewer-selection-note')); toolbar.append(button('Clear plot selection', () => { state.pick = null; state.deviceOffset = 0; run(renderPanel); })); }
+  if (matrix) disclosure(container, 'About this table').append(element('p', 'Values join by original device identity. Repeated executions remain separate; open a device to inspect every recorded result and flag.', 'viewer-help'));
 }
 async function drawDevices(container, matrix = false) {
   drawDeviceToolbar(container, matrix);
@@ -175,13 +189,13 @@ function openDevice(row, after = [0, -1], history = []) {
   run(async () => {
     const result = await query('device', { datasetId: row.dataset_id, deviceId: row.id, group: row.group_id, after, limit: PAGE });
     const body = $('viewer-device-body'); body.replaceChildren(); detail(body, 'Attempt identity and recorded part fields', result.attempt);
-    body.append(element('p', 'Normalized values are accompanied by original R4 bits and recorded flags. Open a record for all fields and exact source bytes.', 'viewer-help'));
+    disclosure(body, 'About these results').append(element('p', 'Open a record for all fields and original bytes. Exports include every observation for this attempt, beyond the displayed page and selected tests.', 'viewer-help'));
     const exportBar = element('div', undefined, 'viewer-toolbar');
     for (const [text, format] of [['Export CSV', 'csv'], ['Export Excel', 'xlsx']]) {
       const exportButton = button(text, () => runAction(() => actions.exportDevice(snapshot(), { datasetId: row.dataset_id, deviceId: row.id, group: row.group_id }, format)));
       exportButton.disabled = typeof actions.exportDevice !== 'function'; exportBar.append(exportButton);
     }
-    body.append(element('p', 'Device exports include all recorded observations for this attempt, beyond the displayed page and selected tests.', 'viewer-help'), exportBar);
+    body.append(exportBar);
     const transpose = element('input'), label = element('label', undefined, 'viewer-transpose'), observations = element('div'); transpose.type = 'checkbox'; transpose.checked = state.deviceTranspose === true;
     label.append(transpose, document.createTextNode('Transpose this page')); body.append(label, observations);
     const draw = () => { observations.replaceChildren(); renderObservations(observations, result, state.settings, (seq) => openRecord(row.dataset_id, seq), transpose.checked); };
@@ -246,13 +260,14 @@ async function renderPanel() {
       await drawDevices(section(panel, 'Device test matrix'), true); return;
     }
     for (const analysis of analyses) {
-      const box = section(panel, testTitle(analysis.test)); warnings(box, analysis.warnings);
+      const box = section(panel); warnings(box, analysis.warnings);
       const pinInfo = state.selected.get(analysis.test.key)?.pins; if (pinInfo?.length) detail(box, 'Pin metadata with source/head/site scope', pinInfo);
       const chartBox = element('div'); box.append(chartBox);
       const args = { series: colored(analysis.series), settings: state.settings, title: `${FAMILY_LABEL(analysis.test.family)} · ${testTitle(analysis.test)}`, onPick: (pick) => pickDevices(pick, { testKey: analysis.test.key }) };
       const label = analysis.test.family === 20 ? 'Test flag (status byte)' : `Test value${analysis.test.unit ? ` (${analysis.test.unit})` : ''}`;
       chartHandles.push(state.tab === 'trend' ? renderTrend(chartBox, { ...args, yLabel: label }) : renderHistogram(chartBox, { ...args, xLabel: label }));
-      renderStats(box, [analysis], state.settings);
+      compactChart(chartBox); renderStatSummary(box, analysis, state.settings);
+      renderStats(disclosure(box, 'All statistics'), [analysis], state.settings);
     }
     return;
   }
@@ -261,15 +276,17 @@ async function renderPanel() {
     selectField(toolbar, 'Bin family', [['soft', 'Software bins'], ['hard', 'Hardware bins']], state.binKind, (value) => { state.binKind = value; run(renderPanel); });
     const result = await query('bins', { kind: state.binKind, seriesBy: state.seriesBy }); warnings(panel, result.warnings);
     const chartBox = element('div'); panel.append(chartBox); chartHandles.push(renderBins(chartBox, { series: colored(result.series), settings: state.settings, title: `${state.binKind === 'soft' ? 'Software' : 'Hardware'} bins`, onPick: (pick) => pickDevices(pick, { bin: { kind: state.binKind, number: pick.number } }) }));
-    drawBinTable(panel, result.series); return;
+    compactChart(chartBox); drawBinTable(disclosure(panel, 'Bin table'), result.series); return;
   }
   if (state.tab === 'wafers') {
     const wafers = await query('wafers'), toolbar = element('div', undefined, 'viewer-toolbar'); panel.append(toolbar);
     if (state.waferKey !== 'stacked' && !wafers.items.some((w) => w.key === state.waferKey)) state.waferKey = 'stacked';
     selectField(toolbar, 'Wafer map', [['stacked', 'Stacked failure counts'], ...wafers.items.map((w) => [w.key, `${state.selection.groups[w.group].name} · ${w.name} · ${w.sourceName}`])], state.waferKey, (value) => { state.waferKey = value; run(renderPanel); });
-    waferViewport(panel);
+    const rangeLabel = state.waferBounds ? `Coordinate range · X ${state.waferBounds.x.join(' to ')} · Y ${state.waferBounds.y.join(' to ')}` : 'Coordinate range';
+    waferViewport(disclosure(panel, rangeLabel));
     const result = await query('wafer', { waferKey: state.waferKey, ...(state.waferBounds ? { bounds: state.waferBounds } : {}) }); warnings(panel, result.warnings);
     const chartBox = element('div'); panel.append(chartBox); chartHandles.push(renderWafer(chartBox, { ...result, settings: state.settings, onPick: (pick) => pickDevices(pick, result.wafer ? { wafer: { datasetId: result.wafer.datasetId, id: result.wafer.id }, group: result.wafer.group } : { wafer: 'stacked' }) }));
+    compactChart(chartBox);
     if (result.wafer) detail(panel, 'Wafer metadata and orientation provenance', result.wafer); return;
   }
   await drawRecords(panel);
@@ -281,18 +298,26 @@ async function startup() {
   library?.terminate(); library = new DataLibraryClient({ onProgress: progress }); await library.open(); state.opened = true;
   state.datasets = []; let offset = 0;
   do { const page = await library.listDatasets({ offset, limit: 100 }); state.datasets.push(...page.items); offset = page.nextOffset; if (state.datasets.length > 1000) throw new Error('This workspace supports a catalog of up to 1,000 saved datasets.'); } while (offset != null);
-  if (!state.datasets.length) { state.ready = false; empty($('viewer-panel'), 'Your library is empty', 'Add STDF files in Data library, or open a saved workspace.'); $('viewer-subtitle').textContent = 'Add a file to begin.'; $('viewer-test-count').textContent = 'No saved tests'; window.dispatchEvent(new CustomEvent('viewer-ready', { detail: snapshot() })); return; }
-  const requested = new URL(location.href).searchParams.get('dataset');
-  if (requested && !state.datasets.some((d) => d.id === requested)) throw new Error('That dataset is not in this browser library. Open it from Data library.');
+  if (!state.datasets.length) { state.ready = false; empty($('viewer-panel'), 'No files yet', 'Import an STDF file or try a small example.'); const link = element('a', 'Try example data', 'button primary'); link.href = './app.html?examples=1'; $('viewer-panel').append(link); $('viewer-subtitle').textContent = 'Data viewer'; $('viewer-test-count').textContent = 'No tests'; window.dispatchEvent(new CustomEvent('viewer-ready', { detail: snapshot() })); return; }
+  const params = new URL(location.href).searchParams, requested = params.has('datasets') ? [...new Set(params.get('datasets').split(','))] : params.get('dataset') ? [params.get('dataset')] : [];
+  let selectFirst = false;
   if (!state.selection) {
-    let saved; try { saved = JSON.parse(localStorage.getItem(WORKSPACE_KEY) ?? 'null'); } catch { /* Ignore invalid local preference data. */ }
-    if (!requested && saved?.version === 1) {
-      try { const selection = validateSelection(saved.selection); if (selection.groups.every((g) => g.datasetIds.every((id) => state.datasets.some((d) => d.id === id)))) { state.selection = selection; for (const key of (saved.tests ?? []).slice(0, 12)) state.selected.set(key, parseTestKey(key)); } } catch { state.selection = null; state.selected.clear(); }
+    let saved; try { saved = history.state?.semidataViewer ?? (!requested.length ? JSON.parse(localStorage.getItem(WORKSPACE_KEY) ?? 'null') : null); } catch { /* Ignore invalid local preference data. */ }
+    if (saved?.version === 1) {
+      try { const selection = validateSelection(saved.selection); if (selection.groups.every((g) => g.datasetIds.every((id) => state.datasets.some((d) => d.id === id)))) { state.selection = selection; for (const key of (saved.tests ?? []).slice(0, 12)) state.selected.set(key, parseTestKey(key)); state.tab = TABS.includes(saved.tab) ? saved.tab : 'histogram'; state.seriesBy = saved.seriesBy === 'site' ? 'site' : 'aggregate'; state.includeAggregate = saved.includeAggregate === true; } } catch { state.selection = null; state.selected.clear(); }
     }
-    if (!state.selection) { const source = state.datasets.find((d) => d.id === requested) ?? state.datasets[0]; state.selection = validateSelection({ groups: [{ name: source.name.slice(0, 120), datasetIds: [source.id] }] }); }
+    if (!state.selection) {
+      if (requested.some((id) => !state.datasets.some((d) => d.id === id))) throw new Error('That dataset is not in this browser library. Open it from Data library.');
+      const sources = requested.length ? requested.map((id) => state.datasets.find((d) => d.id === id)) : [state.datasets[0]];
+      state.selection = validateSelection({ groups: sources.map((source) => ({ name: source.name.slice(0, 120), datasetIds: [source.id] })) }); selectFirst = true;
+      state.tab = params.has('example') && TABS.includes(params.get('tab')) ? params.get('tab') : 'histogram';
+      if (params.has('example')) { state.seriesBy = ['site', 'both'].includes(params.get('series')) ? 'site' : 'aggregate'; state.includeAggregate = params.get('series') === 'both'; }
+    }
   }
+  $('viewer-series').value = state.seriesBy === 'aggregate' ? 'aggregate' : state.includeAggregate ? 'both' : 'site';
   await restoreFont(state.settings);
-  await reloadWorkspace(); window.dispatchEvent(new CustomEvent('viewer-ready', { detail: snapshot() }));
+  const testNumber = params.has('example') && /^\d{1,10}$/.test(params.get('test') ?? '') ? Number(params.get('test')) : null;
+  await reloadWorkspace({ selectFirst, testNumber }); window.dispatchEvent(new CustomEvent('viewer-ready', { detail: snapshot() }));
 }
 async function restoreFont(settings) {
   try { await applyFont(settings); }
@@ -302,7 +327,6 @@ async function restoreFont(settings) {
   }
 }
 
-hydrateIcons();
 $('viewer-cancel').addEventListener('click', () => { cancelRequested = true; $('viewer-cancel').disabled = true; $('viewer-progress-text').textContent = 'Cancelling at a safe boundary…'; library?.cancel(); });
 $('viewer-retry').addEventListener('click', () => run(library?.worker && state.ready ? retryWork ?? renderPanel : startup));
 $('viewer-groups').addEventListener('click', () => editGroups(state.selection, state.datasets, (selection) => { state.selection = selection; state.selected.clear(); state.rawSource = ''; run(reloadWorkspace); }));
@@ -311,7 +335,8 @@ for (const [id, field] of [['viewer-head', 'heads'], ['viewer-site', 'sites']]) 
   const values = [...$(id).selectedOptions].map((o) => o.value).filter((value) => value !== 'all').map(Number); state.selection[field] = values.length ? values : null; run(reloadWorkspace);
 });
 $('viewer-attempts').addEventListener('change', () => { state.selection.attempts = $('viewer-attempts').value; run(reloadWorkspace); });
-$('viewer-series').addEventListener('change', () => { const value = $('viewer-series').value; state.seriesBy = value === 'aggregate' ? 'aggregate' : 'site'; state.includeAggregate = value === 'both'; state.analyses.clear(); clearHealth(); drawCatalog(); run(renderPanel); });
+$('viewer-series').addEventListener('change', () => { const value = $('viewer-series').value; state.seriesBy = value === 'aggregate' ? 'aggregate' : 'site'; state.includeAggregate = value === 'both'; state.analyses.clear(); clearHealth(); drawCatalog(); renderFilterSummary(); changed(); run(renderPanel); });
+$('viewer-reset-filters').addEventListener('click', () => { state.selection.heads = null; state.selection.sites = null; state.selection.attempts = 'current'; state.seriesBy = 'aggregate'; state.includeAggregate = false; $('viewer-series').value = 'aggregate'; run(reloadWorkspace); });
 $('viewer-scan-health').addEventListener('click', () => run(scanHealth));
 $('viewer-test-search').addEventListener('submit', (e) => { e.preventDefault(); state.testQuery = $('viewer-test-query').value; state.wildcard = $('viewer-wildcard').checked; state.testOrder = $('viewer-test-order').value; run(() => loadCatalog()); });
 $('viewer-test-order').addEventListener('change', () => { state.testOrder = $('viewer-test-order').value; run(() => loadCatalog()); });
@@ -319,7 +344,7 @@ $('viewer-tests-prev').addEventListener('click', () => run(() => loadCatalog(Mat
 $('viewer-tests-next').addEventListener('click', () => run(() => loadCatalog(state.catalog.nextOffset)));
 $('viewer-clear-tests').addEventListener('click', () => { state.selected.clear(); state.analyses.clear(); changed(); drawCatalog(); run(renderPanel); });
 for (const tab of document.querySelectorAll('[data-tab]')) {
-  tab.addEventListener('click', () => { state.tab = tab.dataset.tab; run(renderPanel); });
+  tab.addEventListener('click', () => { state.tab = tab.dataset.tab; changed(); run(renderPanel); });
   tab.addEventListener('keydown', (e) => {
     const tabs = [...document.querySelectorAll('[data-tab]')], index = tabs.indexOf(tab); let target;
     if (e.key === 'ArrowRight') target = tabs[(index + 1) % tabs.length]; else if (e.key === 'ArrowLeft') target = tabs[(index + tabs.length - 1) % tabs.length]; else if (e.key === 'Home') target = tabs[0]; else if (e.key === 'End') target = tabs.at(-1);

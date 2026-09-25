@@ -10,12 +10,24 @@ source-evidenced baseline and intentional corrections.
 
 ## Open a workspace
 
-Open **Data viewer** from a saved dataset in Data library. Its address is
+Click a filename in **Library** to open the viewer. Its address is
 `viewer.html?dataset=<saved dataset ID>` on the same app origin. The first visit
 can build disposable analysis indexes. Progress and cancellation remain visible;
 original retained sources are unchanged. A subsequent visit reuses compatible
 indexes. Direct `file://` loading is unsupported; the launch notice links to the
 local app address.
+
+A newly opened file starts on **Histogram** with its first numeric test selected
+(or its first recorded test if no numeric test exists). Choose another test in
+the left list. Check several tests to display them together, up to twelve. The
+filename stays above the plot; **Library** returns to the saved-file list.
+An empty library links to **Try example data**.
+
+Reloading the current page resumes its edited selection; a file/example link
+initializes its history entry only once. Opening the viewer without a dataset
+link resumes the last group/test selection, tab and chart-series choice,
+including a deliberately empty test selection.
+Opening a portable workspace uses the selections saved in that package.
 
 **Files & groups** creates ordered logical groups of saved datasets. Sources
 within a group form one population in the specified order; comparison groups
@@ -23,8 +35,10 @@ remain independent. The same source may occur in multiple groups, once per
 group. The provider allows eight groups and eight distinct source files.
 Reordering groups or sources does not rewrite STDF bytes.
 
-Choose heads, sites, and **Current attempts** or **All attempts, including
-superseded**. Head/site controls support multiple native selections. Current
+Expand **Filters** to choose heads, sites, and **Current attempts** or **All
+attempts**. Its summary always shows the active population, even when collapsed;
+**Reset filters** restores all heads/sites, current attempts and combined sites.
+Head/site controls support multiple native selections. Current
 attempts are determined by explicit scoped STDF superseding rules; repeated part
 names alone are insufficient evidence of replacement. The chart-series selector
 offers aggregate selected sites, each site, or both. Aggregate and per-site
@@ -36,21 +50,24 @@ series overlap intentionally; they are not disjoint cohorts to sum.
 | --- | --- |
 | File info | Outcome metrics for the selected current/all policy, attempt history counts, source hash, warnings and recorded headers. Unknown outcomes are separate; displayed yield excludes unknowns. |
 | Devices | Searchable/sortable attempt table, 50 rows per page. Open a device for all its recorded observations. Plot selections retain their original population and can be cleared explicitly. |
-| Tests | Full-population statistics for up to twelve selected identities and a device-by-test matrix joined by original device identity. Repeated executions are retained. |
+| Statistics | Full-population statistics for up to twelve selected identities and a device-by-test matrix joined by original device identity. Repeated executions are retained. |
 | Trend | Reduced display points with full recorded/eligible counts and extrema retained by the provider. Statistics are computed from the full population. |
 | Histogram | Common, equal-width provider bins across compared series. Intervals are half-open except the final upper endpoint. |
-| Bins | Recomputed hardware/software counts, percentages and outcome counts. The accompanying bin table is paged at 50 rows. |
-| Wafers | Individual soft-bin maps or stacked failure counts. Recorded orientation and die aspect ratio affect display; drilldowns retain original die coordinates. Four optional X/Y viewport bounds narrow large maps. |
+| Bins | Recomputed hardware/software counts, percentages and outcome counts. Expand **Bin table** for the table, paged at 50 rows. |
+| Wafers | Individual soft-bin maps or stacked failure counts. Recorded orientation and die aspect ratio affect display; drilldowns retain original die coordinates. **Coordinate range** narrows large maps and displays applied bounds in its summary. |
 | Records | Paged GDR/DTR, headers, pin metadata, all indexed metadata, or all original records from a chosen source. Open a record for decoded fields and exact bytes. |
 
 The test catalog is independently paged at 50 identities and supports number/name
 search, optional `*`/`?` wildcards, and original/number/name ordering. Tests retain
 record family, effective name, unit and MPR channel identity. Mapped pin labels
 and available source/head/site pin provenance are shown; an unmapped result is
-not presented as a fabricated pin.
+not presented as a fabricated pin. Wildcards and ordering are under **Search
+options**. **Selected tests** lists selections across catalog pages; **Clear
+selection** removes them.
 
-Catalog recorded/failure counts describe source inventory **before** head/site
-and current/all filters. **Scan test health** performs an explicit, cancellable
+Catalog recorded/failure totals are in each item's tooltip and describe source
+inventory **before** head/site and current/all filters. Under **Find failing
+tests**, **Scan test health** performs an explicit, cancellable
 scan of every test identity using the current population and series policy. It
 adds scoped failure and low-Cpk markers without selecting every test. A partial
 scan reports its completed identity count; unscanned identities have no marker.
@@ -67,12 +84,15 @@ attempt, beyond the current page and selected-test set.
 ## Chart interaction and settings
 
 Each chart provides a legend, reset button, hover information, and labeled
-keyboard alternatives to pointer selection. Trend/histogram interval picks
+keyboard alternatives under **Chart tools**. **About this chart** explains
+reduction, interval edges and overlays. Compact sample count, mean, sigma and
+Cpk remain visible; **All statistics** expands the complete table. Numerical
+exclusions and interpretation warnings remain visible. Trend/histogram interval picks
 query full-population devices, including observations omitted by display
 reduction. Hidden series do not participate in picks. Bin and die picks retain
 their exact category/coordinate and group scope.
 
-**Pointer drag** selects Inspect data, Zoom rectangle, or Pan view. Dedicated
+Under **Chart tools**, **Pointer drag** selects Inspect data, Zoom rectangle, or Pan view. Dedicated
 zoom and four pan buttons provide keyboard operation. Zoom/pan changes the
 displayed extent only; population, histogram bins and statistics remain fixed.
 Reset restores all series and full extent. Wafer viewport bounds are a separate
@@ -93,7 +113,7 @@ each series' peak histogram count; it is not a fitted probability-density axis.
 Color overrides address bin numbers in bin plots and individual wafer maps;
 stacked wafer colors encode failed-attempt counts.
 
-Settings and the latest logical group/test selection use versioned local browser
+Settings and the latest logical group/test/tab/series selection use versioned local browser
 preferences. A custom TTF/OTF font up to 10 MiB is loaded with `FontFace` and stored
 in a separate IndexedDB preference database. Portable workspace packages carry
 the font preference but not the font binary. If the font is unavailable on
@@ -109,10 +129,20 @@ diagnostic JSON. Generated files have explicit download and temporary-copy
 cleanup controls. See [VIEWER-TRANSFER.md](VIEWER-TRANSFER.md) for exact package,
 retained-source, export and restore guarantees. Native upstream database
 sessions are distinct from browser workspace packages.
-**Generated files** reopens the stored temporary-output inventory, including in
+**Downloads** reopens the stored temporary-output inventory, including in
 an empty library, so files can be downloaded or explicitly removed after reload.
 
 ## Module ownership and extension boundary
+
+The bundled example picker opens
+`viewer.html?datasets=<comma-separated IDs>&example=<scenario>&tab=<view>&series=<mode>&test=<number>`.
+Each dataset becomes an independent comparison group. `tab` uses the existing
+view identifiers (`histogram`, `trend`, `tests`, `devices`, `bins`, `wafers`,
+`overview`, `records`); `series` accepts `aggregate`, `site` or `both`; `test`
+selects a matching recorded number from the first catalog page, falling back to
+the first numeric test. These presets apply only with an explicit `example`
+parameter and a fresh selection. Unknown tabs/modes use histogram/aggregate.
+Source IDs must exist in the local library and normal group/source bounds apply.
 
 | File | Responsibility |
 | --- | --- |

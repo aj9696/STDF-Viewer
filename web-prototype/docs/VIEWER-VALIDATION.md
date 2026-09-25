@@ -58,6 +58,18 @@ tests. No quota or runtime error occurred in the recorded run.
 
 ## Application and export qualification
 
+The subsequent UI simplification was checked in Chrome and Edge using the same
+production provider. UI runs `viewer-ui-chrome-1790352275911` and
+`viewer-ui-msedge-1790352306825` each pass ten grouped checks. Production runs
+`viewer-e2e-chrome-1790352306803` and `viewer-e2e-msedge-1790352306815` each pass
+nine workflow groups, including eight-sheet/eleven-PNG reports, scoped plot
+picking, device CSV/Excel, workspace restore and download cleanup. These runs
+verify collapsed controls, visible population/bounds summaries, initial test
+selection and preservation of edited selections on refresh. Desktop and 360px
+layouts were visually reviewed. Numerical methods and storage schemas are
+unchanged. The [small example qualification](../evidence/examples.json) separately
+records the five scenario oracles and their import/open flows.
+
 The portable [qualification summary](../evidence/browser-viewer.json) retains
 checks and measurements without requiring ignored local browser profiles.
 Final Chrome and Edge production E2E runs each pass nine workflow groups:

@@ -8,6 +8,28 @@ export const button = (text, action, className = 'button secondary') => { const 
 export function empty(container, title, text) { const box = element('div', undefined, 'viewer-empty'); box.append(element('h2', title), element('p', text)); container.replaceChildren(box); }
 export function section(container, title) { const s = element('section', undefined, 'viewer-section'); if (title) s.append(element('h2', title)); container.append(s); return s; }
 export function detail(container, title, fields) { const d = element('details', undefined, 'viewer-detail'); d.append(element('summary', title), element('pre', JSON.stringify(fields, null, 2))); container.append(d); return d; }
+export function disclosure(container, title) { const d = element('details', undefined, 'viewer-detail'); d.append(element('summary', title)); container.append(d); return d; }
+export function compactChart(container) {
+  const chart = container.querySelector('.viewer-chart'); if (!chart) return;
+  const note = chart.querySelector('.chart-note'), controls = chart.querySelector('.chart-controls'), navigation = chart.querySelector('.chart-navigation'), status = chart.querySelector('.chart-status');
+  const tools = disclosure(chart, 'Chart tools'); tools.classList.add('chart-tools'); tools.append(navigation, controls);
+  disclosure(chart, 'About this chart').append(note);
+  // Status remains outside collapsed tools so selection/validation feedback is visible.
+  chart.append(status);
+}
+export function renderStatSummary(container, analysis, settings) {
+  const summary = element('div', undefined, 'viewer-stat-summary');
+  for (const series of analysis.series) {
+    const row = element('div', undefined, 'viewer-stat-row');
+    if (analysis.series.length > 1) row.append(element('span', series.label, 'viewer-stat-label'));
+    for (const [label, value] of [['n', series.stats.count], ['Mean', fmt(series.stats.mean, settings.precision, settings.notation)], ['σ', fmt(series.stats.stdev, settings.precision, settings.notation)], ['Cpk', series.stats.cpk == null ? '—' : fmt(series.stats.cpk, settings.precision, settings.notation)]]) {
+      const item = element('span'); item.append(document.createTextNode(`${label} `), element('strong', String(value))); if (label === 'Cpk' && series.stats.cpk == null) item.title = series.stats.cpkReason ?? 'Cpk unavailable'; row.append(item);
+    }
+    if (series.stats.excluded) row.append(element('span', `${series.stats.excluded} excluded`, 'viewer-stat-excluded'));
+    summary.append(row);
+  }
+  container.append(summary);
+}
 export function warnings(container, values = []) { for (const text of values) container.append(element('p', text, 'viewer-warning')); }
 export function table(container, columns, rows, { label = 'Data table', rowClass } = {}) {
   const wrap = element('div', undefined, 'viewer-table-wrap'); wrap.tabIndex = 0; wrap.setAttribute('role', 'region'); wrap.setAttribute('aria-label', label);
@@ -42,21 +64,27 @@ export function testTitle(test) { return `${test.number} · ${test.name || '(nam
 export function renderCatalog(result, selected, onToggle, onRemove, health = new Map(), threshold = 1.33) {
   $('viewer-tests').replaceChildren();
   for (const item of result.items) {
-    const label = element('label', undefined, `viewer-test-choice${item.failures > 0 ? ' has-failures' : ''}`), input = element('input'), text = element('span');
+    const label = element('label', undefined, `viewer-test-choice${selected.has(item.key) ? ' is-selected' : ''}`), input = element('input'), text = element('span');
     input.type = 'checkbox'; input.checked = selected.has(item.key); input.dataset.testKey = item.key;
     input.addEventListener('change', () => onToggle(item, input.checked));
-    text.append(element('strong', `${item.number} · ${FAMILY_NAMES[item.family] ?? item.family}`), element('span', item.name || '(name not recorded)', 'test-name'), element('small', `${item.unit || 'No unit'}${item.channel ? ` · ${item.channel}` : ''}${item.pinLabel ? ` · ${item.pinLabel}` : ''} · ${item.observations.toLocaleString()} recorded · ${item.failures} failures`));
+    text.append(element('strong', String(item.number)), element('span', item.name || '(unnamed)', 'test-name'));
+    const metadata = [item.channel || FAMILY_NAMES[item.family], item.pinLabel, item.unit].filter(Boolean).join(' · ');
+    if (metadata) text.append(element('small', metadata));
+    label.title = `${item.observations.toLocaleString()} recorded · ${item.failures} failures before population filters`;
     if (health.has(item.key)) {
       const status = health.get(item.key), low = status.cpk != null && status.cpk < threshold;
-      text.append(element('small', `Scanned population: ${status.fails ? 'failures' : 'no failures'} · ${status.cpk == null ? 'Cpk unavailable' : `${low ? 'low ' : ''}Cpk ${fmt(status.cpk)}`}`, low || status.fails ? 'health-warning' : 'health-clear'));
+      text.append(element('small', `${status.fails ? 'Failures' : 'No failures'} · ${status.cpk == null ? 'Cpk —' : `Cpk ${fmt(status.cpk)}`}`, low || status.fails ? 'health-warning' : 'health-clear'));
     }
     label.append(input, text); $('viewer-tests').append(label);
   }
   if (!result.items.length) $('viewer-tests').append(element('p', 'No tests match this search.', 'viewer-help'));
-  $('viewer-test-count').textContent = `${result.total.toLocaleString()} identities · source totals`;
+  $('viewer-test-count').textContent = `${result.total.toLocaleString()} tests`;
   $('viewer-test-count').title = result.countScope ?? 'Catalog counts include all recorded observations before population filters.';
   $('viewer-selected-count').textContent = `${selected.size} / 12`;
   $('viewer-test-page').textContent = `${result.items.length ? result.offset + 1 : 0}–${result.offset + result.items.length}`;
+  $('viewer-tests-prev').parentElement.hidden = result.total <= result.items.length && result.offset === 0;
+  $('viewer-clear-tests').hidden = selected.size === 0;
+  $('viewer-selected').closest('details').hidden = selected.size === 0;
   $('viewer-selected').replaceChildren();
   for (const [key, item] of selected) {
     const b = button(`${item.number}${item.channel ? ` ${item.channel}` : ''} ×`, () => onRemove(key), ''); b.setAttribute('aria-label', `Remove ${testTitle(item)} from selection`); $('viewer-selected').append(b);
@@ -70,10 +98,11 @@ export function renderOverview(container, data) {
     for (const [name, value] of [['All attempts', group.total], ['Superseded', group.superseded], [`${policy} pass`, group.passed], [`${policy} fail`, group.failed], [`${policy} unknown`, group.unknown], [`${policy} yield`, group.yield == null ? 'Not available' : `${(100 * group.yield).toFixed(2)}%`]]) {
       const m = element('article'); m.append(element('small', name), element('strong', typeof value === 'number' ? value.toLocaleString() : value)); metrics.append(m);
     }
-    box.append(metrics, element('p', `Outcome counts describe ${data.attempts === 'all' ? 'all attempts, including superseded attempts,' : 'current attempts'} in the selected heads/sites. All-attempt and superseded totals retain history regardless of the attempt selector. Yield excludes unknown outcomes.`, 'viewer-help'));
+    box.append(metrics); disclosure(box, 'Counting rules').append(element('p', `Outcome counts describe ${data.attempts === 'all' ? 'all attempts, including superseded attempts,' : 'current attempts'} in the selected heads/sites. All-attempt and superseded totals retain history regardless of the attempt selector. Yield excludes unknown outcomes.`, 'viewer-help'));
   }
   for (const source of data.sources) {
-    const s = section(container, source.name); s.append(element('p', `${bytes(source.sourceBytes)} · ${source.byteOrder} endian · SHA-256 ${source.sha256}`, 'viewer-help'));
+    const s = section(container, source.name); s.append(element('p', bytes(source.sourceBytes), 'viewer-help'));
+    detail(s, 'Source details', { byteOrder: source.byteOrder, sha256: source.sha256 });
     warnings(s, source.warnings);
     for (const record of source.metadata) detail(s, `Record ${record.seq} · ${record.type}/${record.subtype}`, record.fields);
     if (source.moreMetadata) s.append(element('p', 'Additional header records are available in Records.', 'viewer-help'));

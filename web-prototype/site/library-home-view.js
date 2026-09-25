@@ -52,9 +52,9 @@ export function renderRows(rows) {
     copy.append(name, element('small', caption, 'file-meta')); file.append(glyph, copy); fileCell.append(file);
     const status = element('span', dataset.status === 'ready' ? 'Ready' : 'Needs attention', `status-pill ${dataset.status === 'ready' ? 'ready' : 'unavailable'}`);
     const statusCell = element('td'); statusCell.append(status);
-    const actionCell = element('td'), action = element('button', undefined, 'icon-button row-open');
+    const actionCell = element('td'), action = element('button', 'Details', 'quiet-button row-open');
     action.type = 'button'; action.dataset.datasetId = dataset.id;
-    action.setAttribute('aria-label', `Open ${dataset.name}`); action.append(icon('right')); actionCell.append(action);
+    action.setAttribute('aria-label', `Details for ${dataset.name}`); actionCell.append(action);
     row.append(fileCell, element('td', count(dataset.manifest.counts.measurements), 'number-cell'),
       element('td', bytes(dataset.source_bytes), 'number-cell'), element('td', date(dataset.created_at), 'date-cell'), statusCell, actionCell);
     fragment.append(row);
@@ -73,21 +73,21 @@ export function renderDataset(dataset) {
   $('dataset-subtitle').textContent = `Imported ${date(dataset.created_at, true)}`;
   const counts = dataset.manifest.counts;
   const grid = element('div', undefined, 'detail-grid');
-  for (const [label, value] of [['Measurements', counts.measurements], ['Device attempts', counts.devices], ['Test declarations', counts.definitions], ['Source records', counts.records]]) {
+  for (const [label, value] of [['PTR measurements', counts.measurements], ['Device attempts', counts.devices], ['PTR declarations', counts.definitions], ['Source records', counts.records]]) {
     const item = element('article'); item.append(element('small', label), element('strong', count(value))); grid.append(item);
   }
   const source = element('section', undefined, 'detail-section');
   source.append(element('h3', 'Saved source'), facts([['Original file', bytes(dataset.source_bytes)], ['Database', bytes(dataset.db_bytes)], ['Location', 'This browser · this device']]));
-  const coverage = element('section', undefined, 'detail-section detail-coverage');
-  coverage.append(element('h3', 'What’s preserved'), element('p', 'Every source record, device attempt and repeated measurement is retained. Your original STDF is saved alongside this dataset.'));
+  const coverage = element('details', undefined, 'detail-section detail-coverage');
+  coverage.append(element('summary', 'Record coverage'));
   const families = dataset.manifest.coverage?.measurement_families;
   coverage.append(element('p', `Measurement rows: ${Array.isArray(families) && families.length ? families.join(', ') : 'None declared'}. Other record families are available in the original source.`, 'muted'));
   const identity = element('details', undefined, 'fingerprint');
-  identity.append(element('summary', 'File fingerprint'), element('p', 'This content fingerprint identifies duplicate files, even after a rename.'), element('code', dataset.source_hash));
+  identity.append(element('summary', 'SHA-256'), element('code', dataset.source_hash));
   const viewer = element('a', 'Open data viewer', 'button primary');
   viewer.href = `./viewer.html?dataset=${encodeURIComponent(dataset.id)}`;
   viewer.append(icon('right'));
-  const explore = element('a', 'Explore tests', 'button secondary');
+  const explore = element('a', 'Raw records', 'quiet-button');
   explore.href = `./explore.html?dataset=${encodeURIComponent(dataset.id)}`;
   explore.append(icon('right'));
   $('dataset-info').replaceChildren(viewer, explore, grid, source, coverage, identity);

@@ -172,3 +172,15 @@ PTR source imported in 126.23 s and built its first analysis cache in 582.68 s;
 warm cache preparation was 14.3 ms. This is a documented performance limitation,
 not a parser-only benchmark or a claim of production qualification. PAT design
 and broader product roadmap remain separate engineer-selected work.
+
+## UI simplification and small examples — 2026-09-25
+
+- [x] Replace decorative navigation and repeated copy with a compact file-to-chart flow.
+- [x] Keep filters, bounds and warnings visible while placing advanced controls in disclosures.
+- [x] Add five deterministic small STDF scenarios, their expected results, downloads and a picker.
+- [x] Check real imports, duplicate reuse, failure recovery, presets and refresh behavior in browsers.
+- [x] Review desktop/narrow layouts; rerun Chrome/Edge viewer UI and report/workspace workflows.
+
+See [example guide](../web-prototype/docs/EXAMPLES.md),
+[viewer guide](../web-prototype/docs/VIEWER-UI.md) and
+[qualification](../web-prototype/docs/VIEWER-VALIDATION.md).

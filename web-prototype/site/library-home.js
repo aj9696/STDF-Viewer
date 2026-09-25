@@ -1,6 +1,7 @@
 import { DataLibraryClient } from './data-client.js';
 import { inventoryFiles } from './sources.js';
 import { ImportQueue } from './import-queue.js';
+import { createExamplePicker } from './example-picker.js';
 import { $, bytes, count, element, hydrateIcons, renderRows, renderDataset } from './library-home-view.js';
 
 const PAGE_SIZE = 25;
@@ -23,7 +24,7 @@ function notice(message, error = false) {
   $('library-notice').classList.toggle('error-notice', error);
 }
 function controls() {
-  for (const id of ['add-file', 'empty-import', 'refresh-files', 'search-files', 'sort-files']) $(id).disabled = !ready || busy;
+  for (const id of ['add-file', 'empty-import', 'try-examples', 'refresh-files', 'search-files', 'sort-files']) $(id).disabled = !ready || busy;
   document.querySelectorAll('[data-dataset-id]').forEach((button) => { button.disabled = !ready || busy; });
   $('previous-page').disabled = !ready || busy || page === 0;
   $('next-page').disabled = !ready || busy || (page + 1) * PAGE_SIZE >= filtered().length;
@@ -59,7 +60,7 @@ function renderLibrary() {
   $('total-datasets').textContent = ready ? count(datasets.length) : '—';
   $('total-measurements').textContent = ready ? count(datasets.reduce((sum, item) => sum + item.manifest.counts.measurements, 0)) : '—';
   $('total-bytes').textContent = ready ? bytes(datasets.reduce((sum, item) => sum + item.source_bytes, 0)) : '—';
-  $('library-caption').textContent = ready ? (datasets.length ? 'Open a dataset to see what’s inside.' : 'A home for your semiconductor test data.') : 'Your library is not connected.';
+  $('library-caption').textContent = ready ? `${count(datasets.length)} saved files` : 'Library disconnected';
   const start = page * PAGE_SIZE;
   $('page-label').textContent = `${count(start + 1)}–${count(Math.min(start + PAGE_SIZE, rows.length))} of ${count(rows.length)} datasets`;
   renderRows(ready ? rows.slice(start, start + PAGE_SIZE) : []);
@@ -123,6 +124,10 @@ async function connect() {
     }
   });
   void storageStatus();
+  if (ready && new URLSearchParams(location.search).has('examples')) {
+    history.replaceState(null, '', location.pathname);
+    void examples.open();
+  }
 }
 async function storageStatus() {
   $('storage-origin').textContent = location.origin;
@@ -153,7 +158,7 @@ function showImport() {
   $('import-progress').hidden = true;
   $('open-imported').hidden = true;
   $('start-import').hidden = false;
-  importMessage('Select completed STDF files, or choose a folder.');
+  importMessage('');
   controls();
   $('import-dialog').showModal();
 }
@@ -221,7 +226,7 @@ async function startImport() {
       const result = await library.importFile(file, { relativePath: selectedItems[0]?.relativePath ?? file.name });
       if (epoch !== generation) return;
       importedId = result.dataset.id;
-      importMessage(result.duplicate ? 'Already in your library. This file matches a saved dataset, so we reused it.' : 'Saved to your library. Your dataset is ready to reopen.', 'success');
+      importMessage(result.duplicate ? 'Already imported — using the saved copy.' : 'Imported.', 'success');
       $('open-imported').hidden = false;
     } catch (error) {
       if (epoch !== generation) return;
@@ -262,7 +267,29 @@ async function openDataset(id) {
   });
 }
 
+function openViewer(ids, example) {
+  if (!ready) return;
+  const params = new URLSearchParams(ids.length === 1 && !example ? { dataset: ids[0] } : { datasets: ids.join(',') });
+  if (example) {
+    params.set('example', example.id);
+    params.set('tab', example.suggested.tab);
+    params.set('test', String(example.suggested.testNumber));
+    params.set('series', example.suggested.seriesBy ?? 'aggregate');
+  }
+  library.terminate();
+  location.assign(`./viewer.html?${params}`);
+}
+
+const examples = createExamplePicker({
+  available: () => ready && !busy,
+  run: operation,
+  client: () => library,
+  refresh: loadCatalog,
+  openViewer,
+});
+
 hydrateIcons();
+$('try-examples').addEventListener('click', () => examples.open());
 for (const id of ['add-file', 'empty-import']) $(id).addEventListener('click', showImport);
 $('retry-open').addEventListener('click', connect);
 $('refresh-files').addEventListener('click', () => operation(async (epoch) => { await loadCatalog(epoch); notice('Library refreshed.'); }));
@@ -272,7 +299,10 @@ $('previous-page').addEventListener('click', () => { --page; renderLibrary(); })
 $('next-page').addEventListener('click', () => { ++page; renderLibrary(); });
 $('dataset-rows').addEventListener('click', (event) => {
   const button = event.target.closest('[data-dataset-id]');
-  if (button) void openDataset(button.dataset.datasetId);
+  if (!button || !ready || busy) return;
+  const id = button.dataset.datasetId;
+  if (button.classList.contains('file-name') && datasets.find((item) => item.id === id)?.status === 'ready') openViewer([id]);
+  else void openDataset(id);
 });
 $('source-file').addEventListener('change', (event) => { if (event.target.files.length) chooseFiles(event.target.files); });
 $('choose-folder').addEventListener('click', () => $('source-folder').click());
@@ -289,7 +319,7 @@ $('cancel-import').addEventListener('click', async () => {
 });
 $('close-import').addEventListener('click', () => { if (!importing) $('import-dialog').close(); });
 $('import-dialog').addEventListener('cancel', (event) => { if (importing) event.preventDefault(); });
-$('open-imported').addEventListener('click', () => { $('import-dialog').close(); void openDataset(importedId); });
+$('open-imported').addEventListener('click', () => { if (!busy && importedId) openViewer([importedId]); });
 $('close-dataset').addEventListener('click', () => $('dataset-dialog').close());
 $('dataset-dialog').addEventListener('close', () => { restoreDatasetFocus = true; returnToDataset(); });
 for (const id of ['show-storage', 'storage-summary']) $(id).addEventListener('click', () => { $('storage-details').showModal(); void storageStatus(); });

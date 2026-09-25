@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-25",
+  "sources": 5,
+  "sourceBytes": 33549,
+  "sourceAndManifestBytes": 37870,
+  "generatorReproducibility": "make-examples.py --check passed",
+  "providerRuns": [
+    "results/examples-chrome-1790352010585/results.json",
+    "results/examples-msedge-1790352012471/results.json"
+  ],
+  "providerChecks": [
+    "Original SHA-256, retained import, derived observation/device counts and catalogue identities for all five files",
+    "Clean lot: 48 passing devices; Active current mean 18 mA",
+    "Independent comparison groups: 96 devices; shifted site 2 mean 24 mA with 12 failures; site 1 mean 18 mA",
+    "Retest: explicit matching identity; current 24 passing devices; all 30 attempts with six superseded failures",
+    "Wafer: all 49 coordinates checked; 20 failures exactly where x*x+y*y>=10",
+    "Mixed: 19 valid leakage observations of 21 recorded; three missing parts; all three PMR labels and shared MPR failure flags; two functional failures and one not-executed result",
+    "Completed cache reuse and renamed-source duplicate detection"
+  ],
+  "uiRuns": [
+    "results/examples-ui-chrome-1790352353880/results.json",
+    "results/examples-ui-msedge-1790352353891/results.json"
+  ],
+  "uiChecks": [
+    "Dismiss while manifest loads; failed manifest and reopen retry",
+    "Direct download matches bundled bytes",
+    "File-download and integrity failures leave the library empty and allow retry",
+    "All five scenarios open their intended tab and selected test",
+    "Site comparison has two independent groups and separate-site chart series",
+    "Repeated examples leave exactly five saved files",
+    "Desktop and 360 px screenshots; document and dialog horizontal bounds fit"
+  ],
+  "pageErrors": [],
+  "scope": "Small deterministic synthetic examples, not production datasets or performance benchmarks. All browser tests use disposable libraries."
+}

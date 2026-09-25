@@ -2,6 +2,12 @@
 
 ## Browser preview — unreleased
 
+- Simplify Library and Viewer navigation, open files directly into a chart, and
+  place advanced controls and technical detail behind disclosures. Active filters
+  and warnings remain visible.
+- Add five small synthetic STDF examples with a picker, direct downloads,
+  deterministic generation and checked expected outcomes.
+
 - Add Data viewer with ordered file groups, PTR/MPR/FTR catalog, device matrix,
   full-population statistics, interactive trend/histogram, bins, wafer/stacked
   maps, original records and cancellable test-health scans.

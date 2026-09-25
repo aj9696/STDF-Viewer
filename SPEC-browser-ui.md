@@ -1,5 +1,31 @@
 # Browser UI: library home
 
+## Current interaction requirements — 2026-09-25
+
+The engineer requested less text, a simpler investigation flow, and small example
+datasets. These requirements supersede the original first-slice presentation
+below; import/storage contracts are unchanged.
+
+- Use compact top navigation. Remove decorative slogans and repeated privacy copy.
+- A ready file's name opens Viewer directly; a separate **Details** action opens
+  retained metadata. Unavailable files continue to expose recovery information.
+- **Try example data** opens five explicitly synthetic scenarios, each backed by
+  real, downloadable STDF files and deterministic documented expectations.
+  Import only the chosen example through the normal duplicate-aware importer.
+  Never insert demonstration rows or statistics directly into the catalog.
+- Example pairs open as independent comparison groups, with their suggested test,
+  view and site series. Existing real files remain intact. Reopening an example
+  reuses matching source content under the same parser/schema version.
+- The example picker shows loading/import failures, preserves successful partial
+  imports and releases failed connections through the existing recovery path.
+- Viewer starts new file selections on a histogram with a test selected. Saved
+  workspace choices survive reopening. Advanced controls use disclosures, while
+  active population filters and data-quality warnings remain visible.
+- Verify actual import, direct navigation, examples and duplicate reuse in
+  isolated Chrome/Edge profiles. Check keyboard/modal behavior and 360px layout.
+
+## Original first-slice specification
+
 Module: browser-ui. First product frontend slice, authorized 2026-09-24.
 Depends on the delivered browser-library and browser-imports interfaces. The
 engineer requested a polished frontend developed one feature at a time.

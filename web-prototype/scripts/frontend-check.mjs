@@ -189,13 +189,19 @@ try {
   await countRows(page, 1);
   const firstId = await page.locator("#dataset-rows tr[data-id]").getAttribute("data-id");
   await page.locator("#open-imported").click();
+  await page.waitForURL(`${origin}/viewer.html?dataset=${firstId}`);
+  await page.waitForFunction(() => window.semidataViewer && !document.querySelector('#viewer-groups').disabled);
+  assert.equal(await page.locator('#tab-histogram').getAttribute('aria-selected'), 'true');
+  await page.goto(`${origin}/app.html`);
+  await ready(page);
+  await page.locator(`.row-open[data-dataset-id="${firstId}"]`).click();
   await dialogOpen(page, "dataset-dialog");
-  await page.locator("#dataset-info summary").click();
+  await page.locator("#dataset-info .fingerprint summary").click();
   assert.equal(await page.locator("#dataset-name").innerText(), "golden-little.stdf");
   const detail = await page.locator("#dataset-info").innerText();
   const counts = await page.locator("#dataset-info .detail-grid article").evaluateAll((nodes) =>
     nodes.map((node) => [node.querySelector("small").textContent, node.querySelector("strong").textContent]));
-  assert.deepEqual(counts, [["Measurements", "6"], ["Device attempts", "3"], ["Test declarations", "4"], ["Source records", "18"]]);
+  assert.deepEqual(counts, [["PTR measurements", "6"], ["Device attempts", "3"], ["PTR declarations", "4"], ["Source records", "18"]]);
   assert.match(detail, /device attempts/i);
   assert.match(detail, new RegExp(fixtures.files["golden-little.stdf"].sourceSha256));
   await screenshot(page, "02-real-dataset-detail.png");
@@ -276,21 +282,26 @@ try {
   await page.reload();
   await ready(page);
   await countRows(page, 2);
-  await page.locator(`[data-dataset-id="${firstId}"]`).first().click();
+  await page.locator(`.file-name[data-dataset-id="${firstId}"]`).click();
+  await page.waitForURL(`${origin}/viewer.html?dataset=${firstId}`);
+  await page.waitForFunction(() => window.semidataViewer && !document.querySelector('#viewer-groups').disabled);
+  await page.goBack();
+  await ready(page);
+  await page.locator(`.row-open[data-dataset-id="${firstId}"]`).click();
   await dialogOpen(page, "dataset-dialog");
-  await page.locator("#dataset-info summary").click();
+  await page.locator("#dataset-info .fingerprint summary").click();
   assert.match(await page.locator("#dataset-info").innerText(), new RegExp(fixtures.files["golden-little.stdf"].sourceSha256));
   await page.locator("#close-dataset").click();
   checks.push("real: reload reopens existing catalog and dataset without selecting the source again");
 
-  for (const className of ["file-name", "row-open"]) {
+  for (const className of ["row-open"]) {
     for (const closeWith of ["Escape", "button"]) {
       const trigger = page.locator(`.${className}[data-dataset-id="${firstId}"]`);
       const previousNode = await trigger.elementHandle();
       await trigger.focus();
       await page.keyboard.press("Enter");
       await dialogOpen(page, "dataset-dialog");
-      await page.locator("#dataset-info summary").waitFor({ state: "visible" });
+      await page.locator("#dataset-info .fingerprint summary").waitFor({ state: "visible" });
       await ready(page);
       assert.equal(await previousNode.evaluate((node) => node.isConnected), false, "Test must exercise row replacement");
       if (closeWith === "Escape") await page.keyboard.press("Escape");
@@ -300,7 +311,7 @@ try {
       await previousNode.dispose();
     }
   }
-  checks.push("real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender");
+  checks.push("real: filenames open viewer directly; details restore keyboard focus to the Details action after rows rerender");
 
   await page.locator(".tools-link").click();
   await page.waitForURL(`${origin}/foundation.html`);
@@ -348,7 +359,7 @@ try {
   await mockPage.goto(`${origin}/app.html?fixture=unavailable`);
   await ready(mockPage);
   const unavailableId = await mockPage.locator("#dataset-rows tr[data-id]").first().getAttribute("data-id");
-  await mockPage.locator(`#dataset-rows [data-dataset-id="${unavailableId}"]`).first().click();
+  await mockPage.locator(`.row-open[data-dataset-id="${unavailableId}"]`).click();
   await dialogOpen(mockPage, "dataset-dialog");
   await mockPage.waitForFunction(() => /recovery|unavailable/i.test(document.querySelector("#dataset-info").textContent));
   await mockPage.locator("#close-dataset").click();

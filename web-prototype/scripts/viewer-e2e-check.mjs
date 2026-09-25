@@ -124,7 +124,7 @@ try {
   }, fixtureNames);
   await page.goto(origin + '/viewer.html?dataset=' + ids[0]); await ready();
   assert.equal(await page.locator('#viewer-tests input').count(), 5); assert.match(await page.locator('#viewer-panel').textContent(), /golden-little.stdf/);
-  await screenshot('desktop-overview.png');
+  assert.equal(await page.locator('#tab-histogram').getAttribute('aria-selected'), 'true'); assert.equal(await page.locator('#viewer-tests input').first().isChecked(), true); await screenshot('desktop-first-view.png');
   checks.push('Production boot, local cache and five-identity PTR/MPR/FTR catalog from a real retained STDF');
 
   await page.locator('#viewer-groups').click(); await openDialog('viewer-groups-dialog');
@@ -144,7 +144,7 @@ try {
   await secondGroup.getByLabel('Saved file for group 2', { exact: true }).selectOption(ids[1]);
   await secondGroup.getByRole('button', { name: 'Add file to group', exact: true }).click();
   await page.locator('#viewer-apply-groups').click(); await ready();
-  await page.locator('#viewer-head').selectOption('1'); await ready(); await page.locator('#viewer-site').selectOption('2'); await ready();
+  await page.locator('#viewer-filters > summary').click(); await page.locator('#viewer-head').selectOption('1'); await ready(); await page.locator('#viewer-site').selectOption('2'); await ready();
   await page.locator('#viewer-attempts').selectOption('all'); await ready();
   assert.equal(await page.getByRole('region', { name: 'Device attempts', exact: true }).locator('tbody tr').count(), 6);
   checks.push('Files & groups UI preserves ordered sources; current retest follows last file; independent comparison and head/site/all-attempt filters render six scoped attempts');
@@ -153,7 +153,7 @@ try {
   const stats = page.getByRole('region', { name: 'Full-population test statistics', exact: true });
   assert.equal(await stats.locator('tbody tr').count(), 6);
   assert.match(await stats.textContent(), /MULTI/); assert.match(await stats.textContent(), /SCAN/);
-  await page.locator('#viewer-scan-health').click(); await ready(); assert.match(await page.locator('#viewer-health-status').textContent(), /^Complete scan: 5 \/ 5/);
+  await page.locator('.viewer-health > summary').click(); await page.locator('#viewer-scan-health').click(); await ready(); assert.match(await page.locator('#viewer-health-status').textContent(), /^Complete scan: 5 \/ 5/);
   await page.locator('#viewer-settings').click(); await openDialog('viewer-settings-dialog');
   await page.getByLabel('Histogram bins', { exact: true }).fill('7'); await page.getByRole('button', { name: 'Save settings', exact: true }).click(); await ready();
   checks.push('Actual PTR/MPR-channel/FTR checkbox selections drive full-population statistics and matrix; test-health scan and histogram settings operate against real data');
@@ -161,7 +161,7 @@ try {
   await tab('trend'); assert.equal(await page.locator('.viewer-chart').count(), 3);
   let chart = page.locator('.viewer-chart').first();
   await chart.locator('.chart-legend button').first().click();
-  await chart.getByLabel('First device index', { exact: true }).fill('1'); await chart.getByLabel('Last device index', { exact: true }).fill('2');
+  await chart.locator('.chart-tools > summary').click(); await chart.getByLabel('First device index', { exact: true }).fill('1'); await chart.getByLabel('Last device index', { exact: true }).fill('2');
   await chart.getByRole('button', { name: 'Inspect range', exact: true }).click(); await scopedRows();
   const device = page.getByRole('region', { name: 'Device attempts', exact: true }).getByRole('button', { name: 'DUPLICATE', exact: true }).first();
   await device.click(); await ready(); await openDialog('viewer-device-dialog');
@@ -174,13 +174,13 @@ try {
   await download(page, () => page.locator('#viewer-device-dialog').getByRole('button', { name: 'Export Excel', exact: true }).click(), 'device-16.xlsx');
   await page.keyboard.press('Escape'); await closedDialog('viewer-device-dialog');
   await tab('histogram'); chart = page.locator('.viewer-chart').first();
-  await chart.locator('.chart-legend button').first().click(); await chart.getByLabel('Lower value', { exact: true }).fill('-1000'); await chart.getByLabel('Upper value', { exact: true }).fill('1000');
+  await chart.locator('.chart-legend button').first().click(); await chart.locator('.chart-tools > summary').click(); await chart.getByLabel('Lower value', { exact: true }).fill('-1000'); await chart.getByLabel('Upper value', { exact: true }).fill('1000');
   await chart.getByRole('button', { name: 'Inspect intervals', exact: true }).click(); await scopedRows();
-  await tab('bins'); await page.getByLabel(/^Bin series/).selectOption('1'); await page.getByLabel('Bin number', { exact: true }).fill('3');
+  await tab('bins'); await page.locator('.chart-tools > summary').click(); await page.getByLabel(/^Bin series/).selectOption('1'); await page.getByLabel('Bin number', { exact: true }).fill('3');
   await page.getByRole('button', { name: 'Inspect bin', exact: true }).click(); await scopedRows();
   await tab('wafers');
   const wafer = await page.getByLabel('Wafer map', { exact: true }).locator('option').evaluateAll((options) => options.find((o) => o.textContent.includes('Comparison')).value);
-  await choose('Wafer map', wafer); await page.getByLabel('Die X coordinate', { exact: true }).fill('12'); await page.getByLabel('Die Y coordinate', { exact: true }).fill('4');
+  await choose('Wafer map', wafer); await page.locator('.chart-tools > summary').click(); await page.getByLabel('Die X coordinate', { exact: true }).fill('12'); await page.getByLabel('Die Y coordinate', { exact: true }).fill('4');
   await page.getByRole('button', { name: 'Inspect die', exact: true }).click(); await scopedRows();
   checks.push('Trend, histogram, bin and wafer UI picks retain comparison-group/source/head/site/attempt scope; nested device-to-original-MPR drilldown, seven-observation CSV/XLSX exports and Escape focus work');
 
@@ -229,7 +229,7 @@ try {
 
   const restoredPage = await launch('profile-empty-restore');
   await restoredPage.goto(origin + '/viewer.html'); await ready(restoredPage, true);
-  assert.match(await restoredPage.locator('#viewer-panel').textContent(), /library is empty/i);
+  assert.match(await restoredPage.locator('#viewer-panel').textContent(), /No files yet/i);
   assert.equal(await restoredPage.locator('#viewer-save-session').isDisabled(), true);
   await restoreUi(restoredPage, workspaceFile);
   const freshState = await restoredPage.evaluate(() => semidataViewer.getState()), freshDatasets = await restoredPage.evaluate(() => semidataViewer.getDatasets());
