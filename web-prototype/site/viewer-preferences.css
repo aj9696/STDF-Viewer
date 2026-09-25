@@ -1,0 +1,9 @@
+.viewer-table .value-pass { color: var(--viewer-pass-color, #26734d); }
+.viewer-table .value-fail, .viewer-measurement.value-fail { color: var(--viewer-fail-color, #b63842); background: #fff0f1; }
+body[data-table-density="compact"] .viewer-table td { padding: 5px 8px; }
+body[data-table-density="comfortable"] .viewer-table td { padding: 15px 14px; }
+.viewer-table[data-auto-fit="true"] .text-wrap { max-width: none; }
+.viewer-table .viewer-spec-row th { position: static; font-weight: 400; background: #faf8f1; }
+.viewer-table .viewer-spec-row th:first-child { font-weight: 600; }
+.viewer-measurement { display: block; padding: 2px 3px; }
+.viewer-measurement small { display: block; color: #58687f; font-size: 10px; }

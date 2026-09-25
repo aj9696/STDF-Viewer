@@ -1,6 +1,7 @@
 import { element, bytes } from './library-home-view.js';
-import { FAMILY_NAMES, deviceOutcome, testOutcome, parseTestKey } from './viewer-model.js';
+import { FAMILY_NAMES, deviceOutcome, testOutcome, parseTestKey, numericEligible } from './viewer-model.js';
 import { formatNumber } from './viewer-number.js';
+import { DEFAULT_PREFERENCES, capabilityCp, measurementDisplay, measurementOutsideLimits } from './viewer-preferences.js';
 export const $ = (id) => document.getElementById(id);
 export const fmt = formatNumber;
 export const hex = (n, digits = 2) => Number.isInteger(n) ? `0x${(n >>> 0).toString(16).toUpperCase().padStart(digits, '0')}` : 'Not recorded';
@@ -31,11 +32,20 @@ export function renderStatSummary(container, analysis, settings) {
   container.append(summary);
 }
 export function warnings(container, values = []) { for (const text of values) container.append(element('p', text, 'viewer-warning')); }
-export function table(container, columns, rows, { label = 'Data table', rowClass } = {}) {
+export function table(container, columns, rows, { label = 'Data table', rowClass, headerRows = [], onSort, sort, direction } = {}) {
   const wrap = element('div', undefined, 'viewer-table-wrap'); wrap.tabIndex = 0; wrap.setAttribute('role', 'region'); wrap.setAttribute('aria-label', label);
   const t = element('table', undefined, 'viewer-table'), head = element('thead'), tr = element('tr'), body = element('tbody');
-  for (const column of columns) { const th = element('th', column.label); th.scope = 'col'; tr.append(th); }
+  for (const column of columns) {
+    const th = element('th', onSort && column.sortKey ? undefined : column.label); th.scope = 'col';
+    if (onSort && column.sortKey) { th.append(button(column.label, () => onSort(column.sortKey), '')); th.setAttribute('aria-sort', sort === column.sortKey ? direction === 'desc' ? 'descending' : 'ascending' : 'none'); }
+    tr.append(th);
+  }
   head.append(tr); t.append(head, body);
+  for (const row of headerRows) {
+    const r = element('tr', undefined, 'viewer-spec-row');
+    for (const [index, column] of columns.entries()) { const cell = element('th', index === 0 ? row.label : row.value(column), column.wrap ? 'text-wrap' : undefined); cell.scope = index === 0 ? 'row' : 'col'; r.append(cell); }
+    head.append(r);
+  }
   for (const row of rows) {
     const r = element('tr'); if (rowClass) r.className = rowClass(row);
     for (const column of columns) {
@@ -109,38 +119,71 @@ export function renderOverview(container, data) {
   }
 }
 export function renderStats(container, analyses, settings) {
-  const rows = analyses.flatMap((analysis) => analysis.series.map((series) => ({ ...series.stats, label: series.label, test: testTitle(analysis.test) })));
+  const rows = analyses.flatMap((analysis) => analysis.series.map((series) => ({ ...series.stats, cp: capabilityCp(series.stats, analysis.test.family), label: series.label, test: testTitle(analysis.test) })));
   table(container, [
     { label: 'Test / population', value: (r) => `${r.test}\n${r.label}`, wrap: true },
     ...[['total', 'Recorded'], ['count', 'Valid'], ['excluded', 'Excluded'], ['pass', 'Pass'], ['fail', 'Fail'], ['unknown', 'Unknown']].map(([key, label]) => ({ label, value: (r) => r[key] })),
     ...[['mean', 'Mean'], ['median', 'Median'], ['stdev', 'Population σ'], ['min', 'Min'], ['max', 'Max'], ['lsl', 'Low limit'], ['usl', 'High limit']].map(([key, label]) => ({ label, value: (r) => fmt(r[key], settings.precision, settings.notation) })),
+    { label: 'Cp', value: (r) => fmt(r.cp, settings.precision, settings.notation) },
     { label: 'Cpk', value: (r) => r.cpk == null ? r.cpkReason ?? 'Not available' : fmt(r.cpk, settings.precision, settings.notation), wrap: true, className: (r) => r.cpk != null && r.cpk < settings.cpkThreshold ? 'value-warning' : 'value-neutral' },
+    { label: 'Test yield', value: (r) => r.pass + r.fail ? `${fmt(100 * r.pass / (r.pass + r.fail), settings.precision, settings.notation)}%` : 'Not available' },
   ], rows, { label: 'Full-population test statistics' });
 }
-export function renderDevices(container, result, tests, selection, openDevice, settings) {
+export function renderDevices(container, result, tests, selection, openDevice, settings, analyses = [], sortOptions = {}) {
+  const prefs = { ...DEFAULT_PREFERENCES.table, ...settings.table }, analysisByKey = new Map(analyses.map((a) => [a.test.key, a]));
   const columns = [
-    { label: 'Device / part ID', value: (r) => button(r.part_id || `Attempt ${r.x_index}`, () => openDevice(r), ''), wrap: true },
+    { label: 'Device / part ID', sortKey: 'part', value: (r) => button(r.part_id || `Attempt ${r.x_index}`, () => openDevice(r), ''), wrap: true },
     { label: 'Group / source', value: (r) => `${selection.groups[r.group_id].name}\n${r.source_name}`, wrap: true },
-    { label: 'Index', value: (r) => r.x_index }, { label: 'Head / site', value: (r) => `${r.head} / ${r.site}` },
-    { label: 'Outcome', value: (r) => r.retired ? 'Superseded' : deviceOutcome(r.part_flags), className: (r) => r.retired ? 'value-retired' : deviceOutcome(r.part_flags) === 'fail' ? 'value-fail' : deviceOutcome(r.part_flags) === 'unknown' ? 'value-warning' : 'value-neutral' },
-    { label: 'Hard / soft bin', value: (r) => `${r.hard_bin === 65535 ? '—' : r.hard_bin} / ${r.soft_bin === 65535 ? '—' : r.soft_bin}` },
-    { label: 'Time (ms)', value: (r) => r.test_time }, { label: 'Tests', value: (r) => r.num_tests },
+    { label: 'Index', sortKey: 'index', value: (r) => r.x_index }, { label: 'Head / site', sortKey: 'site', value: (r) => `${r.head} / ${r.site}` },
+    { label: 'Outcome', sortKey: 'status', value: (r) => r.retired ? 'Superseded' : deviceOutcome(r.part_flags), className: (r) => r.retired ? 'value-retired' : deviceOutcome(r.part_flags) === 'fail' ? 'value-fail' : deviceOutcome(r.part_flags) === 'unknown' ? 'value-warning' : 'value-pass' },
+    ...(prefs.hardBin ? [{ label: 'Hard bin', sortKey: 'hard_bin', value: (r) => r.hard_bin === 65535 ? '—' : r.hard_bin }] : []),
+    ...(prefs.softBin ? [{ label: 'Soft bin', sortKey: 'soft_bin', value: (r) => r.soft_bin === 65535 ? '—' : r.soft_bin }] : []),
+    ...(prefs.time ? [{ label: 'Time (ms)', sortKey: 'time', value: (r) => r.test_time }] : []), { label: 'Tests', sortKey: 'tests', value: (r) => r.num_tests },
+    { label: 'Failed tests', value: r => (r.failedTests ?? []).map(t => `${t.number} · ${t.name}`).join('\n') + (r.failureNamesTruncated ? '\nMore failures; open device' : ''), wrap: true },
     { label: 'Wafer / XY', value: (r) => `${r.wafer_id ?? '—'} / ${r.x === -32768 || r.y === -32768 ? 'Not recorded' : `${r.x}, ${r.y}`}` },
-    { label: 'Part flags', value: (r) => hex(r.part_flags) },
+    ...(prefs.flags ? [{ label: 'Part flags', value: (r) => hex(r.part_flags) }] : []),
   ];
-  for (const [key, test] of tests) columns.push({ label: testTitle(test), wrap: true, value: (row) => {
+  for (const [key, test] of tests) columns.push({ label: prefs.testNumber ? testTitle(test) : `${test.name || '(unnamed)'}${test.channel ? ` · ${test.channel}` : ''}`, sortKey: test.family === 20 ? undefined : `test:${key}`, testKey: key, test, wrap: true, value: (row) => {
     const entries = row.testResults?.[key] ?? [];
     if (!entries.length) return 'Not tested';
-    const shown = entries.slice(0, 5).map((r) => `#${r.seq}: ${test.family === 20 ? `Flag ${hex(r.test_flags)}` : fmt(r.value, settings.precision, settings.notation)} (${testOutcome(r.test_flags)})`);
-    if (entries.length > 5) shown.push(`${entries.length - 5} more executions; open device`); return shown.join('\n');
+    const shown = element('div');
+    for (const r of entries.slice(0, 5)) {
+      const status = `${testOutcome(r.test_flags)}${test.family !== 20 && !numericEligible(r, test.family) ? '; invalid value' : ''}`;
+      const item = element('span', `#${r.seq}: ${test.family === 20 ? `Flag ${hex(r.test_flags)}` : measurementDisplay(r.value, test.unit, settings)} (${status})`, `viewer-measurement${prefs.highlight && measurementOutsideLimits(r, test.family) ? ' value-fail' : ''}`);
+      if (prefs.appliedLimits && test.family !== 20) item.prepend(element('small', `${measurementDisplay(r.low, test.unit, settings)} ≤ value ≤ ${measurementDisplay(r.high, test.unit, settings)}`));
+      shown.append(item);
+    }
+    if (entries.length > 5) shown.append(element('small', `${entries.length - 5} more executions; open device`)); return shown;
   } });
-  table(container, columns, result.items, { label: tests.size ? 'Device test matrix' : 'Device attempts' });
+  const headerRows = [];
+  if (tests.size && prefs.showLimits) {
+    for (const [field, label] of [['lsl', 'Low limit'], ['usl', 'High limit']]) headerRows.push({ label, value: (column) => {
+      if (!column.testKey) return '';
+      const analysis = analysisByKey.get(column.testKey); if (!analysis) return 'See applied limits';
+      const stats = analysis.series.filter((s) => s.stats.count).map((s) => s.stats);
+      if (stats.some((s) => s.changingLimits) || new Set(stats.map((s) => s[field])).size > 1) return 'Varies';
+      return fmt(stats[0]?.[field], settings.precision, settings.notation);
+    } });
+    headerRows.push({ label: 'Unit', value: (column) => column.test?.unit ?? '' });
+  }
+  for (const [enabled, fields] of [[prefs.moments, [['min', 'Min'], ['max', 'Max'], ['mean', 'Mean'], ['stdev', 'Population σ']]], [prefs.capability, [['cp', 'Cp'], ['cpk', 'Cpk']]], [prefs.outcomes, [['fail', 'Fail executions'], ['yield', 'Test yield'], ['count', 'Valid count']]]]) if (enabled) for (const [field, label] of fields) {
+    headerRows.push({ label, value: (column) => {
+      if (!column.testKey) return '';
+      const analysis = analysisByKey.get(column.testKey); if (!analysis) return 'Not analyzed';
+      return analysis.series.map((series) => {
+        const stats = series.stats, value = field === 'cp' ? capabilityCp(stats, analysis.test.family) : field === 'yield' ? stats.pass + stats.fail ? 100 * stats.pass / (stats.pass + stats.fail) : null : stats[field];
+        return `${analysis.series.length > 1 ? `${series.label}: ` : ''}${fmt(value, settings.precision, settings.notation)}${field === 'yield' && value != null ? '%' : ''}`;
+      }).join('\n');
+    } });
+  }
+  const wrap = table(container, columns, result.items, { label: tests.size ? 'Device test matrix' : 'Device attempts', headerRows, ...sortOptions });
+  wrap.querySelector('table').dataset.autoFit = String(prefs.autoFit);
 }
 export function renderObservations(container, result, settings, readRecord, transpose = false) {
   const columns = [
     { label: 'Record', value: (r) => button(String(r.seq), () => readRecord(r.seq), '') },
     { label: 'Test', value: (r) => `${r.number} · ${r.test_name}`, wrap: true }, { label: 'Family / channel', value: (r) => `${FAMILY_NAMES[r.family]} ${r.channel}` },
-    { label: 'Value', value: (r) => r.family === 20 ? `Test flag ${hex(r.test_flags)}` : fmt(r.value, settings.precision, settings.notation) },
+    { label: 'Value', value: (r) => r.family === 20 ? `Test flag ${hex(r.test_flags)}` : measurementDisplay(r.value, r.unit, settings), className: (r) => settings.table?.highlight !== false && measurementOutsideLimits(r, r.family) ? 'value-fail' : 'value-neutral' },
     { label: 'Unit', value: (r) => r.unit }, { label: 'Low / high', value: (r) => `${fmt(r.low, settings.precision, settings.notation)} / ${fmt(r.high, settings.precision, settings.notation)}` },
     { label: 'TEST_FLG', value: (r) => hex(r.test_flags) }, { label: 'PARM_FLG', value: (r) => hex(r.parm_flags) },
     { label: 'Original R4 bits', value: (r) => hex(r.raw_bits, 8) }, { label: 'Result ordinal', value: (r) => r.ordinal },
@@ -149,8 +192,21 @@ export function renderObservations(container, result, settings, readRecord, tran
   else table(container, columns, result.items, { label: 'All recorded observations for the selected attempt' });
 }
 export function renderRecord(container, result) {
-  container.replaceChildren(); detail(container, 'Decoded record fields', result.decoded).open = true;
+  container.replaceChildren();
   const raw = new Uint8Array(result.bytes), lines = [];
   for (let i = 0; i < raw.length; i += 16) lines.push(`${i.toString(16).toUpperCase().padStart(4, '0')}  ${[...raw.slice(i, i + 16)].map((n) => n.toString(16).toUpperCase().padStart(2, '0')).join(' ')}`);
+  const fields = element('div', undefined, 'viewer-stat-summary');
+  fields.append(element('span', `REC_LEN ${result.record.length - 4} · REC_TYP ${result.record.type} · REC_SUB ${result.record.subtype}`)); container.append(fields);
+  const toolbar = element('div', undefined, 'viewer-toolbar'), status = element('p', '', 'viewer-help'); status.setAttribute('role', 'status');
+  const copy = (label, text) => {
+    const control = button(label, async () => {
+      control.disabled = true; status.textContent = '';
+      try { if (!navigator.clipboard?.writeText) throw Error('Clipboard access is unavailable in this browser context.'); await navigator.clipboard.writeText(text); status.textContent = 'Copied.'; }
+      catch (error) { status.textContent = `Could not copy: ${error.message}`; }
+      finally { control.disabled = false; }
+    }); toolbar.append(control);
+  };
+  copy('Copy hex', [...raw].map((n) => n.toString(16).toUpperCase().padStart(2, '0')).join(' ')); copy('Copy decoded fields', JSON.stringify(result.decoded, null, 2));
+  container.append(toolbar, status); detail(container, 'Decoded record fields', result.decoded).open = true;
   container.append(element('p', `Original source offset ${result.record.offset}; ${raw.length} bytes including the record header.`, 'viewer-help'), element('pre', lines.join('\n'), 'viewer-record-bytes'));
 }

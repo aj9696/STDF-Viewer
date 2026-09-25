@@ -42,7 +42,7 @@ function reportChoice(state, datasets) {
   });
 }
 
-function showDownload(file, filename, release, identity = Symbol('local download')) {
+export function showDownload(file, filename, release, identity = Symbol('local download')) {
   let panel = document.getElementById('viewer-downloads');
   if (!panel) { panel = element('section', undefined, 'library-panel viewer-downloads'); panel.id = 'viewer-downloads'; panel.append(element('h2', 'Generated files')); document.querySelector('.viewer-footer').before(panel); }
   const row = element('div', undefined, 'viewer-toolbar'), link = element('a', `Download ${filename}`, 'button secondary'), remove = element('button', 'Remove temporary copy', 'quiet-button');

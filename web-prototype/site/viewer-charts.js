@@ -59,7 +59,7 @@ function createChart(container, title, series, settings, onPick) {
   const ctx = canvas.getContext("2d"), hidden = new Set(), listeners = new AbortController();
   let frame = 0, disposed = false, start = null;
   const chart = { root, ctx, canvas, stage, controls, note, status, series, settings, hidden, items: [],
-    area: null, rangePick: null, paint: null, keyboardReset: null, hasData: false, viewport: null, fullDomain: null, scale: null, dragMode: 'inspect', afterPaint: null,
+    area: null, rangePick: null, paint: null, keyboardReset: null, hasData: false, viewport: null, fullDomain: null, scale: null, dragMode: 'inspect', afterPaint: null, opacity: 1,
     visible: () => series.filter((s) => !hidden.has(s.key)),
     pick(payload) {
       if (!chart.hasData) { status.textContent = "There are no visible data to select."; return false; }
@@ -110,6 +110,9 @@ function createChart(container, title, series, settings, onPick) {
       }
       navigation.append(node("span", "", ` ${legendPage + 1} / ${Math.ceil(series.length / 24)}`)); legend.append(navigation);
     }
+    if (series.length > 1) for (const [name, hide] of [['All', false], ['None', true]]) {
+      const control = node('button', '', name); control.type = 'button'; control.addEventListener('click', () => { hidden.clear(); if (hide) series.forEach(s => hidden.add(s.key)); renderLegend(); chart.redraw(); }); legend.append(control);
+    }
   };
   renderLegend();
   const navigation = node('div', 'chart-navigation'), modeLabel = node('label', '', 'Pointer drag'), mode = node('select'); mode.setAttribute('aria-label', 'Pointer drag');
@@ -135,7 +138,10 @@ function createChart(container, title, series, settings, onPick) {
   for (const [text, action] of [['Zoom in', () => transform(.5)], ['Zoom out', () => transform(2)], ['Pan left', () => transform(1, chart.flipX ? .25 : -.25)], ['Pan right', () => transform(1, chart.flipX ? -.25 : .25)], ['Pan up', () => transform(1, 0, chart.flipY ? -.25 : .25)], ['Pan down', () => transform(1, 0, chart.flipY ? .25 : -.25)]]) {
     const b = node('button', '', text); b.type = 'button'; b.addEventListener('click', action); navigation.append(b);
   }
-  root.insertBefore(navigation, stage);
+  root.insertBefore(navigation, stage); chart.navigation = navigation;
+  const plotOptions = node('details'), opacityLabel = node('label', '', 'Opacity'), opacity = node('input');
+  opacity.type = 'range'; opacity.min = '.1'; opacity.max = '1'; opacity.step = '.05'; opacity.value = '1'; opacity.setAttribute('aria-label', 'Plot opacity'); opacity.addEventListener('input', () => { chart.opacity = opacity.valueAsNumber; chart.redraw(); });
+  opacityLabel.append(opacity); plotOptions.append(node('summary', '', 'Opacity'), opacityLabel); navigation.append(plotOptions);
   reset.addEventListener("click", chart.reset, { signal: listeners.signal });
   const point = (event) => { const r = canvas.getBoundingClientRect(); return { x: event.clientX - r.left, y: event.clientY - r.top }; };
   const inside = (p) => { const area = chart.scale ?? chart.area; return area && p.x >= area.left && p.x <= area.right && p.y >= area.top && p.y <= area.bottom; };
@@ -222,6 +228,7 @@ function axes(chart, xDomain, yDomain, xLabel, yLabel, flipX = false, flipY = fa
   ctx.save(); ctx.translate(12, (top + bottom) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(yLabel, 0, 0); ctx.restore();
   chart.scale = { x, y, fromX: (px) => mix(...xDomain, clamp(fraction(px, flipX ? right : left, flipX ? left : right), 0, 1)), fromY: (py) => mix(...yDomain, clamp(fraction(py, flipY ? top : bottom, flipY ? bottom : top), 0, 1)), left, right, top, bottom };
   ctx.beginPath(); ctx.rect(left, top, right - left, bottom - top); ctx.clip();
+  ctx.globalAlpha = chart.opacity;
   return chart.scale;
 }
 function line(chart, coords, colorValue, dashed = false) {
@@ -241,10 +248,35 @@ function rangeControls(chart, firstLabel, secondLabel, submitLabel, submit) {
   });
   return inputs;
 }
+function plotRangeControls(chart, axis, fullReset, dataReset) {
+  for (const [label, action] of [['Auto', dataReset], ['Full', fullReset]]) {
+    const control = node('button', '', label); control.type = 'button'; control.title = label === 'Auto' ? 'Fit the recorded data' : 'Include recorded data and available limits';
+    control.addEventListener('click', () => { chart.viewport = null; action(); chart.redraw(); chart.keyboardReset?.(); chart.status.textContent = label === 'Auto' ? 'View fitted to data.' : 'View includes data and available limits.'; }); chart.navigation.append(control);
+  }
+  const inputs = ['minimum', 'maximum'].map((suffix) => {
+    const label = node('label', '', `Visible ${axis.toUpperCase()} ${suffix}`), input = node('input'); input.type = 'number'; input.step = 'any'; input.setAttribute('aria-label', `Visible ${axis.toUpperCase()} ${suffix}`); input.style.width = '115px';
+    label.append(input); chart.navigation.append(label); return input;
+  });
+  const apply = node('button', '', 'Set visible range'); apply.type = 'button';
+  const submit = () => {
+    const values = inputs.map((input) => input.valueAsNumber);
+    if (!values.every(finite) || values[0] >= values[1]) { chart.status.textContent = 'Choose finite, increasing viewport limits.'; return; }
+    if (!chart.fullDomain || !chart.hasData) { chart.status.textContent = 'There are no visible data to fit.'; return; }
+    chart.viewport = { x: [...(chart.viewport?.x ?? chart.fullDomain.x)], y: [...(chart.viewport?.y ?? chart.fullDomain.y)], [axis]: values };
+    chart.redraw(); chart.status.textContent = 'Visible range changed. Full-population statistics and query selection are unchanged.';
+  };
+  apply.addEventListener('click', submit); chart.navigation.append(apply);
+  for (const input of inputs) input.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); submit(); } });
+  return () => { if (chart.fullDomain) inputs.forEach((input, i) => { input.value = String((chart.viewport?.[axis] ?? chart.fullDomain[axis])[i]); }); };
+}
+function chartCheckbox(chart, label, checked, change) {
+  const holder = node('label', 'chart-checkbox'), input = node('input'); input.type = 'checkbox'; input.checked = checked; holder.append(input, document.createTextNode(label));
+  input.addEventListener('change', () => { change(input.checked); chart.redraw(); }); chart.navigation.append(holder); return input;
+}
 /** series: [{key,label,color,points:[{x,value,lsl,usl,datasetId,deviceId,seq}],stats}]. */
 export function renderTrend(container, { series = [], settings = {}, onPick, title = "Trend", yLabel = "Test value" } = {}) {
   const list = seriesList(series), config = options(settings), chart = createChart(container, title, list, config, onPick);
-  let scale, domain = [0, 1];
+  let scale, domain = [0, 1], domainMode = 'full', showGaps = true, showFails = true;
   const choose = (lo, hi, keys = chart.visible().map((s) => s.key)) => {
     if (lo > hi) { chart.status.textContent = "The first device index must be no greater than the last."; return; }
     if (!keys.length) { chart.status.textContent = "Show at least one series before selecting data."; return; }
@@ -252,19 +284,28 @@ export function renderTrend(container, { series = [], settings = {}, onPick, tit
     chart.status.textContent = `Selected device indices ${format(lo, 6)} to ${format(hi, 6)}; the full population will be queried.`;
   };
   const inputs = rangeControls(chart, "First device index", "Last device index", "Inspect range", choose);
-  chart.keyboardReset = () => inputs.forEach((input, i) => { input.value = String(domain[i]); });
+  const resetVisible = plotRangeControls(chart, 'y', () => { domainMode = 'full'; }, () => { domainMode = 'data'; });
+  chartCheckbox(chart, 'Gaps', true, (value) => { showGaps = value; }); chartCheckbox(chart, 'Fails', true, (value) => { showFails = value; });
+  chart.keyboardReset = () => { inputs.forEach((input, i) => { input.value = String(domain[i]); }); resetVisible(); };
   chart.rangePick = (lo, hi) => { const a = scale.fromX(lo), b = scale.fromX(hi); choose(Math.min(a, b), Math.max(a, b)); };
   chart.paint = () => {
     const visible = chart.visible(), points = visible.flatMap((s) => (s.points ?? []).filter((p) => finite(p.x) && finite(p.value)));
     if (!points.length) return false;
     domain = extent(points.map((p) => p.x));
     const values = points.map((p) => p.value);
-    if (config.showLimits) for (const p of points) values.push(p.lsl, p.usl);
-    for (const s of visible) if (config.showLimits) values.push(s.stats?.lsl, s.stats?.usl);
-    for (const s of visible) if (config.showSpecs) values.push(s.stats?.lowSpec, s.stats?.highSpec);
+    if (domainMode === 'full') {
+      if (config.showLimits) for (const p of points) values.push(p.lsl, p.usl);
+      for (const s of visible) values.push(s.stats?.lsl, s.stats?.usl, s.stats?.lowSpec, s.stats?.highSpec);
+    }
     scale = axes(chart, domain, extent(values), "Device index", yLabel, false, false, false, { x: true });
     for (const s of visible) {
       const data = (s.points ?? []).filter((p) => finite(p.x) && finite(p.value));
+      if (config.showSigma && finite(s.stats?.mean) && finite(s.stats?.stdev) && s.stats.stdev > 0) {
+        const low = s.stats.mean - 3 * s.stats.stdev, high = s.stats.mean + 3 * s.stats.stdev;
+        chart.ctx.fillStyle = s.color; chart.ctx.globalAlpha = .08 * chart.opacity;
+        chart.ctx.fillRect(scale.left, scale.y(high), scale.right - scale.left, scale.y(low) - scale.y(high)); chart.ctx.globalAlpha = chart.opacity;
+        for (const value of [low, high]) line(chart, [[scale.left, scale.y(value)], [scale.right, scale.y(value)]], s.color, true);
+      }
       if (config.showLimits) for (const [field, shade] of [["lsl", "#8057a6"], ["usl", "#ad3f55"]]) {
         const limits = data.filter((p) => finite(p[field])).map((p) => [scale.x(p.x), scale.y(p[field])]);
         if (limits.length) line(chart, limits, shade, true);
@@ -273,14 +314,22 @@ export function renderTrend(container, { series = [], settings = {}, onPick, tit
       if (config.showMean && finite(s.stats?.mean)) line(chart, [[scale.left, scale.y(s.stats.mean)], [scale.right, scale.y(s.stats.mean)]], s.color, true);
       if (config.showMedian && finite(s.stats?.median)) line(chart, [[scale.left, scale.y(s.stats.median)], [scale.right, scale.y(s.stats.median)]], '#286b60', true);
       if (config.showSpecs) for (const field of ['lowSpec', 'highSpec']) if (finite(s.stats?.[field])) line(chart, [[scale.left, scale.y(s.stats[field])], [scale.right, scale.y(s.stats[field])]], '#a36518', true);
+      let segment = [], prior = null;
       for (const p of data) {
-        const x = scale.x(p.x), y = scale.y(p.value); chart.ctx.beginPath(); chart.ctx.fillStyle = s.color; chart.ctx.arc(x, y, config.dotSize, 0, 2 * Math.PI); chart.ctx.fill();
-        chart.items.push({ x, y, tip: `${s.label}\nDevice index: ${p.x}\n${yLabel}: ${format(p.value, config.precision, config.notation)}`, payload: { type: "trend", xlo: p.x, xhi: p.x, seriesKeys: [s.key] } });
+        if (showGaps && prior && (p.segment !== undefined && prior.segment !== undefined && p.segment !== prior.segment || p.datasetId !== undefined && prior.datasetId !== undefined && p.datasetId !== prior.datasetId)) { line(chart, segment, s.color); segment = []; }
+        segment.push([scale.x(p.x), scale.y(p.value)]); prior = p;
+      }
+      if (segment.length) line(chart, segment, s.color);
+      for (const p of data) {
+        const x = scale.x(p.x), y = scale.y(p.value), failed = p.failed === true || Number.isInteger(p.testFlags) && !(p.testFlags & 0x50) && !!(p.testFlags & 0x80);
+        chart.ctx.beginPath(); chart.ctx.fillStyle = showFails && failed ? color(settings.failColor ?? '#b63842') : s.color; chart.ctx.arc(x, y, showFails && failed ? config.dotSize + 2 : config.dotSize, 0, 2 * Math.PI); chart.ctx.fill();
+        chart.items.push({ x, y, tip: `${s.label}\nDevice index: ${p.x}\n${yLabel}: ${format(p.value, config.precision, config.notation)}${failed ? '\nRecorded test failure' : ''}${p.seq ? `\nRecord ${p.seq}` : ''}`, payload: { type: "trend", xlo: p.x, xhi: p.x, seriesKeys: [s.key] } });
       }
     }
     const total = visible.reduce((sum, s) => sum + (finite(s.stats?.count) ? s.stats.count : (s.points?.length ?? 0)), 0);
     const recorded = visible.reduce((sum, s) => sum + (finite(s.stats?.total) ? s.stats.total : (s.stats?.count ?? s.points?.length ?? 0)), 0);
-    chart.note.textContent = `${points.length.toLocaleString()} displayed points; ${recorded.toLocaleString()} observations (${total.toLocaleString()} numerically eligible). Inspect drag selects the full interval. Dashed overlays: ${[config.showLimits && 'test limits', config.showSpecs && 'specifications (amber)', config.showMean && 'mean (series color)', config.showMedian && 'median (green)'].filter(Boolean).join(', ') || 'none'}. Missing or changing specification limits are not drawn.`;
+    chart.note.textContent = `${points.length.toLocaleString()} displayed points · ${recorded.toLocaleString()} observations · ${total.toLocaleString()} numerically eligible. Picks query full intervals. Gaps use invalid runs and source boundaries; untested device gaps are not inferred. Fails marks retained samples; reduced trends may omit other failures.`;
+    chart.note.title = `Dashed overlays: ${[config.showLimits && 'test limits', config.showSpecs && 'specifications (amber)', config.showMean && 'mean (series color)', config.showMedian && 'median (green)', config.showSigma && '±3 sigma shaded band'].filter(Boolean).join(', ') || 'none'}. Missing or changing specifications are not drawn.`;
     return true;
   };
   chart.redraw(); chart.keyboardReset(); return chart;
@@ -289,7 +338,7 @@ export function renderTrend(container, { series = [], settings = {}, onPick, tit
 /** Histogram bins come from the query provider: [{low,high,count,last}]. Shared edges are its responsibility. */
 export function renderHistogram(container, { series = [], settings = {}, onPick, title = "Histogram", xLabel = "Test value" } = {}) {
   const list = seriesList(series), config = options(settings), chart = createChart(container, title, list, config, onPick);
-  let scale, domain = [0, 1];
+  let scale, domain = [0, 1], domainMode = 'full';
   const validBins = (s) => (s.bins ?? []).filter((b) => finite(b.low) && finite(b.high) && b.high > b.low && finite(b.count) && b.count >= 0);
   const choose = (low, high) => {
     if (low >= high) { chart.status.textContent = "The lower value must be less than the upper value."; return; }
@@ -301,24 +350,25 @@ export function renderHistogram(container, { series = [], settings = {}, onPick,
     chart.status.textContent = `Selected whole histogram intervals: [${format(bounds[0], config.precision, config.notation)}, ${format(bounds[1], config.precision, config.notation)}${inclusiveHigh ? "]" : ")"}.`;
   };
   const inputs = rangeControls(chart, "Lower value", "Upper value", "Inspect intervals", choose);
-  chart.keyboardReset = () => inputs.forEach((input, i) => { input.value = String(domain[i]); });
+  const resetVisible = plotRangeControls(chart, 'x', () => { domainMode = 'full'; }, () => { domainMode = 'data'; });
+  chart.keyboardReset = () => { inputs.forEach((input, i) => { input.value = String(domain[i]); }); resetVisible(); };
   chart.rangePick = (lo, hi) => { const a = scale.fromX(lo), b = scale.fromX(hi); choose(Math.min(a, b), Math.max(a, b)); };
   chart.paint = () => {
     const visible = chart.visible(), bins = visible.flatMap(validBins);
     if (!bins.some((b) => b.count > 0)) return false;
     const values = bins.flatMap((b) => [b.low, b.high]);
-    if (config.showLimits) for (const s of visible) values.push(s.stats?.lsl, s.stats?.usl);
-    if (config.showSpecs) for (const s of visible) values.push(s.stats?.lowSpec, s.stats?.highSpec);
+    if (domainMode === 'full') for (const s of visible) values.push(s.stats?.lsl, s.stats?.usl, s.stats?.lowSpec, s.stats?.highSpec);
     domain = extent(values); const peak = extent(bins.map((b) => b.count), true)[1];
     scale = axes(chart, domain, [0, peak * 1.12], xLabel, "Observation count", false, false, false, { y: true });
     visible.forEach((s, index) => {
-      const data = validBins(s), { ctx } = chart;
+      const data = validBins(s), { ctx } = chart, total = data.reduce((sum, b) => sum + b.count, 0); let cumulative = 0;
       for (const b of data) {
+        cumulative += b.count;
         const totalWidth = scale.x(b.high) - scale.x(b.low), width = totalWidth / visible.length;
         const x = scale.x(b.low) + index * width + 0.5, y = scale.y(b.count), height = scale.y(0) - y;
-        ctx.fillStyle = s.color; ctx.globalAlpha = 0.84; ctx.fillRect(x, y, Math.max(0.5, width - 1), height); ctx.globalAlpha = 1;
+        ctx.fillStyle = s.color; ctx.globalAlpha = 0.84 * chart.opacity; ctx.fillRect(x, y, Math.max(0.5, width - 1), height); ctx.globalAlpha = chart.opacity;
         if (b.count) chart.items.push({ x: x + width / 2, y: y + height / 2, width: Math.max(1, width), height,
-          tip: `${s.label}\n[${format(b.low, config.precision, config.notation)}, ${format(b.high, config.precision, config.notation)}${b.last ? "]" : ")"}\nCount: ${b.count.toLocaleString()}`,
+          tip: `${s.label}\n[${format(b.low, config.precision, config.notation)}, ${format(b.high, config.precision, config.notation)}${b.last ? "]" : ")"}\nCount: ${b.count.toLocaleString()}\nShare: ${format(100 * b.count / total, 2)}%\nCumulative: ${format(100 * cumulative / total, 2)}%`,
           payload: { type: "histogram", low: b.low, high: b.high, inclusiveHigh: b.last === true, seriesKeys: [s.key] } });
       }
       const stats = s.stats ?? {}, overlay = (value, shade) => {

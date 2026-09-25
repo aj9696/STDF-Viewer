@@ -41,6 +41,10 @@ try {
   });
   assert.equal(await page.locator("#chart img").count(), 0);
   assert.match(await page.locator(".chart-note").textContent(), /19,000 observations/);
+  await page.getByRole('button', { name: 'None', exact: true }).click(); assert.equal(await page.evaluate(() => handle.items.length), 0);
+  await page.getByRole('button', { name: 'All', exact: true }).click(); assert.equal(await page.evaluate(() => handle.items.length), 6);
+  await page.getByText('Opacity', { exact: true }).first().click(); await page.getByLabel('Plot opacity', { exact: true }).press('Home'); assert.equal(await page.evaluate(() => handle.opacity), .1);
+  await page.getByLabel('Plot opacity', { exact: true }).press('End'); assert.equal(await page.evaluate(() => handle.opacity), 1);
   await page.getByLabel("First device index").fill("0");
   await page.getByLabel("Last device index").fill("5");
   await page.getByRole("button", { name: "Inspect range", exact: true }).click();
@@ -104,6 +108,8 @@ try {
   const histCanvas = await page.locator("canvas").boundingBox();
   await page.mouse.move(histCanvas.x + lastBar.x, histCanvas.y + lastBar.y);
   assert.match(await page.locator(".chart-tooltip").textContent(), /\[1, 2\]/);
+  assert.match(await page.locator(".chart-tooltip").textContent(), /Share: 33\.33%/);
+  assert.match(await page.locator(".chart-tooltip").textContent(), /Cumulative: 100%/);
   await page.mouse.click(histCanvas.x + lastBar.x, histCanvas.y + lastBar.y);
   assert.equal(await page.evaluate(() => picks.at(-1).inclusiveHigh), true);
   await page.screenshot({ path: resolve(output, "histogram.png"), fullPage: true });
@@ -156,6 +162,38 @@ try {
   await page.getByRole("button", { name: "Next legend page", exact: true }).click();
   assert.equal(await page.locator('.chart-legend button[aria-pressed]').count(), 16);
   checks.push(`50,000-coordinate canvas and bounded legend DOM: ${performance.milliseconds.toFixed(1)} ms initial render`);
+  await page.setViewportSize({ width: 1100, height: 850 });
+  await page.evaluate(() => {
+    handle = renderer.renderHistogram(document.querySelector('#chart'), { series: [{ key: 'H', bins: [{ low: 0, high: 1, count: 8 }, { low: 1, high: 2, count: 4, last: true }], stats: { lsl: -5, usl: 8, lowSpec: -10, highSpec: 10 } }], settings: { showLimits: false, showSpecs: false }, onPick: (x) => picks.push(x) });
+  });
+  assert.deepEqual(await page.evaluate(() => handle.fullDomain.x), [-10, 10]);
+  await page.getByRole('button', { name: 'Auto', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.fullDomain.x), [0, 2]);
+  await page.getByRole('button', { name: 'Full', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.fullDomain.x), [-10, 10]);
+  const beforeRange = await page.evaluate(() => picks.length);
+  await page.getByLabel('Visible X minimum', { exact: true }).fill('0.25'); await page.getByLabel('Visible X maximum', { exact: true }).fill('1.5');
+  await page.getByRole('button', { name: 'Set visible range', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.viewport.x), [.25, 1.5]); assert.equal(await page.evaluate(() => picks.length), beforeRange);
+  await page.getByLabel('Visible X minimum', { exact: true }).fill('2'); await page.getByRole('button', { name: 'Set visible range', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.viewport.x), [.25, 1.5]);
+  assert.match(await page.locator('.chart-status').textContent(), /increasing viewport/);
+  checks.push('Histogram Auto/Full includes hidden spec extents; viewport range validates without changing query selection');
+  await page.evaluate(() => {
+    handle = renderer.renderTrend(document.querySelector('#chart'), { series: [{ key: 'T', color: '#245cce', points: [{ x: 0, value: 1, segment: 0 }, { x: 1, value: 2, segment: 0, failed: true }, { x: 3, value: 3, segment: 1 }], stats: { count: 3, mean: 2, stdev: 1, lsl: -5, usl: 8 } }], settings: { showLimits: false, showMean: false, showSigma: true }, onPick: (x) => picks.push(x) });
+    // Capture actual drawing operations: separate retained segments, failed-marker radius,
+    // and translucent full-width band must survive the interactive toggles.
+    const operations = [], ctx = handle.ctx; window.operations = operations;
+    for (const method of ['moveTo', 'lineTo', 'arc', 'fillRect']) { const original = ctx[method].bind(ctx); ctx[method] = (...args) => { operations.push({ method, args, alpha: ctx.globalAlpha, color: ctx.fillStyle }); return original(...args); }; }
+    handle.redraw();
+  });
+  assert.ok(await page.evaluate(() => operations.some((o) => o.method === 'fillRect' && o.alpha > 0 && o.alpha < .1)));
+  const markerRadii = await page.evaluate(() => operations.filter((o) => o.method === 'arc').map((o) => o.args[2])); assert.equal(markerRadii.length, 3); assert.equal(markerRadii[1], markerRadii[0] + 2);
+  const gapLineCount = await page.evaluate(() => { operations.length = 0; handle.redraw(); return operations.filter((o) => o.method === 'lineTo').length; });
+  await page.getByLabel('Gaps', { exact: true }).uncheck(); assert.equal(await page.evaluate(() => { operations.length = 0; handle.redraw(); return operations.filter((o) => o.method === 'lineTo').length; }), gapLineCount + 1);
+  await page.evaluate(() => { operations.length = 0; }); await page.getByLabel('Fails', { exact: true }).uncheck(); assert.equal(await page.evaluate(() => new Set(operations.filter((o) => o.method === 'arc').map((o) => o.args[2])).size), 1);
+  await page.getByRole('button', { name: 'Auto', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.fullDomain.y), [1, 3]);
+  await page.getByRole('button', { name: 'Full', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.fullDomain.y), [-5, 8]);
+  await page.getByLabel('Visible Y minimum', { exact: true }).fill('0'); await page.getByLabel('Visible Y maximum', { exact: true }).fill('4'); await page.getByLabel('Visible Y maximum', { exact: true }).press('Enter'); assert.deepEqual(await page.evaluate(() => handle.viewport.y), [0, 4]);
+  assert.match(await page.locator('.chart-note').textContent(), /untested device gaps are not inferred/); assert.match(await page.locator('.chart-note').textContent(), /reduced trends may omit other failures/);
+  await page.screenshot({ path: resolve(output, 'trend-controls.png'), fullPage: true });
+  checks.push('Trend separates known gaps, toggles retained fail markers, shades sigma band, and exposes Y range with reduction disclosure');
   assert.deepEqual(errors, []);
   await writeFile(resolve(output, "results.json"), JSON.stringify({ channel, checks, errors }, null, 2));
   console.log(JSON.stringify({ output, checks, errors }, null, 2));

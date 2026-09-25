@@ -1,6 +1,8 @@
+import { tr } from './viewer-i18n.js';
 import { element } from './library-home-view.js';
+import { DEFAULT_PREFERENCES, validatePreferences, applyPreferences, preferencesEditor, colorPreset } from './viewer-preferences.js';
 const KEY = 'semidata.viewer.settings.v1';
-export const DEFAULT_SETTINGS = Object.freeze({ bins: 30, precision: 3, notation: 'adaptive', dotSize: 3, showLimits: true, showSpecs: false, showMean: true, showMedian: false, showSigma: true, showGaussian: true, cpkThreshold: 1.33, font: 'Segoe UI', siteColors: {}, binColors: {} });
+export const DEFAULT_SETTINGS = Object.freeze({ bins: 30, precision: 3, notation: 'adaptive', dotSize: 3, showLimits: true, showSpecs: false, showMean: true, showMedian: false, showSigma: true, showGaussian: true, cpkThreshold: 1.33, font: 'Segoe UI', siteColors: {}, binColors: {}, ...DEFAULT_PREFERENCES });
 export function validateSettings(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Viewer settings must be an object.');
   const result = { ...DEFAULT_SETTINGS };
@@ -26,7 +28,7 @@ export function validateSettings(input = {}) {
       result[key][number] = fill;
     }
   }
-  return result;
+  return { ...result, ...validatePreferences(input) };
 }
 export function loadSettings() {
   try { const stored = JSON.parse(localStorage.getItem(KEY) ?? 'null'); return stored?.version === 1 ? validateSettings(stored.settings) : validateSettings(); }
@@ -62,43 +64,53 @@ export async function applyFont(settings) {
     await installFont(saved.bytes);
   }
   document.body.style.setProperty('--viewer-font', `"${settings.font}", system-ui, sans-serif`);
+  applyPreferences(settings);
 }
-export function editSettings(settings, onApply) {
+export function editSettings(settings, onApply, options = {}) {
   const dialog = document.getElementById('viewer-settings-dialog'), form = document.getElementById('viewer-settings-form'); form.replaceChildren();
   const grid = element('div', undefined, 'viewer-settings-grid'), fields = {};
   for (const [key, name, min, max, step] of [['bins', 'Histogram bins', 1, 1000, 1], ['precision', 'Displayed decimal precision', 0, 12, 1], ['dotSize', 'Trend point size', 1, 10, 0.5], ['cpkThreshold', 'Low-Cpk warning threshold', 0, 100, 0.01]]) {
-    const label = element('label', name), input = element('input'); input.type = 'number'; input.required = true; input.min = min; input.max = max; input.step = step; input.value = settings[key]; fields[key] = input; label.append(input); grid.append(label);
+    const label = element('label', tr(name)), input = element('input'); input.type = 'number'; input.required = true; input.min = min; input.max = max; input.step = step; input.value = settings[key]; fields[key] = input; label.append(input); grid.append(label);
   }
   for (const [key, name] of [['showLimits', 'Show test limits'], ['showSpecs', 'Show specification limits'], ['showMean', 'Show mean'], ['showMedian', 'Show median'], ['showSigma', 'Show ±3/6/9 sigma'], ['showGaussian', 'Show peak-scaled Gaussian']]) {
-    const label = element('label', undefined, 'checkbox-setting'), input = element('input'); input.type = 'checkbox'; input.checked = settings[key]; fields[key] = input; label.append(input, element('span', name)); grid.append(label);
+    const label = element('label', undefined, 'checkbox-setting'), input = element('input'); input.type = 'checkbox'; input.checked = settings[key]; fields[key] = input; label.append(input, element('span', tr(name))); grid.append(label);
   }
-  const fontLabel = element('label', 'Display font'), font = element('select');
-  font.setAttribute('aria-label', 'Display font');
+  const fontLabel = element('label', tr('Display font')), font = element('select');
+  font.setAttribute('aria-label', tr('Display font'));
   for (const name of ['Segoe UI', 'Arial', 'Consolas', 'SemiDataLocalFont']) { const option = element('option', name === 'SemiDataLocalFont' ? 'Your local font' : name); option.value = name; font.append(option); }
   font.value = settings.font; fontLabel.append(font); grid.append(fontLabel);
-  const notationLabel = element('label', 'Number notation'), notation = element('select'); notation.setAttribute('aria-label', 'Number notation');
-  for (const [value, name] of [['adaptive', 'Adaptive'], ['fixed', 'Fixed decimal'], ['scientific', 'Scientific']]) { const option = element('option', name); option.value = value; notation.append(option); }
+  const notationLabel = element('label', tr('Number notation')), notation = element('select'); notation.setAttribute('aria-label', tr('Number notation'));
+  for (const [value, name] of [['adaptive', 'Adaptive'], ['fixed', 'Fixed decimal'], ['scientific', 'Scientific']]) { const option = element('option', tr(name)); option.value = value; notation.append(option); }
   notation.value = settings.notation; notationLabel.append(notation); grid.append(notationLabel); form.append(grid);
-  const localLabel = element('label', 'Add a local TTF or OTF font (up to 10 MiB)'), file = element('input'); file.type = 'file'; file.accept = '.ttf,.otf'; localLabel.append(file); form.append(localLabel);
+  const localLabel = element('label', tr('Add a local TTF or OTF font (up to 10 MiB)')), file = element('input'); file.type = 'file'; file.accept = '.ttf,.otf'; localLabel.append(file); form.append(localLabel);
   const colors = structuredClone({ siteColors: settings.siteColors, binColors: settings.binColors });
-  const colorFields = element('fieldset'), colorLegend = element('legend', 'Site and bin colors'); colorFields.append(colorLegend);
-  const colorRow = element('div', undefined, 'viewer-toolbar'), kindLabel = element('label', 'Color category'), kind = element('select');
-  for (const [value, label] of [['siteColors', 'Site (-1 for aggregate)'], ['binColors', 'Bin number']]) { const o = element('option', label); o.value = value; kind.append(o); }
-  kindLabel.append(kind); const numberLabel = element('label', 'Site or bin number'), number = element('input'); number.type = 'number'; number.step = '1'; number.min = '-1'; number.max = '65535'; number.value = '0'; numberLabel.append(number);
-  const fillLabel = element('label', 'Color'), fill = element('input'); fill.type = 'color'; fill.value = '#245cce'; fillLabel.append(fill);
-  const add = element('button', 'Set color', 'button secondary'); add.type = 'button'; const colorList = element('p', '', 'viewer-help');
-  const renderColors = () => { colorList.textContent = Object.entries(colors).flatMap(([category, entries]) => Object.entries(entries).map(([n, c]) => `${category === 'siteColors' ? 'Site' : 'Bin'} ${n}: ${c}`)).join(' · ') || 'Default color palette'; };
+  const colorFields = element('fieldset'), colorLegend = element('legend', tr('Site and bin colors')); colorFields.append(colorLegend);
+  const colorRow = element('div', undefined, 'viewer-toolbar'), kindLabel = element('label', tr('Color category')), kind = element('select');
+  for (const [value, label] of [['siteColors', 'Site (-1 for aggregate)'], ['binColors', 'Bin number']]) { const o = element('option', tr(label)); o.value = value; kind.append(o); }
+  kindLabel.append(kind); const numberLabel = element('label', tr('Site or bin number')), number = element('input'); number.type = 'number'; number.step = '1'; number.min = '-1'; number.max = '65535'; number.value = '0'; numberLabel.append(number);
+  const fillLabel = element('label', tr('Color')), fill = element('input'); fill.type = 'color'; fill.value = '#245cce'; fillLabel.append(fill);
+  const add = element('button', tr('Set color'), 'button secondary'); add.type = 'button'; const colorList = element('p', '', 'viewer-help');
+  const renderColors = () => { colorList.textContent = `${Object.keys(colors.siteColors).length} site overrides · ${Object.keys(colors.binColors).length} bin overrides`; };
   colorRow.append(kindLabel, numberLabel, fillLabel, add); colorFields.append(colorRow, colorList); form.append(colorFields); renderColors();
+  const readPreferences = preferencesEditor(form, settings, options);
+  const paletteLabel = element('label', tr('Palette preset')), palette = element('select'); palette.setAttribute('aria-label', tr('Palette preset'));
+  for (const [value, name] of [['classic', 'Classic'], ['blueOrange', 'Blue / orange'], ['grayscale', 'Grayscale']]) { const option = element('option', tr(name)); option.value = value; palette.append(option); }
+  paletteLabel.append(palette); const preset = element('button', tr('Apply palette'), 'button secondary'), resetColors = element('button', tr('Reset all colors'), 'button secondary'); preset.type = resetColors.type = 'button';
+  const updateColors = value => { colors.siteColors = structuredClone(value.siteColors); colors.binColors = structuredClone(value.binColors); readPreferences.setColors(value); renderColors(); selectedColor(); };
+  preset.addEventListener('click', () => { updateColors(colorPreset(palette.value)); colorList.textContent += ' · Palette applies to bins 0–49 and sites 0–15 plus aggregate.'; });
+  resetColors.addEventListener('click', () => updateColors({ ...DEFAULT_PREFERENCES, siteColors: {}, binColors: {} }));
+  colorFields.append(paletteLabel, preset, resetColors);
+  const selectedColor = () => { fill.value = colors[kind.value][number.value] ?? '#245cce'; }; kind.addEventListener('change', selectedColor); number.addEventListener('input', selectedColor);
   const error = element('p'); error.setAttribute('role', 'alert'); form.append(error);
   add.addEventListener('click', () => {
     if (!Number.isInteger(number.valueAsNumber) || number.valueAsNumber < -1 || number.valueAsNumber > 65535) { error.textContent = 'Enter a valid site or bin number.'; return; }
     colors[kind.value][number.valueAsNumber] = fill.value; renderColors();
   });
-  const save = element('button', 'Save settings', 'button primary'); save.type = 'submit'; form.append(save);
+  const save = element('button', tr('Save settings'), 'button primary'); save.type = 'submit'; form.append(save);
   form.onsubmit = async (event) => {
     event.preventDefault(); save.disabled = true; error.textContent = '';
     try {
-      const next = validateSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, input]) => [key, input.type === 'checkbox' ? input.checked : input.valueAsNumber])), font: font.value, notation: notation.value, ...colors });
+      const next = validateSettings({ ...Object.fromEntries(Object.entries(fields).map(([key, input]) => [key, input.type === 'checkbox' ? input.checked : input.valueAsNumber])), font: font.value, notation: notation.value, ...colors, ...readPreferences() });
       if (file.files.length) {
         const selected = file.files[0]; if (selected.size > 10 * 1024 * 1024) throw new Error('Choose a font no larger than 10 MiB.');
         const bytes = await selected.arrayBuffer(); await installFont(bytes); await fontRecord({ name: selected.name, bytes }); next.font = 'SemiDataLocalFont';
