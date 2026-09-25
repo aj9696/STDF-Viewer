@@ -104,3 +104,22 @@ readiness. Earlier demonstration checkpoints became recorded validation steps.
 See [full-path validation](../web-prototype/LIBRARY-VALIDATION.md) and
 [frontend handoff](../web-prototype/docs/FRONTEND-HANDOFF.md). Analysis and PAT
 design remain with the engineer; hosted CI remains open until publication.
+
+## Browser frontend — one feature at a time
+
+- [x] **UI-1 — Library home.** Module: browser-ui; depends BL-6.
+  - Delivered: styled local workspace, single-file import/drop, phase progress,
+    duplicate/cancel/error feedback, saved-dataset search/sort/25-row pagination,
+    metadata drawer and actual storage estimates/persistence status.
+  - Verify: real Chrome/Edge imports, known counts/hash, renamed duplicate,
+    malformed input, cancellation, reload/navigation/reopen and tab ownership;
+    explicit test-only inventories exercise pagination and failure states.
+    Keyboard focus, progress reset and 360/390px layout checks included.
+  - Review: independently found and fixed detached dialog-opener focus;
+    screenshot review found and fixed stale progress and narrow-page overflow.
+  - Docs: [Library home guide](../web-prototype/docs/LIBRARY-HOME.md),
+    [specification](../SPEC-browser-ui.md) and frontend browser harness.
+- [ ] Engineer evaluation of UI-1; select the next frontend feature together.
+
+Do not interpret this checkpoint as authorization to design analytical policy
+or implement all remaining frontend workflows at once.

@@ -101,3 +101,14 @@ Parallel work is limited to Rust decoding, source discovery, and transfer helper
 once their interfaces are written; the root owns catalog/storage integration.
 Finish with independent review, browser tests, 1M/10M measurements, a runnable
 engineering console and a frontend handoff guide listing remaining limitations.
+
+## 2026-09-24: first browser frontend feature
+
+The engineer requested a polished frontend developed one feature at a time.
+Follow SPEC-browser-ui.md: deliver library home, single-file import with honest
+progress/outcomes, saved-dataset search/sort/pagination and metadata reopen.
+Keep the same browser origin and existing storage interfaces. Parallelize styling
+and browser workflow checks against the agreed markup; independently review
+focus/lifecycle and text rendering. Record a user guide and browser evidence.
+Stop after this runnable feature for engineer evaluation. Folder UX, workspace
+save/open and all analytical workflows remain separate future increments.
