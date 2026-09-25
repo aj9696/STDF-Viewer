@@ -49,7 +49,7 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
   - Files: under `web-prototype/`, split into a pinned asset/build + minimal
     worker/harness slice, then reopen/export verification + README and
     STORAGE-VALIDATION.md. Keep each slice to at most five files. Dependencies: none.
-- [ ] **BL-2 — Retain one actual STDF.** Module: browser-imports; depends BL-1. Next slice.
+- [x] **BL-2 — Retain one actual STDF.** Module: browser-imports; depends BL-1.
   - Acceptance: copy/hash and import the evaluation STDF in bounded batches;
     retain ordered measurements/device context and publish only after checks;
     reopen the dataset without reading or parsing the original.
@@ -57,7 +57,7 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
     repeated records, flags, metadata, source hash and restart behavior.
   - Files: write SPEC-browser-imports.md first; split changes to parser output,
     storage sink and UI into separately verified batches of at most five files.
-- [ ] **BL-3 — Make retry safe.** Modules: browser-library/browser-imports;
+- [x] **BL-3 — Make retry safe.** Modules: browser-library/browser-imports;
   depends BL-2.
   - Acceptance: identical content deduplicates; changed content with the same
     name is distinct; cancellation, quota/write failure and restart never
@@ -66,7 +66,7 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
     incomplete sources, retry from the beginning, and a second tab.
   - Files: storage worker, library coordinator, storage/import harness and
     STORAGE-VALIDATION.md; split if fixture changes exceed five files.
-- [ ] **BL-4 — Make datasets portable.** Module: browser-transfer;
+- [x] **BL-4 — Make datasets portable.** Module: browser-transfer;
   depends BL-3.
   - Acceptance: export/restore a versioned source+database package; verify hashes
     and reject incompatible/damaged input; support large datasets without a
@@ -75,14 +75,17 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
     corruption injection, memory measurement, interrupted export/restore.
   - Files: write SPEC-browser-transfer.md first, then transfer module, worker
     integration, fixture/harness and validation notes in bounded slices.
-- [ ] **BL-5 — Add a folder queue.** Module: browser-imports; depends BL-4.
+- [x] **BL-5 — Add a folder queue.** Module: browser-imports; depends BL-4.
   - Acceptance: read-only directory selection with file-input fallback; review
     candidates with optional subfolders before import; sequential queue, explicit
     rescan, per-file outcomes and retry/reconnect controls.
   - Verify: mixed supported/unsupported files, duplicate names/content, changed
     and incomplete sources, nested directories, revoked permission and cancellation.
+    Permission denial is covered by controlled tests; native OS picker/permission
+    UI remains an explicit manual qualification gap. Real OPFS handles and the
+    folder-input fallback passed desktop browser checks.
   - Files: source-selection module, queue module, UI, import harness and guide.
-- [ ] **BL-6 — Qualify the complete logistics path.** Depends BL-5.
+- [x] **BL-6 — Qualify the complete logistics path.** Depends BL-5.
   - Acceptance: publish full-import timing/memory/storage at 1M/10M, verify reopen
     and restore, and document supported browser/input limits and remaining gaps.
   - Verify: fresh-process/origin methodology as appropriate, sequential trials,
@@ -90,9 +93,14 @@ See [Release verification](../docs/release-verification.md) for evidence and lim
     include snapshot/hash, parsing, writes, indexes, validation and publication.
   - Files: benchmark harness, portable result file, STORAGE-VALIDATION.md,
     browser workflow guide and capability status.
+  - Delivered: final Chrome imports of 1M/10M measurements in 17.22/174.45 s;
+    bounded export/fresh-profile restore and full verification passed. Import
+    SQLite WASM allocation stayed at 10,092,544 bytes for both sizes. See
+    LIBRARY-VALIDATION.md for detailed evidence and qualification gaps; WASM
+    allocations are not browser RSS or JavaScript peak-memory measurements.
 
-Checkpoint after BL-1: the storage proof and evidence are ready for engineer
-evaluation; this increment stops here. Checkpoint after BL-2: demonstrate one
-imported/reopened real dataset.
-Checkpoint after BL-4: demonstrate portable recovery before folder-scale use.
-Analysis and PAT design are intentionally left for the engineer's later plan.
+The engineer subsequently authorized autonomous completion through frontend
+readiness. Earlier demonstration checkpoints became recorded validation steps.
+See [full-path validation](../web-prototype/LIBRARY-VALIDATION.md) and
+[frontend handoff](../web-prototype/docs/FRONTEND-HANDOFF.md). Analysis and PAT
+design remain with the engineer; hosted CI remains open until publication.
