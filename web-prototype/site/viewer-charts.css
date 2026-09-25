@@ -1,0 +1,30 @@
+.viewer-chart { min-width: 0; color: #24354c; font: 13px/1.5 "Segoe UI", system-ui, sans-serif; }
+.viewer-chart * { box-sizing: border-box; }
+.viewer-chart .chart-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; }
+.viewer-chart h3 { margin: 0; font-size: 15px; font-weight: 650; }
+.viewer-chart button, .viewer-chart input, .viewer-chart select { font: inherit; color: inherit; }
+.viewer-chart button { padding: 6px 10px; border: 1px solid #d7deea; border-radius: 5px; background: #fff; cursor: pointer; }
+.viewer-chart button:hover { background: #f0f4fb; }
+.viewer-chart :focus-visible { outline: 2px solid #245cce; outline-offset: 3px; }
+.viewer-chart .chart-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+.viewer-chart .chart-legend button { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; min-width: 0; text-align: left; overflow-wrap: anywhere; padding: 4px 8px; border-color: transparent; }
+.viewer-chart .chart-legend button[aria-pressed="false"] { color: #66758a; background: #f1f3f7; text-decoration: line-through; }
+.viewer-chart .chart-swatch { flex: 0 0 10px; width: 10px; height: 10px; border-radius: 3px; background: var(--series-color); }
+.viewer-chart .chart-stage { position: relative; min-width: 0; width: 100%; height: 330px; }
+.viewer-chart canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+.viewer-chart .chart-tooltip { position: absolute; z-index: 3; max-width: min(280px, 85%); padding: 8px 11px; border: 1px solid #ccd6e5; border-radius: 6px; color: #24354c; background: #fff; box-shadow: 0 3px 12px #1c315222; white-space: pre-line; overflow-wrap: anywhere; pointer-events: none; font-size: 12px; }
+.viewer-chart .chart-selection { position: absolute; border: 1px solid #245cce; background: #245cce20; pointer-events: none; }
+.viewer-chart .chart-empty { position: absolute; inset: 45px 25px; display: grid; place-content: center; text-align: center; color: #58687f; pointer-events: none; }
+.viewer-chart [hidden] { display: none !important; }
+.viewer-chart .chart-note { margin: 7px 0 0; color: #58687f; font-size: 12px; overflow-wrap: anywhere; }
+.viewer-chart .chart-controls { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; padding-top: 12px; margin-top: 10px; border-top: 1px solid #e5eaf2; }
+.viewer-chart .chart-controls label { display: grid; gap: 4px; max-width: 100%; color: #58687f; font-size: 12px; }
+.viewer-chart input, .viewer-chart select { min-width: 0; width: 150px; max-width: 100%; padding: 6px 8px; border: 1px solid #cbd4e2; border-radius: 5px; background: #fff; }
+.viewer-chart select { width: 270px; }
+.viewer-chart .chart-status { flex: 1 0 100%; margin: 0; min-height: 18px; color: #58687f; font-size: 12px; }
+@media (max-width: 520px) {
+  .viewer-chart .chart-stage { height: 285px; }
+  .viewer-chart .chart-controls label { flex: 1 1 110px; }
+  .viewer-chart .chart-controls input, .viewer-chart .chart-controls select { width: 100%; }
+  .viewer-chart .chart-legend { gap: 3px; }
+}
