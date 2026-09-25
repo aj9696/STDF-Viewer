@@ -2,6 +2,7 @@ import { DataLibraryClient } from './data-client.js';
 import { inventoryFiles } from './sources.js';
 import { ImportQueue } from './import-queue.js';
 import { createExamplePicker } from './example-picker.js';
+import { createAtdfImporter } from './library-atdf-ui.js';
 import { $, bytes, count, element, hydrateIcons, renderRows, renderDataset } from './library-home-view.js';
 
 const PAGE_SIZE = 25;
@@ -24,7 +25,7 @@ function notice(message, error = false) {
   $('library-notice').classList.toggle('error-notice', error);
 }
 function controls() {
-  for (const id of ['add-file', 'empty-import', 'try-examples', 'refresh-files', 'search-files', 'sort-files']) $(id).disabled = !ready || busy;
+  for (const id of ['add-file', 'add-atdf', 'empty-import', 'try-examples', 'refresh-files', 'search-files', 'sort-files']) $(id).disabled = !ready || busy;
   document.querySelectorAll('[data-dataset-id]').forEach((button) => { button.disabled = !ready || busy; });
   $('previous-page').disabled = !ready || busy || page === 0;
   $('next-page').disabled = !ready || busy || (page + 1) * PAGE_SIZE >= filtered().length;
@@ -287,9 +288,12 @@ const examples = createExamplePicker({
   refresh: loadCatalog,
   openViewer,
 });
+const atdf = createAtdfImporter({ available: () => ready && !busy, run: operation, client: () => library,
+  refresh: async epoch => { await loadCatalog(epoch); void storageStatus(); }, openViewer });
 
 hydrateIcons();
 $('try-examples').addEventListener('click', () => examples.open());
+$('add-atdf').addEventListener('click', () => atdf.open());
 for (const id of ['add-file', 'empty-import']) $(id).addEventListener('click', showImport);
 $('retry-open').addEventListener('click', connect);
 $('refresh-files').addEventListener('click', () => operation(async (epoch) => { await loadCatalog(epoch); notice('Library refreshed.'); }));

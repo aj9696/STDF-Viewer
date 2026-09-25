@@ -26,6 +26,10 @@ async function dispatch(message, context) {
     const { runViewerReport } = await import('./viewer-report.js');
     return runViewerReport(store, message, context);
   }
+  if (message.type === 'viewerAuthoring') {
+    const { runViewerAuthoring } = await import('./viewer-authoring.js');
+    return runViewerAuthoring(store, message, context);
+  }
   if (message.type === 'viewerDownloads') {
     const { runViewerDownloads } = await import('./viewer-downloads.js');
     return runViewerDownloads(message, context);

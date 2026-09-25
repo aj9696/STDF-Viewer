@@ -76,4 +76,5 @@ export class DataLibraryClient {
   viewer(action, selection, options = {}) { return this.request("viewer", { action, selection, options }); }
   viewerTransfer(action, options = {}) { return this.request('viewerTransfer', { ...options, action }); }
   viewerReport(selection, options = {}) { return this.request('viewerReport', { selection, options }); }
+  viewerAuthoring(action, selection, options = {}) { return this.request('viewerAuthoring', { action, selection, options }); }
 }

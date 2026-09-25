@@ -3,6 +3,8 @@ import { boundedInteger, invalid } from './viewer-model.js';
 const LOCATIONS = {
   report: { directory: 'semidata-report-exports-v1', pattern: /^[0-9a-f-]{36}\.(xlsx|csv)$/ },
   workspace: { directory: 'semidata-viewer-exports-v1', pattern: /^[0-9a-f-]{36}\.(sdworkspace|sdlibrary)$/ },
+  authoring: { directory: 'semidata-authoring-exports-v1', pattern: /^[0-9a-f-]{36}\.(stdf|zip|json|atdf)$/ },
+  document: { directory: 'semidata-document-exports-v1', pattern: /^[0-9a-f-]{36}\.(pdf|docx|xlsx|png|jpg|zip)$/ },
 };
 
 /** Explicit inventory/cleanup only; a browser download may still hold a File. */
