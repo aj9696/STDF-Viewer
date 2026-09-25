@@ -25,6 +25,9 @@
     const caption = document.getElementById('library-caption') ?? document.getElementById('test-count');
     if (caption) caption.textContent = 'Waiting for the app to start.';
   }
+  // A page may supply an inline fallback for a missing boot script. Once this
+  // script loads, keep one reload handler instead of navigating twice.
+  reload.onclick = null;
   reload.addEventListener('click', () => location.reload());
   if (location.protocol === 'file:') {
     libraryLink.href = 'http://127.0.0.1:8766/app.html';
