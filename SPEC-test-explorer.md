@@ -47,6 +47,11 @@ Search first selects matching numbers; returning a group does not hide its other
 declarations. totalTests counts all groups; matchedTests counts matching groups
 independently of cursor position. Null cursor includes test number zero.
 
+Before any explorer query, reject LIBRARY_LIMIT if the manifest declares more
+than 20,000 definitions or a bounded first-20,001-row probe finds extra definitions.
+This protects the grouping bound for restored packages as well as native imports;
+it neither rewrites the dataset nor changes the existing restore contract.
+
 getTest counts observations using the existing measurements_test index; listTests
 does not scan or count the measurement table. Measurement paging uses the same
 (test_number,seq) index and joins attempt metadata by device primary key. No new

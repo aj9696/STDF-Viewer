@@ -1,6 +1,9 @@
 import { libraryError } from "./dataset-schema.js";
 
 const MAX_PAGE_BYTES = 2 * 1024 * 1024;
+// Matches retained-v1's MAX_DEFINITIONS in rust/src/retained.rs. Restored
+// databases must also respect the query bound, independent of manifest claims.
+const MAX_DEFINITIONS = 20_000;
 const encoder = new TextEncoder();
 
 // Filter whole groups after aggregation: a matching declaration must not hide
@@ -106,6 +109,12 @@ export async function runTestQuery(store, message) {
   const handlers = { listTests, getTest, readTestDefinitions, readTestMeasurements };
   if (!Object.hasOwn(handlers, message.type)) throw libraryError("INVALID_REQUEST", "Unknown test query.");
   const opened = await store.access(message.datasetId);
-  try { return handlers[message.type](opened.db, message); }
+  try {
+    if (opened.manifest.counts.definitions > MAX_DEFINITIONS ||
+      opened.db.selectValue('SELECT id FROM definitions LIMIT 1 OFFSET ?', [MAX_DEFINITIONS]) != null) {
+      throw libraryError('LIBRARY_LIMIT', 'Test Explorer supports at most 20,000 recorded declarations per dataset. This dataset remains available in Library tools.');
+    }
+    return handlers[message.type](opened.db, message);
+  }
   finally { opened.db.close(); }
 }
