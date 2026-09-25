@@ -2,6 +2,19 @@
 
 ## Browser preview — unreleased
 
+- Add DLOG-inspired engineering tools: file/lot dashboards, exact distribution
+  comparisons, explicit test aliases, paired 2D/3D scatter, numeric wafer
+  roll-ups, 3D relief and gallery views.
+- Add reproducible PAT and per-lot recipes, What-If, independent GDBN/cluster
+  screening with precedence, PVT assignments and balanced crossed Gauge R&R.
+- Add typed source revisions, attempt removal, bin remapping and separate
+  derived STDF exports; preserve originals and rebuild affected summaries.
+- Add ATDF import with original-text recovery, batch record/source conversion,
+  PDF/Word/Excel-summary/image reports, page sizing and source/lot batches.
+- Add table/display controls, full-catalog exclusions, color presets and
+  explicit engineering-control translations. Record methods, limits and
+  qualification in the [manual coverage guide](docs/dlog-coverage.md).
+
 - Simplify Library and Viewer navigation, open files directly into a chart, and
   place advanced controls and technical detail behind disclosures. Active filters
   and warnings remain visible.

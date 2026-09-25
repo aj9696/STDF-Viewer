@@ -147,3 +147,26 @@ docs/viewer-parity.md for differences and web-prototype/docs/VIEWER-VALIDATION.m
 for cold/warm scale evidence. No hosted release or upstream push is implied.
 Further cold-index optimization and vendor-file qualification remain visible
 follow-up work, alongside the engineer's future PAT design.
+
+## 2026-09-25: DLOG manual feature expansion
+
+The user supplied the 58-page DLOG manual and requested its features. Follow the
+capability map and SPEC-browser-studies.md; extend this same product plan without
+discarding prior work or unrelated follow-ups. Read the full manual and inspect
+screenshots; record every feature/page in docs/dlog-coverage.md. Implement and
+verify provider/math slices first, then integrate compact views, safe authoring,
+format/report exports and settings. Parallel work uses separate provider/UI
+modules; root owns common routing/state integration. Keep originals immutable,
+new methods explicit, and unsupported format dialects visible until target
+information is available. Finish with independent numerical/roundtrip tests,
+Chrome/Edge flows, visual review and updated documentation.
+
+
+Delivered the specified open methods and compact Tools workflows, including
+source-bound lot recipes and derived authoring. Independent review corrected
+filtered wafer geometry, missing aggregate provenance, summary-point picking,
+incompatible alias histogram bin overlays, and duplicate PAT references.
+Verification combines independent numerical/byte-level oracles, real browser
+workflows, export readers and rendered document inspection. Exact remaining
+translation and recipient-format work stays in the coverage matrix; no upstream
+push, hosted deployment or production qualification is implied.

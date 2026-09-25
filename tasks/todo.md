@@ -184,3 +184,29 @@ and broader product roadmap remain separate engineer-selected work.
 See [example guide](../web-prototype/docs/EXAMPLES.md),
 [viewer guide](../web-prototype/docs/VIEWER-UI.md) and
 [qualification](../web-prototype/docs/VIEWER-VALIDATION.md).
+
+## DLOG manual expansion — 2026-09-25
+
+- [x] DL-1: Manual coverage map and provider/method specifications.
+- [x] DL-2: Dashboard, grid options and record summary with bounded queries.
+- [x] DL-3: Joined scatter/3D, distribution comparisons and file/lot ranking.
+- [x] DL-4: PAT/What-If, spatial rules, PVT and measurement-system studies.
+- [x] DL-5: Wafer value/3D/gallery views, picking and display settings.
+- [x] DL-6: Edit preview, derived STDF/reimport, metadata edits and bulk remap.
+- [x] DL-7: ATDF and batch CSV/JSON/STDF conversion with verified round trips.
+- [x] DL-8: PDF/Word/Excel/image/PAT report outputs, layout and actual output receipts.
+- [x] DL-9: Independent correctness, export roundtrips, UI checks and guides.
+
+
+The implementation and independent qualification are recorded in
+[manual coverage](../docs/dlog-coverage.md), [engineering tools](../web-prototype/docs/TOOLS.md)
+and [viewer qualification](../web-prototype/docs/VIEWER-VALIDATION.md).
+
+- [ ] **Interoperability dependency:** SINF, G85 and E142 require the recipient
+  tool/revision and an accepted profile/sample. The manual does not define them;
+  a clarification is pending. Existing generic exports are not mislabeled.
+- [ ] Finish localization of diagnostic messages and method explanations.
+  Navigation and the documented engineering controls have explicit translations;
+  source content and STDF field names stay unchanged.
+- [ ] Qualify new studies/authoring/report performance on large vendor files;
+  prior parser/cache benchmarks do not qualify these new operations.

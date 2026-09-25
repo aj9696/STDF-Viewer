@@ -13,7 +13,20 @@
     "test:viewer:ui": "node scripts/viewer-ui-check.mjs",
     "test:viewer:e2e": "node scripts/viewer-e2e-check.mjs",
     "test:viewer:transfer": "node scripts/viewer-transfer-check.mjs",
-    "test:viewer:population": "node scripts/viewer-population-check.mjs"
+    "test:viewer:population": "node scripts/viewer-population-check.mjs",
+    "test:studies": "node scripts/viewer-studies-check.mjs",
+    "test:tools": "node scripts/viewer-tools-ui-check.mjs",
+    "test:wafer-studies": "node scripts/wafer-studies-check.mjs",
+    "test:authoring": "node scripts/authoring-check.mjs",
+    "test:documents": "node scripts/viewer-documents-check.mjs",
+    "test:reclassification": "node scripts/reclassification-check.mjs",
+    "test:authoring:ui": "node scripts/authoring-ui-check.mjs",
+    "test:pat-lots": "node scripts/viewer-pat-recipes-check.mjs",
+    "test:preferences": "node scripts/viewer-preferences-check.mjs",
+    "test:preferences:ui": "node scripts/viewer-preferences-browser-check.mjs",
+    "test:localization": "node scripts/viewer-localization-check.mjs",
+    "test:study-charts": "node scripts/viewer-study-charts-check.mjs",
+    "test:wafer-studies:browser": "node scripts/wafer-studies-browser-check.mjs"
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.53.4-build1",

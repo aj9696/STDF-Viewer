@@ -7,6 +7,10 @@ are read-only; no test-data upload or backend data service is involved. This
 remains an engineering evaluation build, separate from the existing native
 SemiData application. The Data viewer adds the working investigation workflows
 of the upstream desktop viewer through disposable local analysis indexes.
+The engineering Tools menu adds distributions/correlations, PAT and per-lot
+recipes, spatial screening, PVT, Gauge R&R, 3D wafer studies, typed source
+revisions and document reports. See the [tools guide](docs/TOOLS.md) and
+[manual coverage](../docs/dlog-coverage.md) for exact scope and remaining gaps.
 
 | Page | Purpose | What it retains |
 | --- | --- | --- |

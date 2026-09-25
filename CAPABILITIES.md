@@ -1,5 +1,27 @@
 # SemiData Workbench capability map
 
+## DLOG manual expansion — authorized 2026-09-25
+
+Reference: user-supplied `DLOG_Manual_EN (1).pdf`, 58 physical pages, version 1.0.
+The engineer requests its functional feature set in the local browser product,
+retaining the simplified UI. No DLOG branding, artwork or license activation is
+part of this open-source implementation. Detailed checklist: `docs/dlog-coverage.md`.
+
+| Module id | Responsibility | Depends on |
+| --- | --- | --- |
+| browser-investigation | Dashboard, grid options, record summaries, settings | browser-viewer query/cache |
+| browser-studies | Joined scatter, distributions/comparison, PAT/What-If, PVT and Gauge R&R | browser-viewer query/cache |
+| browser-wafer-studies | Value/pass/fail/3D wafer maps, gallery, GDBN/CD preview | browser-studies population contract |
+| browser-authoring | Explicit edit plans, metadata/bin edits, derived STDF, ATDF and conversions | retained immutable source, browser-studies decisions |
+| browser-report-formats | Single/lot/PAT PDF, Word, Excel, image outputs and receipts | browser-studies, existing report writer |
+
+Build order: investigation and studies → wafer studies/authoring → report
+integration. Providers and independent numerical fixtures precede UI claims.
+Preserve existing schemas, source bytes and previous workspace packages. Record
+format compatibility gaps explicitly when target standards/dialects are absent.
+
+## Native evaluation workbench
+
 Status: engineering evaluation release, 0.1.1. Working product name: SemiData.
 
 The product is an open-source semiconductor test-data workbench. PAT,
@@ -21,9 +43,10 @@ User authorization: requested a runnable product and professional documentation
 on 2026-09-23. Implementation choices remain reviewable in this repository;
 the user evaluates working increments as a test engineer.
 
-Full product direction includes MPR/FTR analysis, device genealogy, qualified
-PAT/DPAT recipes, wafer analysis, historical monitoring, automation, and improved
-UI. These remain separate future increments, not implied delivered features.
+Future product work includes device genealogy, qualified PAT/DPAT recipes,
+historical monitoring and automation. The browser now implements MPR/FTR
+investigation, wafer studies and reproducible screening previews; these do not
+establish production disposition qualification.
 
 The native evaluation workbench above remains runnable and unchanged. A separate
 browser-only library retains STDF in local SQLite, coordinates file/folder
@@ -81,4 +104,6 @@ and portable workspace save/restore. See the [engineer guide](web-prototype/docs
 [qualification](web-prototype/docs/VIEWER-VALIDATION.md). Desktop presentation
 and format differences are explicit in the parity tracker. Cold viewer indexing
 of the 10M PTR workload took 9m43s after import and remains an optimization target.
-Browser PAT, history, SPC, correlation and production automation are future work.
+The DLOG expansion above adds browser PAT, correlation, wafer studies, authoring
+and document reports. Cross-session history, SPC and production automation remain
+separate work.

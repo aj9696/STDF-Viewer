@@ -1,0 +1,716 @@
+{
+  "format": "semidata-dlog-workflows-qualification",
+  "version": 1,
+  "recordedDate": "2026-09-25",
+  "scope": "Bounded synthetic fixtures, independent binary readers and Chrome/Edge browser workflows. Not a large vendor-file performance qualification.",
+  "sourcePolicy": "All browser harnesses use disposable profiles and temporary loopback origins. Original retained source hashes are verified; derived edits produce separate files.",
+  "reference": "User-supplied DLOG User Manual v1.0, 58 PDF pages; original manual remains outside the repository.",
+  "pureChecks": [
+    {
+      "script": "reclassification-check.mjs",
+      "status": "passed",
+      "scope": "Independent screening precedence, explicit test aliases and coordinate aggregates"
+    },
+    {
+      "script": "viewer-preferences-check.mjs",
+      "checks": 8,
+      "status": "passed"
+    },
+    {
+      "script": "wafer-studies-check.mjs",
+      "checks": 15,
+      "status": "passed"
+    },
+    {
+      "script": "authoring-model-check.mjs",
+      "checks": 44,
+      "atdfRoundtripRecords": 26,
+      "status": "passed"
+    }
+  ],
+  "runs": [
+    {
+      "suite": "viewer-studies",
+      "channel": "chrome",
+      "artifact": "viewer-studies-chrome-1790358468140/results.json",
+      "status": "passed",
+      "browser": "153.0.8010.48",
+      "checks": [
+        "little numeric final-execution sorting, invalid-last in both directions, no temporary sort",
+        "little: exact attempt joins, sparse axes, repeated/final invalid, 2D/3D covariance, deterministic bounded sampling, group isolation, exact quartiles/CDF/Cp, What-If unknown preservation, explicit PVT, cancellation",
+        "big numeric final-execution sorting, invalid-last in both directions, no temporary sort",
+        "big: exact attempt joins, sparse axes, repeated/final invalid, 2D/3D covariance, deterministic bounded sampling, group isolation, exact quartiles/CDF/Cp, What-If unknown preservation, explicit PVT, cancellation",
+        "PAT: independent sigma/MAD oracle, known-pass-only population, invalid-final exclusion, boundary equality, preview cap and indexed no-temporary-sort MAD",
+        "Gauge: independent balanced 3×2×3 ANOVA oracle, variance clamping, study/tolerance percentages, duplicate/unbalanced/constant designs"
+      ]
+    },
+    {
+      "suite": "viewer-studies",
+      "channel": "msedge",
+      "artifact": "viewer-studies-msedge-1790358088411/results.json",
+      "status": "passed",
+      "browser": "153.0.4234.48",
+      "checks": [
+        "little numeric final-execution sorting, invalid-last in both directions, no temporary sort",
+        "little: exact attempt joins, sparse axes, repeated/final invalid, 2D/3D covariance, deterministic bounded sampling, group isolation, exact quartiles/CDF/Cp, What-If unknown preservation, explicit PVT, cancellation",
+        "big numeric final-execution sorting, invalid-last in both directions, no temporary sort",
+        "big: exact attempt joins, sparse axes, repeated/final invalid, 2D/3D covariance, deterministic bounded sampling, group isolation, exact quartiles/CDF/Cp, What-If unknown preservation, explicit PVT, cancellation",
+        "PAT: independent sigma/MAD oracle, known-pass-only population, invalid-final exclusion, boundary equality, preview cap and indexed no-temporary-sort MAD",
+        "Gauge: independent balanced 3×2×3 ANOVA oracle, variance clamping, study/tolerance percentages, duplicate/unbalanced/constant designs"
+      ]
+    },
+    {
+      "suite": "viewer-pat-recipes",
+      "channel": "chrome",
+      "artifact": "viewer-pat-recipes-chrome-1790358088212/results.json",
+      "status": "passed",
+      "browser": "153.0.8010.48",
+      "checks": [
+        "Independent lot MAD references, exact counts, per-lot bins, final-invalid exclusion, head/site scope, cross-lot current retirement and global decision cap",
+        "Original comparison identity/source order, independent repeated-group fits, inclusive manual bound and test-bin override, cancellation",
+        "Explicit membership validation and recipe round trip bound to source hashes, group order and filters",
+        "Standalone and combined PAT reference guard prevents duplicated groups making 15 observations appear to satisfy 30-device minimum",
+        "Combined UI sends independent spatial knobs, six-way precedence and per-test PAT overrides",
+        "PAT by lot UI explicit memberships, real worker preview, professional result labels and saved/loaded recipe controls"
+      ]
+    },
+    {
+      "suite": "viewer-pat-recipes",
+      "channel": "msedge",
+      "artifact": "viewer-pat-recipes-msedge-1790358014268/results.json",
+      "status": "passed",
+      "browser": "153.0.4234.48",
+      "checks": [
+        "Independent lot MAD references, exact counts, per-lot bins, final-invalid exclusion, head/site scope, cross-lot current retirement and global decision cap",
+        "Original comparison identity/source order, independent repeated-group fits, inclusive manual bound and test-bin override, cancellation",
+        "Explicit membership validation and recipe round trip bound to source hashes, group order and filters",
+        "Standalone and combined PAT reference guard prevents duplicated groups making 15 observations appear to satisfy 30-device minimum",
+        "Combined UI sends independent spatial knobs, six-way precedence and per-test PAT overrides",
+        "PAT by lot UI explicit memberships, real worker preview, professional result labels and saved/loaded recipe controls"
+      ]
+    },
+    {
+      "suite": "wafer-studies",
+      "channel": "chrome",
+      "artifact": "wafer-studies-chrome-1790358275575/results.json",
+      "status": "passed",
+      "checks": [
+        "wafer-little.stdf: finite final values, missing/invalid, source orientation, bounds and inclusive limits",
+        "wafer-little.stdf: paged wafer gallery and yield order",
+        "wafer-little.stdf: GDBN/CD do not cross WIR or head",
+        "wafer-little.stdf: scoped dashboard, timing, top fails, cumulative known-outcome yield, invalid-run trend metadata and complete record counts",
+        "wafer-big.stdf: finite final values, missing/invalid, source orientation, bounds and inclusive limits",
+        "wafer-big.stdf: paged wafer gallery and yield order",
+        "wafer-big.stdf: GDBN/CD do not cross WIR or head",
+        "wafer-big.stdf: scoped dashboard, timing, top fails, cumulative known-outcome yield, invalid-run trend metadata and complete record counts",
+        "Two sources with same lot and XY retain independent source neighborhoods and aggregate counts",
+        "Overlapping comparison groups count independently while original record inventory deduplicates",
+        "Aggregation checks geometry only for filtered contributors, excludes invalid values, retains exact means/recipe/hash provenance, and rejects included mismatches"
+      ]
+    },
+    {
+      "suite": "wafer-studies",
+      "channel": "msedge",
+      "artifact": "wafer-studies-msedge-1790358275578/results.json",
+      "status": "passed",
+      "checks": [
+        "wafer-little.stdf: finite final values, missing/invalid, source orientation, bounds and inclusive limits",
+        "wafer-little.stdf: paged wafer gallery and yield order",
+        "wafer-little.stdf: GDBN/CD do not cross WIR or head",
+        "wafer-little.stdf: scoped dashboard, timing, top fails, cumulative known-outcome yield, invalid-run trend metadata and complete record counts",
+        "wafer-big.stdf: finite final values, missing/invalid, source orientation, bounds and inclusive limits",
+        "wafer-big.stdf: paged wafer gallery and yield order",
+        "wafer-big.stdf: GDBN/CD do not cross WIR or head",
+        "wafer-big.stdf: scoped dashboard, timing, top fails, cumulative known-outcome yield, invalid-run trend metadata and complete record counts",
+        "Two sources with same lot and XY retain independent source neighborhoods and aggregate counts",
+        "Overlapping comparison groups count independently while original record inventory deduplicates",
+        "Aggregation checks geometry only for filtered contributors, excludes invalid values, retains exact means/recipe/hash provenance, and rejects included mismatches"
+      ]
+    },
+    {
+      "suite": "viewer-preferences",
+      "channel": "chrome",
+      "artifact": "viewer-preferences-chrome-1790358867535/results.json",
+      "status": "passed",
+      "checks": [
+        "Table toggles, full-population rows, invalid-value exclusion and source text safety",
+        "Language and nested table preferences persist without changing source strings",
+        "Navigation language changes are reversible",
+        "Palette staging/persistence and reset clear every color override while preserving non-color preferences; exclusion preview retains caller scope",
+        "Record length header, exact hex/decoded clipboard content and visible denied-permission recovery"
+      ]
+    },
+    {
+      "suite": "viewer-preferences",
+      "channel": "msedge",
+      "artifact": "viewer-preferences-msedge-1790357694623/results.json",
+      "status": "passed",
+      "checks": [
+        "Table toggles, full-population rows, invalid-value exclusion and source text safety",
+        "Language and nested table preferences persist without changing source strings",
+        "Navigation language changes are reversible",
+        "Palette staging/persistence and reset clear every color override while preserving non-color preferences; exclusion preview retains caller scope",
+        "Record length header, exact hex/decoded clipboard content and visible denied-permission recovery"
+      ]
+    },
+    {
+      "suite": "viewer-charts",
+      "channel": "chrome",
+      "artifact": "viewer-charts-chrome-1790357313011/results.json",
+      "status": "passed",
+      "checks": [
+        "trend semantics, hidden-series scope, reversed-range validation, pointer range, safe labels, PNG",
+        "Keyboard zoom/pan and pointer rectangle/pan preserve query scope and reset full extent",
+        "replacement/disposal, no-data rendering, 360px layout",
+        "histogram half-open/final-closed boundaries, interval snapping, overlay, hover and pointer picks",
+        "bin zero, exact group identity and hidden-series keyboard pick guard",
+        "wafer original-coordinate picking, reversed axes, die aspect ratio, all-passing stack, hide/reset",
+        "float32 extreme and nonfinite rendering",
+        "50,000-coordinate canvas and bounded legend DOM: 36.0 ms initial render",
+        "Histogram Auto/Full includes hidden spec extents; viewport range validates without changing query selection",
+        "Trend separates known gaps, toggles retained fail markers, shades sigma band, and exposes Y range with reduction disclosure"
+      ]
+    },
+    {
+      "suite": "viewer-charts",
+      "channel": "msedge",
+      "artifact": "viewer-charts-msedge-1790357313016/results.json",
+      "status": "passed",
+      "checks": [
+        "trend semantics, hidden-series scope, reversed-range validation, pointer range, safe labels, PNG",
+        "Keyboard zoom/pan and pointer rectangle/pan preserve query scope and reset full extent",
+        "replacement/disposal, no-data rendering, 360px layout",
+        "histogram half-open/final-closed boundaries, interval snapping, overlay, hover and pointer picks",
+        "bin zero, exact group identity and hidden-series keyboard pick guard",
+        "wafer original-coordinate picking, reversed axes, die aspect ratio, all-passing stack, hide/reset",
+        "float32 extreme and nonfinite rendering",
+        "50,000-coordinate canvas and bounded legend DOM: 35.3 ms initial render",
+        "Histogram Auto/Full includes hidden spec extents; viewport range validates without changing query selection",
+        "Trend separates known gaps, toggles retained fail markers, shades sigma band, and exposes Y range with reduction disclosure"
+      ]
+    },
+    {
+      "suite": "viewer-study-charts",
+      "channel": "chrome",
+      "artifact": "viewer-study-charts-chrome-1790357783010/results.json",
+      "status": "passed",
+      "checks": [
+        "Data/full spec extents, stable-limit lines, full-population regression overlay, range validation and safe full axis labels",
+        "Population All/None/individual visibility, opacity, regression toggle and preserved original-device picks",
+        "Box whiskers determine extent; hover exposes quartiles/outliers; Full is absent without supplied stable limits",
+        "Wafer direction and physical aspect survive plot controls; narrow viewport remains bounded",
+        "Solid die faces preserve original identity through rotation; range strip uses exact mean/median/limits and omits empty populations",
+        "Categorical bar widths follow nearest population spacing, capped at 80 pixels"
+      ]
+    },
+    {
+      "suite": "viewer-study-charts",
+      "channel": "msedge",
+      "artifact": "viewer-study-charts-msedge-1790357906244/results.json",
+      "status": "passed",
+      "checks": [
+        "Data/full spec extents, stable-limit lines, full-population regression overlay, range validation and safe full axis labels",
+        "Population All/None/individual visibility, opacity, regression toggle and preserved original-device picks",
+        "Box whiskers determine extent; hover exposes quartiles/outliers; Full is absent without supplied stable limits",
+        "Wafer direction and physical aspect survive plot controls; narrow viewport remains bounded",
+        "Solid die faces preserve original identity through rotation; range strip uses exact mean/median/limits and omits empty populations",
+        "Categorical bar widths follow nearest population spacing, capped at 80 pixels"
+      ]
+    },
+    {
+      "suite": "viewer-tools-ui",
+      "channel": "chrome",
+      "artifact": "viewer-tools-ui-chrome-1790358867535/results.json",
+      "status": "passed",
+      "checks": [
+        "Whole-population numeric matrix ordering uses final eligible values",
+        "Dashboard and file/lot comparison route through production worker",
+        "Summary chart picks do not issue device-detail queries",
+        "Explicit equivalent-test mapping keeps comparison group labels and provenance",
+        "Mapped histogram populations have separate correctly binned charts",
+        "CDF, boxplots and 2D/3D correlation render with real numerical results",
+        "PAT and What-If preview, source-safe screening export and download receipt",
+        "PVT requires explicit corner labels and plots means by voltage/temperature",
+        "Bin remap preview, revert and decoded metadata field editing",
+        "Record inventory drills down to the selected original record type",
+        "2D/3D wafer values, gallery and independent GDBN/cluster previews",
+        "Combined rule precedence retains independent screening reasons and shows projected wafer changes",
+        "Full-catalog exclusion scan applies literal-name rules while preserving selected source data",
+        "Tools survive reload and compact forms fit a narrow viewport"
+      ]
+    },
+    {
+      "suite": "viewer-tools-ui",
+      "channel": "msedge",
+      "artifact": "viewer-tools-ui-msedge-1790358346405/results.json",
+      "status": "passed",
+      "checks": [
+        "Whole-population numeric matrix ordering uses final eligible values",
+        "Dashboard and file/lot comparison route through production worker",
+        "Summary chart picks do not issue device-detail queries",
+        "Explicit equivalent-test mapping keeps comparison group labels and provenance",
+        "Mapped histogram populations have separate correctly binned charts",
+        "CDF, boxplots and 2D/3D correlation render with real numerical results",
+        "PAT and What-If preview, source-safe screening export and download receipt",
+        "PVT requires explicit corner labels and plots means by voltage/temperature",
+        "Bin remap preview, revert and decoded metadata field editing",
+        "Record inventory drills down to the selected original record type",
+        "2D/3D wafer values, gallery and independent GDBN/cluster previews",
+        "Combined rule precedence retains independent screening reasons and shows projected wafer changes",
+        "Full-catalog exclusion scan applies literal-name rules while preserving selected source data",
+        "Tools survive reload and compact forms fit a narrow viewport"
+      ]
+    },
+    {
+      "suite": "viewer-localization",
+      "channel": "chrome",
+      "artifact": "viewer-localization-chrome-1790359022374/results.json",
+      "status": "passed",
+      "checks": [
+        "English defaults and Korean settings/Tools/PAT controls persist through a real viewer reload",
+        "Source filenames, typed record field identifiers, source metadata and freeform edit values are never text-matched for translation",
+        "PAT lot names stay literal while composed form labels and combined screening controls translate",
+        "Chinese report controls/sections/layout translate, preserve source lot and freeform title, and persist across reload",
+        "Reversible language changes leave source SHA256, source strings and retained metadata unchanged; hostile source markup remains text"
+      ]
+    },
+    {
+      "suite": "viewer-localization",
+      "channel": "msedge",
+      "artifact": "viewer-localization-msedge-1790359092312/results.json",
+      "status": "passed",
+      "checks": [
+        "English defaults and Korean settings/Tools/PAT controls persist through a real viewer reload",
+        "Source filenames, typed record field identifiers, source metadata and freeform edit values are never text-matched for translation",
+        "PAT lot names stay literal while composed form labels and combined screening controls translate",
+        "Chinese report controls/sections/layout translate, preserve source lot and freeform title, and persist across reload",
+        "Reversible language changes leave source SHA256, source strings and retained metadata unchanged; hostile source markup remains text"
+      ]
+    },
+    {
+      "suite": "authoring",
+      "channel": "chrome",
+      "artifact": "authoring-chrome-1790358129196/results.json",
+      "status": "passed",
+      "browser": "153.0.8010.48",
+      "rejectionCases": 46,
+      "rejections": [
+        "shared test defaults",
+        "duplicate removed attempt",
+        "absent removed attempt",
+        "edit removed attempt",
+        "coordinate overflow",
+        "structural",
+        "ordinal",
+        "retest flags",
+        "wrong source hash",
+        "cancelled",
+        "station overflow",
+        "fractional timestamp",
+        "date order",
+        "SDR ownership",
+        "unknown group rename",
+        "duplicate bin identity",
+        "computed bin count",
+        "computed test count",
+        "ambiguous summary scope",
+        "bad test family",
+        "duplicate test summary",
+        "removed edited summary",
+        "unrelated original ATDF token",
+        "malformed ATDF"
+      ]
+    },
+    {
+      "suite": "authoring",
+      "channel": "msedge",
+      "artifact": "authoring-msedge-1790358036743/results.json",
+      "status": "passed",
+      "browser": "153.0.4234.48",
+      "rejectionCases": 46,
+      "rejections": [
+        "shared test defaults",
+        "duplicate removed attempt",
+        "absent removed attempt",
+        "edit removed attempt",
+        "coordinate overflow",
+        "structural",
+        "ordinal",
+        "retest flags",
+        "wrong source hash",
+        "cancelled",
+        "station overflow",
+        "fractional timestamp",
+        "date order",
+        "SDR ownership",
+        "unknown group rename",
+        "duplicate bin identity",
+        "computed bin count",
+        "computed test count",
+        "ambiguous summary scope",
+        "bad test family",
+        "duplicate test summary",
+        "removed edited summary",
+        "unrelated original ATDF token",
+        "malformed ATDF"
+      ]
+    },
+    {
+      "suite": "authoring-ui",
+      "channel": "chrome",
+      "artifact": "authoring-ui-chrome-1790359092332/results.json",
+      "status": "passed",
+      "checks": [
+        "Empty-library malformed and cancelled ATDF imports publish no data or partial archives",
+        "ATDF imports from an empty Library, exact original/receipt downloads, duplicate canonical dataset reuse",
+        "Typed UTC/station and numeric coordinate edits preview and export real derived values",
+        "Attempt removal preview, undo, revert and derived output preserve the original",
+        "Batch sources support All/None and six completed conversion members from two files",
+        "Original ATDF recovery finds persisted receipts and downloads byte-identical input"
+      ],
+      "independent": {
+        "passed": true,
+        "checks": 6
+      }
+    },
+    {
+      "suite": "authoring-ui",
+      "channel": "msedge",
+      "artifact": "authoring-ui-msedge-1790358129152/results.json",
+      "status": "passed",
+      "checks": [
+        "Empty-library malformed and cancelled ATDF imports publish no data or partial archives",
+        "ATDF imports from an empty Library, exact original/receipt downloads, duplicate canonical dataset reuse",
+        "Typed UTC/station and numeric coordinate edits preview and export real derived values",
+        "Attempt removal preview, undo, revert and derived output preserve the original",
+        "Batch sources support All/None and six completed conversion members from two files",
+        "Original ATDF recovery finds persisted receipts and downloads byte-identical input"
+      ],
+      "independent": {
+        "passed": true,
+        "checks": 6
+      }
+    },
+    {
+      "suite": "viewer-documents",
+      "channel": "chrome",
+      "artifact": "viewer-documents-chrome-1790358916881/results.json",
+      "status": "passed",
+      "browser": "153.0.8010.48",
+      "checks": [
+        "PDF/DOCX/PNG/JPEG real binary generation, multipage image ZIPs, Unicode source/measurement labels, bounded tables and cancellation rollback",
+        "Explicit landscape page dimensions, image resolution, layout receipt and oversized canvas rejection",
+        "Production statistics/wafer/bin/PAT/timing/retest/PCR/datalog/device-yield/full-catalogue-Cpk report model, UI single-source plus lot batch and receipts; editable Word report",
+        "Three-source/two-lot batch membership, lot names, source hashes, counts and five complete report receipts",
+        "Excel summary workbook native literals, chart images, provenance and all five source/lot scopes"
+      ],
+      "independentContainers": [
+        {
+          "file": "semidata-report-pdf.pdf",
+          "pages": 3,
+          "receipt": true
+        },
+        {
+          "file": "production-report.pdf",
+          "pages": 2,
+          "receipt": true
+        },
+        {
+          "file": "production-all-sections.pdf",
+          "pages": 6,
+          "receipt": true
+        },
+        {
+          "file": "semidata-report-docx.docx",
+          "tables": 2,
+          "images": 1,
+          "receipt": true
+        },
+        {
+          "file": "production-report.docx",
+          "tables": 11,
+          "images": 10,
+          "receipt": true
+        },
+        {
+          "file": "semidata-report-png.zip",
+          "images": 3
+        },
+        {
+          "file": "semidata-report-jpg.zip",
+          "images": 3
+        },
+        {
+          "layout": "297 × 210 mm",
+          "PDF/DOCX geometry": true,
+          "image": [
+            1600,
+            1131
+          ]
+        },
+        {
+          "file": "semidata-summary-xlsx.xlsx",
+          "sheets": 6,
+          "sourceCount": 1,
+          "literalCells": true
+        },
+        {
+          "file": "production-report.xlsx",
+          "sheets": 24,
+          "sourceCount": 1,
+          "literalCells": true
+        },
+        {
+          "file": "batch-lot-report.xlsx",
+          "sheets": 5,
+          "sourceCount": 2,
+          "literalCells": true
+        }
+      ]
+    },
+    {
+      "suite": "viewer-documents",
+      "channel": "msedge",
+      "artifact": "viewer-documents-msedge-1790358916881/results.json",
+      "status": "passed",
+      "browser": "153.0.4234.48",
+      "checks": [
+        "PDF/DOCX/PNG/JPEG real binary generation, multipage image ZIPs, Unicode source/measurement labels, bounded tables and cancellation rollback",
+        "Explicit landscape page dimensions, image resolution, layout receipt and oversized canvas rejection",
+        "Production statistics/wafer/bin/PAT/timing/retest/PCR/datalog/device-yield/full-catalogue-Cpk report model, UI single-source plus lot batch and receipts; editable Word report",
+        "Three-source/two-lot batch membership, lot names, source hashes, counts and five complete report receipts",
+        "Excel summary workbook native literals, chart images, provenance and all five source/lot scopes"
+      ],
+      "independentContainers": [
+        {
+          "file": "semidata-report-pdf.pdf",
+          "pages": 3,
+          "receipt": true
+        },
+        {
+          "file": "production-report.pdf",
+          "pages": 2,
+          "receipt": true
+        },
+        {
+          "file": "production-all-sections.pdf",
+          "pages": 6,
+          "receipt": true
+        },
+        {
+          "file": "semidata-report-docx.docx",
+          "tables": 2,
+          "images": 1,
+          "receipt": true
+        },
+        {
+          "file": "production-report.docx",
+          "tables": 11,
+          "images": 10,
+          "receipt": true
+        },
+        {
+          "file": "semidata-report-png.zip",
+          "images": 3
+        },
+        {
+          "file": "semidata-report-jpg.zip",
+          "images": 3
+        },
+        {
+          "layout": "297 × 210 mm",
+          "PDF/DOCX geometry": true,
+          "image": [
+            1600,
+            1131
+          ]
+        },
+        {
+          "file": "semidata-summary-xlsx.xlsx",
+          "sheets": 6,
+          "sourceCount": 1,
+          "literalCells": true
+        },
+        {
+          "file": "production-report.xlsx",
+          "sheets": 24,
+          "sourceCount": 1,
+          "literalCells": true
+        },
+        {
+          "file": "batch-lot-report.xlsx",
+          "sheets": 5,
+          "sourceCount": 2,
+          "literalCells": true
+        }
+      ]
+    },
+    {
+      "suite": "viewer-e2e",
+      "channel": "chrome",
+      "artifact": "viewer-e2e-chrome-1790358865286/results.json",
+      "status": "passed",
+      "checks": [
+        "Production boot, local cache and five-identity PTR/MPR/FTR catalog from a real retained STDF",
+        "Files & groups UI preserves ordered sources; current retest follows last file; independent comparison and head/site/all-attempt filters render six scoped attempts",
+        "Actual PTR/MPR-channel/FTR checkbox selections drive full-population statistics and matrix; test-health scan and histogram settings operate against real data",
+        "Trend, histogram, bin and wafer UI picks retain comparison-group/source/head/site/attempt scope; nested device-to-original-MPR drilldown, seven-observation CSV/XLSX exports and Escape focus work",
+        "All eight production tabs render; indexed datalog and complete original records expose exact source-byte detail",
+        "Export dialog generates and downloads complete Excel report with real chart PNGs; workspace download restores settings, selected tests, tab and ordered groups in an existing library",
+        "All tabs and populated group/device dialogs fit 360 px; wide tables scroll inside their own regions",
+        "Generated-file dialog survives reload, downloads byte-identical retained workspace and explicitly removes all four temporary exports; both original source datasets still pass checksum/integrity verification",
+        "Open workspace is usable in an empty library; restore rebuilds caches, remaps source IDs by verified hashes and retains ordered groups/tests/settings through reload"
+      ]
+    },
+    {
+      "suite": "viewer-e2e",
+      "channel": "msedge",
+      "artifact": "viewer-e2e-msedge-1790357957186/results.json",
+      "status": "passed",
+      "checks": [
+        "Production boot, local cache and five-identity PTR/MPR/FTR catalog from a real retained STDF",
+        "Files & groups UI preserves ordered sources; current retest follows last file; independent comparison and head/site/all-attempt filters render six scoped attempts",
+        "Actual PTR/MPR-channel/FTR checkbox selections drive full-population statistics and matrix; test-health scan and histogram settings operate against real data",
+        "Trend, histogram, bin and wafer UI picks retain comparison-group/source/head/site/attempt scope; nested device-to-original-MPR drilldown, seven-observation CSV/XLSX exports and Escape focus work",
+        "All eight production tabs render; indexed datalog and complete original records expose exact source-byte detail",
+        "Export dialog generates and downloads complete Excel report with real chart PNGs; workspace download restores settings, selected tests, tab and ordered groups in an existing library",
+        "All tabs and populated group/device dialogs fit 360 px; wide tables scroll inside their own regions",
+        "Generated-file dialog survives reload, downloads byte-identical retained workspace and explicitly removes all four temporary exports; both original source datasets still pass checksum/integrity verification",
+        "Open workspace is usable in an empty library; restore rebuilds caches, remaps source IDs by verified hashes and retains ordered groups/tests/settings through reload"
+      ]
+    },
+    {
+      "suite": "viewer-population",
+      "channel": "chrome",
+      "artifact": "viewer-population-chrome-1790356526350/results.json",
+      "status": "passed",
+      "checks": [
+        "little: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "little: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "little: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "big: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "big: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "big: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "actual wafer provider SQL has no temporary sort in pinned browser SQLite",
+        "same dataset in two groups preserves independent current/all attempts, group-aware device and wafer drilldown",
+        "report iterator equals full interactive device rows/matrices for current/all, duplicate sources across groups and head/site scope",
+        "report iterator crosses 4096 rows with 5003 devices and repeated/sparse tests; 100-row keyset batches, linear SQLite steps and no count/offset/sort",
+        "cancelled partial cache remains unpublished and retry rebuilds complete 20,000-observation cache",
+        "existing immutable retained-v1 package restores, verifies and builds viewer cache under v2 writer",
+        "retained-v2 default-only source exports/restores unchanged in fresh profile and rebuilds viewer cache"
+      ]
+    },
+    {
+      "suite": "viewer-population",
+      "channel": "msedge",
+      "artifact": "viewer-population-msedge-1790358468137/results.json",
+      "status": "passed",
+      "checks": [
+        "little: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "little: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "little: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "big: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "big: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "big: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "actual wafer provider SQL has no temporary sort in pinned browser SQLite",
+        "same dataset in two groups preserves independent current/all attempts, group-aware device and wafer drilldown",
+        "report iterator equals full interactive device rows/matrices for current/all, duplicate sources across groups and head/site scope",
+        "report iterator crosses 4096 rows with 5003 devices and repeated/sparse tests; 100-row keyset batches, linear SQLite steps and no count/offset/sort",
+        "cancelled partial cache remains unpublished and retry rebuilds complete 20,000-observation cache",
+        "existing immutable retained-v1 package restores, verifies and builds viewer cache under v2 writer",
+        "retained-v2 default-only source exports/restores unchanged in fresh profile and rebuilds viewer cache"
+      ]
+    },
+    {
+      "suite": "viewer",
+      "channel": "chrome",
+      "artifact": "viewer-chrome-1790356497081/results.json",
+      "status": "passed",
+      "checks": [
+        "little: retained import, disposable cache reuse, PTR/MPR/FTR, repeated executions, retest, bins, wafer, datalog and original verification",
+        "big: retained import, disposable cache reuse, PTR/MPR/FTR, repeated executions, retest, bins, wafer, datalog and original verification",
+        "ordered group cross-file supersede versus independent comparison and shared histogram edges",
+        "close/reopen retains completed derived caches"
+      ]
+    },
+    {
+      "suite": "frontend",
+      "channel": "chrome",
+      "artifact": "frontend-chrome-1790357957191/results.json",
+      "status": "passed",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: filenames open viewer directly; details restore keyboard focus to the Details action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ]
+    },
+    {
+      "suite": "viewer-ui",
+      "channel": "chrome",
+      "artifact": "viewer-ui-chrome-1790357957191/summary.json",
+      "status": "passed",
+      "checks": [
+        "Startup, safe source/test labels, catalog pagination, multi-test statistics/matrix/charts, scoped trend pick",
+        "Explicit full-catalog health scan marks filtered-population failures/low Cpk beyond selected tests",
+        "Device group identity, raw bits, exact bytes, nested dialog keyboard focus restoration",
+        "Histogram interval drilldown, bounded bin pagination/drilldown, wafer viewport and group scope",
+        "Original record browser, validated persistent settings, independent comparison groups",
+        "New controls remain inert during operations; cancellation, retry, action-safe workspace application",
+        "Cancellation during a no-worker capture gap blocks explicit checkpoints and the next query; idle checks do not retain stale cancellation",
+        "360px no horizontal page overflow across six views",
+        "Empty-library workspace restore refreshes dataset catalog and survives missing custom font",
+        "Fresh datasets open a test histogram, example routes apply explicit presets, filters summarize/reset, and reload preserves tab/series/empty selection"
+      ]
+    },
+    {
+      "suite": "viewer-ui",
+      "channel": "msedge",
+      "artifact": "viewer-ui-msedge-1790358864988/summary.json",
+      "status": "passed",
+      "checks": [
+        "Startup, safe source/test labels, catalog pagination, multi-test statistics/matrix/charts, scoped trend pick",
+        "Explicit full-catalog health scan marks filtered-population failures/low Cpk beyond selected tests",
+        "Device group identity, raw bits, exact bytes, nested dialog keyboard focus restoration",
+        "Histogram interval drilldown, bounded bin pagination/drilldown, wafer viewport and group scope",
+        "Original record browser, validated persistent settings, independent comparison groups",
+        "New controls remain inert during operations; cancellation, retry, action-safe workspace application",
+        "Cancellation during a no-worker capture gap blocks explicit checkpoints and the next query; idle checks do not retain stale cancellation",
+        "360px no horizontal page overflow across six views",
+        "Empty-library workspace restore refreshes dataset catalog and survives missing custom font",
+        "Fresh datasets open a test histogram, example routes apply explicit presets, filters summarize/reset, and reload preserves tab/series/empty selection"
+      ]
+    }
+  ],
+  "visualInspection": [
+    "Desktop and narrow viewer/tools layouts, numeric wafer relief, summary plots, hover and contributor picking",
+    "All PDF and editable Word pages for the Unicode and production fixtures; custom landscape output geometry",
+    "Actual summary XLSX opened directly in LibreOffice; six fixture sheets rendered and inspected"
+  ],
+  "reviewCorrections": [
+    "Filtered-out wafer geometry excluded from coordinate aggregate compatibility checks",
+    "Aggregate recipe, source hashes and contributing identities retained",
+    "Summary plots cannot open device details without original identity",
+    "Mapped-test histogram populations render separately when their bin edges differ",
+    "Repeated reference sources cannot inflate PAT reference population",
+    "Word table property order, image captions and short-row pagination corrected",
+    "Bounded summary XLSX uses classic ZIP for tested LibreOffice compatibility"
+  ],
+  "unqualified": [
+    "Microsoft Word/Excel desktop application compatibility has not been exercised directly",
+    "SINF/G85/E142 recipient dialects and revisions await specification and accepted samples",
+    "Diagnostics, methods, some older controls and guides remain English",
+    "New studies, authoring and reports have not been benchmarked at ten million measurements"
+  ]
+}

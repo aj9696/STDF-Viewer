@@ -3,50 +3,52 @@
 An open-source, local semiconductor test-data workbench built on
 [Noon Chen's STDF-Viewer](https://github.com/noonchen/STDF-Viewer).
 
-**Version 0.1.1 · engineering evaluation release · Windows verified**
+Import STDF into a local browser library, investigate PTR/MPR/FTR results, and
+run explicit screening experiments. Rust/WebAssembly and SQLite process the
+files on your machine. No account, test-data upload or database server is needed.
 
-Import STDF once, compare scalar measurements across lots and sites, and
-evaluate reproducible PAT experiments with saved evidence. Files stay in your
-chosen workspace; the application requires no database server or cloud account.
+## Start the browser workbench
 
-## Start
+On the prepared workstation, open [Data library](http://127.0.0.1:8766/app.html).
+If the server is stopped, run this from the repository root:
 
-On the prepared workstation, double-click **Start-SemiData.cmd**. The application
-opens at http://127.0.0.1:8765. Keep the terminal open; Ctrl+C stops the server.
-For a clean checkout, follow [Installation](docs/installation.md).
+```powershell
+.venv/Scripts/python.exe -m http.server 8766 --bind 127.0.0.1 --directory web-prototype/site
+```
 
-1. Choose **Load example data** in Data library.
-2. Open **Explore** and compare test 1001, VDD, across the three example lots.
-3. Follow the [15-minute engineer walkthrough](docs/engineer-guide.md) to evaluate
-   a MAD screen, save the experiment, and export its affected measurements.
+For a clean checkout, follow the [browser build/run guide](web-prototype/README.md).
+Use the HTTP address; opening the HTML through `file://` does not work.
 
-The walkthrough also documents a reproducible recipe at
-[STDF.io Generate](https://stdf.io/generate) for independent evaluation data.
+1. Open **Examples** for small scenarios, or import your STDF files/folder.
+2. Open a file, select tests and use the chart tabs.
+3. Choose **Tools** for comparison studies, screening, editing and reports.
 
-The newer browser-only application runs separately at
-[Data library](http://127.0.0.1:8766/app.html). It provides local STDF storage and
-[Data viewer](http://127.0.0.1:8766/viewer.html) for PTR/MPR/FTR investigation,
-multi-source comparisons, device tables, statistics, interactive trend/histogram,
-bin and wafer plots, Excel reports, and portable workspaces. Follow the
-[browser build/run guide](web-prototype/README.md),
-[viewer guide](web-prototype/docs/VIEWER-UI.md) and
-[upstream parity tracker](docs/viewer-parity.md). The native PAT experiment
-workflows below remain separate; browser PAT is not implemented yet.
-
-## Delivered capabilities
-
-| Workflow | Available in 0.1 |
+| Workflow | Browser capabilities |
 | --- | --- |
-| Data library | Durable catalog, source snapshots, duplicate detection, raw/gzip/bzip2/ZIP imports |
-| Exploration | Scalar PTR selection, site/attempt filters, distributions, source comparison, statistics |
-| PAT lab | Mean/sample-SD and median/MAD screens, separate reference populations, explicit eligibility |
-| Saved runs | Exact recipes, source hashes, bounds, affected measurements, CSV export, restart persistence |
-| Existing viewer | Original Qt application and its wafer/bin/report workflows remain available |
+| Library | Raw/compressed STDF, ATDF, folder queues, content-based duplicates, portable workspaces |
+| Investigation | Device/test matrix, exact statistics, histograms, trends, bins and original records |
+| Comparison | Ordered source groups, file/lot ranking, CDF/box plots, explicit test aliases, 2D/3D correlation |
+| Wafers | Bin/value maps, numeric coordinate means, 3D relief, gallery and device picking |
+| Studies | PAT and lot recipes, What-If, GDBN/CD, combined screening, PVT and crossed Gauge R&R |
+| Authoring | Typed changes, bin remaps, attempt removal, preview and separate derived STDF copies |
+| Outputs | CSV/JSON/STDF bundles, Excel, PDF, editable Word, chart/page images and receipts |
 
-This release is for engineering evaluation. It does not claim qualified DPAT,
-production disposition, cross-file retest consolidation, MPR/FTR analytics in
-the new UI, or enterprise-scale performance. See [Calculation reference](docs/methods.md)
-and [Architecture](docs/architecture.md) for precise boundaries and resource caps.
+This is an engineering evaluation build. The [tools guide](web-prototype/docs/TOOLS.md),
+[manual coverage matrix](docs/dlog-coverage.md) and
+[qualification record](web-prototype/docs/VIEWER-VALIDATION.md) distinguish working
+features, limits and remaining interoperability work. Original sources remain
+immutable. Browser profile/origin determines where the library persists.
+
+## Earlier applications
+
+The Python workbench (**v0.1.1**) remains available through `Start-SemiData.cmd`
+at port 8765. Its [walkthrough](docs/engineer-guide.md),
+[methods](docs/methods.md) and [architecture](docs/architecture.md) describe that
+separate application and its scalar-PTR PAT experiments. Its file-based workspace
+is separate from the browser library.
+
+Run the original Qt viewer with `.venv/Scripts/python.exe STDF-Viewer.py`.
+Its instructions are preserved in [README.upstream.md](README.upstream.md).
 
 ## Documentation
 
@@ -64,7 +66,7 @@ and [Architecture](docs/architecture.md) for precise boundaries and resource cap
 - [Contribution guide](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 - [Capability map](CAPABILITIES.md) · [Implementation checklist](tasks/todo.md)
 
-## Development checks
+## Python application checks
 
 ```powershell
 .venv/Scripts/python.exe -m unittest discover -s tests -v
@@ -74,9 +76,6 @@ node --check semidata/static/format.js
 .venv/Scripts/python.exe -m compileall -q semidata
 git diff --check
 ```
-
-Run the original viewer with `.venv/Scripts/python.exe STDF-Viewer.py`.
-Its original instructions are preserved in [README.upstream.md](README.upstream.md).
 
 ## License and attribution
 

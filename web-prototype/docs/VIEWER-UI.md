@@ -8,6 +8,10 @@ See [VIEWER-CONTRACT.md](VIEWER-CONTRACT.md) for population/query rules and
 [upstream-viewer-behavior.md](../../docs/upstream-viewer-behavior.md) for the
 source-evidenced baseline and intentional corrections.
 
+The compact **Tools** menu adds the workflows documented in [Engineering tools](TOOLS.md).
+The [DLOG coverage matrix](../../docs/dlog-coverage.md) distinguishes complete
+workflows, intentional differences and remaining compatibility gaps.
+
 ## Open a workspace
 
 Click a filename in **Library** to open the viewer. Its address is
@@ -196,9 +200,11 @@ separate full-extent chart instances.
 ## Presentation differences from the desktop baseline
 
 The browser implements the investigation workflows with a new web layout; it
-does not reproduce every desktop presentation preference. This increment is
-English-only and uses colored series with explicit group/site legends rather
-than the desktop's per-file marker-symbol controls. Histograms are vertical,
+does not reproduce every desktop presentation preference. Navigation and
+engineering controls support English, Korean and Chinese; remaining translation
+limits are listed in [Viewer preferences](VIEWER-PREFERENCES.md). Plots use
+colored series with explicit group/site legends rather than the desktop's
+per-file marker-symbol controls. Histograms are vertical,
 use common comparison edges, and show counts. The upstream configuration-only
 horizontal orientation and peak-normalized bar modes are not exposed here.
 Gaussian overlays remain explicitly peak-scaled. These differences do not

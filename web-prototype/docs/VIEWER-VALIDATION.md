@@ -275,3 +275,45 @@ admission limit. Large-scale MPR/FTR and retest-heavy populations still need
 separate qualification. A passing synthetic workload establishes its tested
 behavior, not complete upstream feature parity or a production ATE acceptance
 corpus.
+
+
+## DLOG engineering workflows — 2026-09-25
+
+The expansion is qualified as a browser engineering implementation. It does
+not change the retained source schema or overwrite source snapshots. The
+[coverage matrix](../../docs/dlog-coverage.md) records each manual workflow and
+its limits; [tools](TOOLS.md) provides the evaluation path. Machine-readable
+run references are in [dlog-features.json](../evidence/dlog-features.json).
+
+| Area | Verification |
+| --- | --- |
+| Numerical studies | Independent little/big-endian STDF fixtures; sparse/repeated/final-invalid test pairing; signed correlation; exact quartiles, Tukey whiskers and CDF ranks; PAT sigma/MAD; balanced crossed R&R oracle; PVT assignments |
+| PAT lots and combined rules | Explicit source memberships; per-test limits/bins; source-hash recipe reload; current-attempt retirement across lot boundaries; duplicate-reference rejection; independent rules and first-match precedence |
+| Wafer/dashboard | Hand-computed spatial neighborhoods and density; WIR/head isolation; recorded aspect/orientation; filtered coordinate means and contributors; dashboard outcomes, timing and full record inventory |
+| Tables and plots | Final-execution numeric ordering with invalid/missing last; query plans without temporary sort; complete/partial catalog exclusion scans; ranges, regression, CDF steps, box hover, visibility and 3D picking |
+| Source authoring | Independently parsed emitted bytes in both endiannesses; original hashes; interleaved attempt removal; PRR XY and PTR/MPR edits; linked metadata changes; rebuilt summaries; malformed/stale plan rejection |
+| ATDF and conversion | Supported record/flag mapping, UTC offset, malformed input, duplicate imports, cancellation cleanup, exact original-text recovery, CSV/JSON/STDF bundles |
+| Documents | Actual PDF/DOCX/XLSX/PNG/JPEG files read independently; source/lot memberships and receipts; page geometry; literal spreadsheet text; chart images; cancellation/batch rollback; rendered PDF/Word inspection |
+| Product regressions | Existing library, viewer, device drilldown, Excel report, generated-file inventory and workspace restore workflows; legacy retained-v1/v2 restores; desktop and narrow viewport checks |
+
+Browser checks run in fresh disposable profiles against temporary local origins,
+not the engineer's library. Chrome and Edge are both exercised. Pure model,
+independent Python artifact readers, actual worker/SQLite providers and product
+UI checks have separate roles; a provider-only pass does not establish a control
+exists. Rendered pages were inspected after LibreOffice/Poppler conversion.
+
+Independent review found and corrected:
+
+- A filtered-out wafer incorrectly participating in aggregate geometry checks.
+- Missing recipe/source provenance in numeric coordinate aggregates.
+- Summary plot clicks opening invalid device-detail requests.
+- Alias histogram series being combined despite different bin edges.
+- Repeated reference sources inflating PAT reference count.
+- Word table property ordering, detached image captions and split short rows.
+
+The earlier 1M/10M parser/cache measurements remain historical. New distributions,
+screening, authoring and document exports have bounded-fixture correctness
+qualification, not measured 10M throughput. Resource limits, unsupported R&R
+designs, ATDF record coverage and downstream format dependencies are documented
+in their feature guides. No claim is made of an undocumented proprietary
+algorithm or an untested vendor-format dialect.
