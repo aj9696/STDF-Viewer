@@ -51,12 +51,12 @@ function readableText(parts, context) {
     async cancel() { await iterator.return?.(); },
   });
 }
-function rowXml(row, number, header = false) {
+function rowXml(row, number, header = false, wrap = false) {
   if (!Array.isArray(row) || row.length > MAX_COLUMNS) fail('An Excel row must contain no more than 16,384 columns.');
   let rowBytes = 0;
   const cells = row.map((value, column) => {
     if (value == null) return '';
-    const address = columnName(column) + number, style = header ? ' s="1"' : '';
+    const address = columnName(column) + number, style = wrap ? ` s="${header ? 3 : 2}"` : header ? ' s="1"' : '';
     if (typeof value === 'number') {
       if (!Number.isFinite(value)) fail('Excel numeric cells must be finite. Format NaN and infinity as text explicitly.');
       return `<c r="${address}"${style}><v>${Object.is(value, -0) ? '-0' : value}</v></c>`;
@@ -72,11 +72,14 @@ function rowXml(row, number, header = false) {
 }
 async function* sheetXml(sheet, number, result, hasImages, context) {
   const freeze = nonnegativeInteger(sheet.freezeRows ?? (sheet.headers ? 1 : 0), MAX_ROWS - 1, 'frozen row count');
-  yield `${XML}<worksheet xmlns="${NS}" xmlns:r="${REL}"><sheetViews><sheetView workbookViewId="0">${freeze ? `<pane ySplit="${freeze}" topLeftCell="A${freeze + 1}" activePane="bottomLeft" state="frozen"/>` : ''}</sheetView></sheetViews><sheetData>`;
+  const widths = sheet.columnWidths ?? [];
+  if (!Array.isArray(widths) || widths.length > MAX_COLUMNS || widths.some(width => !Number.isFinite(width) || width <= 0 || width > 255)) fail('Excel column widths must be between zero and 255 characters.');
+  const columnsXml = widths.length ? `<cols>${widths.map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`).join('')}</cols>` : '';
+  yield `${XML}<worksheet xmlns="${NS}" xmlns:r="${REL}"><sheetViews><sheetView workbookViewId="0">${freeze ? `<pane ySplit="${freeze}" topLeftCell="A${freeze + 1}" activePane="bottomLeft" state="frozen"/>` : ''}</sheetView></sheetViews>${columnsXml}<sheetData>`;
   let count = 0, columns = 0, batch = '', batchBytes = 0;
   const append = (row, header) => {
     if (++count > MAX_ROWS) fail('An Excel sheet exceeds 1,048,576 rows, including its header. Narrow or split the report before exporting.');
-    const xml = rowXml(row, count, header); columns = Math.max(columns, row.length); return xml;
+    const xml = rowXml(row, count, header, sheet.wrapText); columns = Math.max(columns, row.length); return xml;
   };
   if (sheet.headers) yield append(sheet.headers, true);
   try {
@@ -120,7 +123,7 @@ function drawingXml(images) {
 const relationships = (items) => `${XML}<Relationships xmlns="${PACKAGE_REL}">${items.map(({ id, type, target }) => `<Relationship Id="${id}" Type="${REL}/${type}" Target="${escapeXml(target)}"/>`).join('')}</Relationships>`;
 
 /** Close writable only on success; abort it on any validation, cancellation, or I/O error. */
-export async function writeWorkbook({ writable, sheets, images = [], context = {} }) {
+export async function writeWorkbook({ writable, sheets, images = [], context = {}, zip64 = true }) {
   const hooks = { checkCancelled: () => context.checkCancelled?.(), progress: (event) => context.progress?.(event) };
   let bytes = 0;
   try {
@@ -129,10 +132,10 @@ export async function writeWorkbook({ writable, sheets, images = [], context = {
     if (!Array.isArray(sheets) || !sheets.length || sheets.length > 64 || sheets.some((sheet) => !sheet || !sheet.rows?.[Symbol.asyncIterator] && !sheet.rows?.[Symbol.iterator])) fail('Choose one to 64 worksheets with iterable rows.');
     const names = [], usedNames = new Set(), pictures = await imageMetadata(images, sheets), results = [];
     const sink = new WritableStream({ async write(chunk) { hooks.checkCancelled(); bytes += chunk.byteLength; if (bytes > 64 * 1024 ** 3) fail('Workbook exceeds the 64 GiB output limit.'); await writable.write(chunk); } });
-    const zip = new ZipWriter(sink, { level: 0, useWebWorkers: false, zip64: true, bufferedWrite: false, preventClose: true });
+    const zip = new ZipWriter(sink, { level: 0, useWebWorkers: false, zip64, bufferedWrite: false, preventClose: true });
     const addText = (path, text) => zip.add(path, new TextReader(text), { level: 0 });
     await addText('_rels/.rels', relationships([{ id: 'rId1', type: 'officeDocument', target: 'xl/workbook.xml' }]));
-    await addText('xl/styles.xml', `${XML}<styleSheet xmlns="${NS}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`);
+    await addText('xl/styles.xml', `${XML}<styleSheet xmlns="${NS}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`);
     const drawings = [];
     for (const [i, sheet] of sheets.entries()) {
       hooks.checkCancelled();
