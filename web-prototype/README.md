@@ -1,23 +1,27 @@
-# Browser STDF library and engineering labs
+# Browser STDF viewer and local library
 
 The browser foundation imports raw STDF into local SQLite databases, retains
 exact source snapshots, reopens saved records, and exports/restores portable
 packages. A Rust/WASM decoder and SQLite run in a dedicated worker. Source files
 are read-only; no test-data upload or backend data service is involved. This
 remains an engineering evaluation build, separate from the existing native
-SemiData application. Product screens now include the library home and Test
-Explorer; additional workflows and analysis are developed one feature at a time.
+SemiData application. The Data viewer adds the working investigation workflows
+of the upstream desktop viewer through disposable local analysis indexes.
 
 | Page | Purpose | What it retains |
 | --- | --- | --- |
-| [Data library](http://127.0.0.1:8766/app.html) | Import one STDF, search saved datasets and reopen their metadata | The same retained library as the engineering console |
+| [Data library](http://127.0.0.1:8766/app.html) | Import raw/compressed files or folders, search saved datasets and reopen metadata | The same retained library as the engineering console |
+| [Data viewer](http://127.0.0.1:8766/viewer.html) | Compare PTR/MPR/FTR; devices, statistics, trends, histograms, bins, wafers, records, Excel and workspaces | Rebuildable per-source analysis indexes; settings and workspace state |
 | Test Explorer, opened from a dataset overview | Search PTR tests, inspect recorded declarations and page observations | Reads the saved dataset without reparsing or changing it |
 | [Library engineering console](http://127.0.0.1:8766/foundation.html) | Evaluate imports, folders, recovery, saved rows, and portability | Source snapshots, per-source databases, catalog and job history |
 | [Summary parser lab](http://127.0.0.1:8766/) | Measure a streaming summary scan | In-memory summaries; optional JSON download |
 | [Synthetic storage proof](http://127.0.0.1:8766/storage.html) | Reproduce the original SQLite persistence experiment | One note in an independent SQLite pool |
 
-Start with the [library home guide](docs/LIBRARY-HOME.md), then choose **Explore
-tests** in a dataset overview. The [Test Explorer guide](docs/TEST-EXPLORER.md)
+Start with Data library, import data and choose **Open data viewer** in a dataset
+overview. The [viewer guide](docs/VIEWER-UI.md) covers the investigation workflow;
+[calculation rules](docs/VIEWER-METHODS.md), [qualification and performance](docs/VIEWER-VALIDATION.md),
+and [upstream parity](../docs/viewer-parity.md) define its boundaries.
+The [Test Explorer guide](docs/TEST-EXPLORER.md)
 explains recorded fields and paging. Use the [frontend handoff](docs/FRONTEND-HANDOFF.md) for the console
 workflow and feature boundaries. The [frontend API](docs/FRONTEND-CONTRACT.md)
 and [source/queue API](docs/SOURCES.md) define the integration surfaces. The
@@ -33,17 +37,18 @@ Python/Rust environment available:
 ```powershell
 npm.cmd --prefix web-prototype ci --ignore-scripts
 npm.cmd --prefix web-prototype run build:storage
+npm.cmd --prefix web-prototype run build:vendor
 ./web-prototype/build.ps1
 .venv/Scripts/python.exe -m http.server 8766 --bind 127.0.0.1 --directory web-prototype/site
 ```
 
 If port 8766 already serves this directory, keep that server running. Open
-[Data library](http://127.0.0.1:8766/app.html) for the first frontend feature.
+[Data library](http://127.0.0.1:8766/app.html).
 Use this HTTP address instead of opening `site/app.html` or `site/explore.html`
 directly from File Explorer. A `file://` launch cannot load the application's
-module graph or provide its normal storage origin. Both product pages now show
+module graph or provide its normal storage origin. All product pages show
 launch guidance for this case before creating any library worker. Select a
-dataset in Data library and choose **Explore tests**; its URL includes the saved
+dataset in Data library and choose **Open data viewer**; its URL includes the saved
 dataset ID. Chrome, Edge and Codex each have separate browser-profile libraries.
 
 For folder queues, raw row inspection, recovery and package transfer, open
@@ -52,12 +57,21 @@ choose raw files or a source folder, review the inventory, then choose **Import
 reviewed files**. Close/reopen the library or browser at the same origin/profile
 to inspect retained records without selecting the originals again.
 
-The library normalizes PTR measurements and preserves repeated observations,
+The retained library normalizes PTR measurements and preserves repeated observations,
 flags, result bits, device attempts, declarations, record order, and source byte
 offsets. MPR/FTR and other unnormalized families remain accessible through raw
-record indexes and the original bytes. Effective defaults, eligibility, retest
-consolidation, yield, PAT, and charting are outside this foundation. Check each
-dataset's `manifest.coverage` before designing any analytical feature.
+record indexes and the original bytes. The viewer separately normalizes
+PTR/MPR/FTR with effective defaults, explicit retest rules and flag eligibility.
+Its first visit builds a SQLite analysis index; later visits reuse it. Retained
+coverage and viewer coverage are deliberately distinct. PAT recipes, historical
+monitoring and production rebinning remain future browser capabilities.
+
+Save a complete selection with **Save workspace** (`.sdworkspace`) and restore
+with **Open workspace**, including into an empty library. Native desktop `.db`
+sessions are not compatible. Session packages carry original data and settings;
+derived indexes are rebuilt after restore. Use **Generated files** to recover
+or remove temporary report/session files after a reload. Confirm downloads are
+complete before removing their temporary copies. See [transfer contracts](docs/VIEWER-TRANSFER.md).
 
 The database creates test/device indexes before inserting rows and maintains
 them within bounded write transactions. This avoids a later whole-dataset index

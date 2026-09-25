@@ -1,6 +1,7 @@
 # Browser data viewer
 
-Status: implementation in progress, 2026-09-25. This specification supersedes
+Status: implemented engineering baseline, 2026-09-25; qualification and explicit
+differences are recorded in docs/viewer-parity.md. This specification supersedes
 the earlier browser restriction to logistics and raw PTR inspection. The engineer
 authorized implementing the working feature set of the original STDF-Viewer.
 
@@ -41,6 +42,11 @@ Cancellation, crashes and cache rebuild failures must leave the saved dataset
 available. Portable dataset packages remain compatible; caches can be rebuilt
 after restore. An upstream native `.db` session is a different format and must
 not be mistaken for a browser package.
+
+Current imports use retained-v2 with the same schema, admitting only documented
+unexecuted/default-only orphan PTR declarations. Readers/restorers support v1
+and v2. Duplicate identity includes parser version, so reimporting a v1 source
+under v2 can create a separate dataset instead of silently rewriting it.
 
 Raw result bits, flags, record sequence, device attempt identity and original
 records remain available. Analytical normalization must not overwrite them.

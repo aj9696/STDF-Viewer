@@ -56,6 +56,49 @@ live allocations, JavaScript heap, OPFS buffers, renderer processes or total
 browser RSS. No claim about total browser peak memory is supported by these
 tests. No quota or runtime error occurred in the recorded run.
 
+## Application and export qualification
+
+The portable [qualification summary](../evidence/browser-viewer.json) retains
+checks and measurements without requiring ignored local browser profiles.
+Final Chrome and Edge production E2E runs each pass nine workflow groups:
+all eight views, real PTR/MPR/FTR selection, ordered groups and population
+filters, chart-to-device-to-record drilldown, device CSV/Excel, eight-sheet
+reports with eleven PNGs, workspace restore into existing and empty libraries,
+and generated-file recovery/removal after reload. Both source checksums remain
+valid after export cleanup. Each run includes seven reviewed screenshots;
+360-pixel checks establish layout behavior, not mobile browser storage support.
+
+Transfer suites each pass 31 cases covering corrupt ZIP CRC and source hashes,
+bounded archive validation, cancellation, partial-restore outcomes, literal
+Excel strings/images and splitting beyond Excel's row limit. Separate focused
+lifecycle tests independently read 253-device/257-DTR workbooks, cancel CSV on
+its final page, and check cancellation between PNG captures, duplicate download
+URL invalidation and modal closure during an outstanding request. They use
+explicit test-only gates; production code has no fault-injection switches.
+
+The UI-only suites use a substitute provider to check focus, cancellation,
+notation persistence and missing-font recovery. Chart checks include zoom/pan,
+interval endpoints, exact coordinate picking and a 50,000-coordinate rendering
+fixture. Those isolated tests supplement, rather than replace, real-provider
+E2E. Retained library, recovery, raw Explorer, file/folder queue and startup
+regressions also passed. All three product pages explain `file://` launches
+and module failures rather than leaving an opening-library spinner.
+
+Final E2E artifacts are `viewer-e2e-chrome-1790338590701/results.json` and
+`viewer-e2e-msedge-1790338590904/results.json`. Focused lifecycle artifacts are
+`viewer-lifecycle-chrome-1790338304283/results.json` and
+`viewer-lifecycle-msedge-1790338337657/results.json`. The evidence summary names
+the provider, UI, compression, chart and regression runs separately.
+
+```powershell
+node web-prototype/scripts/viewer-e2e-check.mjs chrome
+node web-prototype/scripts/viewer-e2e-check.mjs msedge
+node web-prototype/scripts/viewer-lifecycle-check.mjs chrome
+node web-prototype/scripts/viewer-lifecycle-check.mjs msedge
+node web-prototype/scripts/viewer-transfer-check.mjs chrome
+node web-prototype/scripts/viewer-transfer-check.mjs msedge
+```
+
 The retained import and cold cache are separate persisted stages. Their timings
 are not interchangeable with the older streaming parser benchmark, native
 desktop importer benchmark or retained-database-only benchmark.

@@ -1,0 +1,474 @@
+{
+  "format": "semidata-browser-viewer-qualification",
+  "version": 1,
+  "recordedDate": "2026-09-25",
+  "upstreamReference": "b8deaad8eecf860676183825ac0089cf6c4b0ba3",
+  "rust": {
+    "ignoredPurpose": "Explicit browser fixture generator",
+    "passed": 29,
+    "ignored": 1
+  },
+  "runs": [
+    {
+      "artifact": "viewer-chrome-1790337252606/results.json",
+      "channel": "chrome",
+      "checks": [
+        "little: retained import, disposable cache reuse, PTR/MPR/FTR, repeated executions, retest, bins, wafer, datalog and original verification",
+        "big: retained import, disposable cache reuse, PTR/MPR/FTR, repeated executions, retest, bins, wafer, datalog and original verification",
+        "ordered group cross-file supersede versus independent comparison and shared histogram edges",
+        "close/reopen retains completed derived caches"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-msedge-1790337499997/results.json",
+      "channel": "msedge",
+      "checks": [
+        "little: retained import, disposable cache reuse, PTR/MPR/FTR, repeated executions, retest, bins, wafer, datalog and original verification",
+        "big: retained import, disposable cache reuse, PTR/MPR/FTR, repeated executions, retest, bins, wafer, datalog and original verification",
+        "ordered group cross-file supersede versus independent comparison and shared histogram edges",
+        "close/reopen retains completed derived caches"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-population-chrome-1790338329590/results.json",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "little: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "little: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "little: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "big: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "big: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "big: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "actual wafer provider SQL has no temporary sort in pinned browser SQLite",
+        "same dataset in two groups preserves independent current/all attempts, group-aware device and wafer drilldown",
+        "report iterator equals full interactive device rows/matrices for current/all, duplicate sources across groups and head/site scope",
+        "report iterator crosses 4096 rows with 5003 devices and repeated/sparse tests; 100-row keyset batches, linear SQLite steps and no count/offset/sort",
+        "cancelled partial cache remains unpublished and retry rebuilds complete 20,000-observation cache",
+        "existing immutable retained-v1 package restores, verifies and builds viewer cache under v2 writer",
+        "retained-v2 default-only source exports/restores unchanged in fresh profile and rebuilds viewer cache"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-population-msedge-1790338402770/results.json",
+      "channel": "msedge",
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "little: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "little: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "little: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "big: independent means/medians/population deviation, invalid flags/NaN, changing limits, head/site scopes, mismatched execution matrix, histogram endpoint drilldown",
+        "big: exact 23.5 interior-edge histogram count matches drilldown for range [-20,55], 50 bins, including both endpoints",
+        "big: wafer last bin/device follows PRR completion despite opposite PIR order; all ambiguous attempts retained",
+        "actual wafer provider SQL has no temporary sort in pinned browser SQLite",
+        "same dataset in two groups preserves independent current/all attempts, group-aware device and wafer drilldown",
+        "report iterator equals full interactive device rows/matrices for current/all, duplicate sources across groups and head/site scope",
+        "report iterator crosses 4096 rows with 5003 devices and repeated/sparse tests; 100-row keyset batches, linear SQLite steps and no count/offset/sort",
+        "cancelled partial cache remains unpublished and retry rebuilds complete 20,000-observation cache",
+        "existing immutable retained-v1 package restores, verifies and builds viewer cache under v2 writer",
+        "retained-v2 default-only source exports/restores unchanged in fresh profile and rebuilds viewer cache"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-e2e-chrome-1790338590701/results.json",
+      "channel": "chrome",
+      "checks": [
+        "Production boot, local cache and five-identity PTR/MPR/FTR catalog from a real retained STDF",
+        "Files & groups UI preserves ordered sources; current retest follows last file; independent comparison and head/site/all-attempt filters render six scoped attempts",
+        "Actual PTR/MPR-channel/FTR checkbox selections drive full-population statistics and matrix; test-health scan and histogram settings operate against real data",
+        "Trend, histogram, bin and wafer UI picks retain comparison-group/source/head/site/attempt scope; nested device-to-original-MPR drilldown, seven-observation CSV/XLSX exports and Escape focus work",
+        "All eight production tabs render; indexed datalog and complete original records expose exact source-byte detail",
+        "Export dialog generates and downloads complete Excel report with real chart PNGs; workspace download restores settings, selected tests, tab and ordered groups in an existing library",
+        "All tabs and populated group/device dialogs fit 360 px; wide tables scroll inside their own regions",
+        "Generated-file dialog survives reload, downloads byte-identical retained workspace and explicitly removes all four temporary exports; both original source datasets still pass checksum/integrity verification",
+        "Open workspace is usable in an empty library; restore rebuilds caches, remaps source IDs by verified hashes and retains ordered groups/tests/settings through reload"
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "downloads": {
+        "reportSheets": [
+          "File Info",
+          "DUT Summary",
+          "Trend Chart",
+          "Histogram",
+          "Bin Chart",
+          "Wafer Map",
+          "Test Statistics",
+          "GDR & DTR Summary"
+        ],
+        "pngImages": 11,
+        "reportRows": [
+          158,
+          7,
+          31,
+          43,
+          5,
+          4,
+          7,
+          7
+        ],
+        "workspaceSources": 2,
+        "deviceObservations": 7
+      }
+    },
+    {
+      "artifact": "viewer-e2e-msedge-1790338590904/results.json",
+      "channel": "msedge",
+      "checks": [
+        "Production boot, local cache and five-identity PTR/MPR/FTR catalog from a real retained STDF",
+        "Files & groups UI preserves ordered sources; current retest follows last file; independent comparison and head/site/all-attempt filters render six scoped attempts",
+        "Actual PTR/MPR-channel/FTR checkbox selections drive full-population statistics and matrix; test-health scan and histogram settings operate against real data",
+        "Trend, histogram, bin and wafer UI picks retain comparison-group/source/head/site/attempt scope; nested device-to-original-MPR drilldown, seven-observation CSV/XLSX exports and Escape focus work",
+        "All eight production tabs render; indexed datalog and complete original records expose exact source-byte detail",
+        "Export dialog generates and downloads complete Excel report with real chart PNGs; workspace download restores settings, selected tests, tab and ordered groups in an existing library",
+        "All tabs and populated group/device dialogs fit 360 px; wide tables scroll inside their own regions",
+        "Generated-file dialog survives reload, downloads byte-identical retained workspace and explicitly removes all four temporary exports; both original source datasets still pass checksum/integrity verification",
+        "Open workspace is usable in an empty library; restore rebuilds caches, remaps source IDs by verified hashes and retains ordered groups/tests/settings through reload"
+      ],
+      "errors": [],
+      "externalRequests": [],
+      "downloads": {
+        "reportSheets": [
+          "File Info",
+          "DUT Summary",
+          "Trend Chart",
+          "Histogram",
+          "Bin Chart",
+          "Wafer Map",
+          "Test Statistics",
+          "GDR & DTR Summary"
+        ],
+        "pngImages": 11,
+        "reportRows": [
+          158,
+          7,
+          31,
+          43,
+          5,
+          4,
+          7,
+          7
+        ],
+        "workspaceSources": 2,
+        "deviceObservations": 7
+      }
+    },
+    {
+      "artifact": "viewer-ui-chrome-1790337959076/summary.json",
+      "channel": "chrome",
+      "checks": [
+        "Startup, safe source/test labels, catalog pagination, multi-test statistics/matrix/charts, scoped trend pick",
+        "Explicit full-catalog health scan marks filtered-population failures/low Cpk beyond selected tests",
+        "Device group identity, raw bits, exact bytes, nested dialog keyboard focus restoration",
+        "Histogram interval drilldown, bounded bin pagination/drilldown, wafer viewport and group scope",
+        "Original record browser, validated persistent settings, independent comparison groups",
+        "New controls remain inert during operations; cancellation, retry, action-safe workspace application",
+        "Cancellation during a no-worker capture gap blocks explicit checkpoints and the next query; idle checks do not retain stale cancellation",
+        "360px no horizontal page overflow across six views",
+        "Empty-library workspace restore refreshes dataset catalog and survives missing custom font"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-ui-msedge-1790337959081/summary.json",
+      "channel": "msedge",
+      "checks": [
+        "Startup, safe source/test labels, catalog pagination, multi-test statistics/matrix/charts, scoped trend pick",
+        "Explicit full-catalog health scan marks filtered-population failures/low Cpk beyond selected tests",
+        "Device group identity, raw bits, exact bytes, nested dialog keyboard focus restoration",
+        "Histogram interval drilldown, bounded bin pagination/drilldown, wafer viewport and group scope",
+        "Original record browser, validated persistent settings, independent comparison groups",
+        "New controls remain inert during operations; cancellation, retry, action-safe workspace application",
+        "Cancellation during a no-worker capture gap blocks explicit checkpoints and the next query; idle checks do not retain stale cancellation",
+        "360px no horizontal page overflow across six views",
+        "Empty-library workspace restore refreshes dataset catalog and survives missing custom font"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-charts-chrome-1790337646822/results.json",
+      "channel": "chrome",
+      "checks": [
+        "trend semantics, hidden-series scope, reversed-range validation, pointer range, safe labels, PNG",
+        "Keyboard zoom/pan and pointer rectangle/pan preserve query scope and reset full extent",
+        "replacement/disposal, no-data rendering, 360px layout",
+        "histogram half-open/final-closed boundaries, interval snapping, overlay, hover and pointer picks",
+        "bin zero, exact group identity and hidden-series keyboard pick guard",
+        "wafer original-coordinate picking, reversed axes, die aspect ratio, all-passing stack, hide/reset",
+        "float32 extreme and nonfinite rendering",
+        "50,000-coordinate canvas and bounded legend DOM: 41.1 ms initial render"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-charts-msedge-1790337722905/results.json",
+      "channel": "msedge",
+      "checks": [
+        "trend semantics, hidden-series scope, reversed-range validation, pointer range, safe labels, PNG",
+        "Keyboard zoom/pan and pointer rectangle/pan preserve query scope and reset full extent",
+        "replacement/disposal, no-data rendering, 360px layout",
+        "histogram half-open/final-closed boundaries, interval snapping, overlay, hover and pointer picks",
+        "bin zero, exact group identity and hidden-series keyboard pick guard",
+        "wafer original-coordinate picking, reversed axes, die aspect ratio, all-passing stack, hide/reset",
+        "float32 extreme and nonfinite rendering",
+        "50,000-coordinate canvas and bounded legend DOM: 35.8 ms initial render"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-transfer-chrome-1790337607038/results.json",
+      "channel": "chrome",
+      "passed": true,
+      "checks": [
+        "Real two-source STORE workspace, source SHA metadata, repeated comparison group and unresolved key round trip; duplicate restore verifies packages and reuses datasets",
+        "Hostile inventories, compressed members, traversal, oversized manifest, hash mismatch, prototype keys, native DB and corrupt nested package rejected; no source mutation or temporary leftovers",
+        "Fresh profile restores and remaps all group IDs plus unresolved test identity; later corruption/cancellation preserves completed import without returning session state",
+        "Independent Python ZIP/XML inspection verifies 70,000 literal rows, actual newlines and XML/OOXML escaping, sanitized unique names, PNG relationships; 1,048,579 data rows split exactly with repeated headers and first-part image",
+        "Invalid cell values/column count/text/row budget, injected storage failure and real worker cancellation abort unpublished output and close row generators",
+        "Production DataLibraryClient/worker routes generate all eight real report sections and PNG; record converter reconstructs every original STDF record byte-for-byte, failed report cleans output, workspace routes preserve test keys"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cases": 31
+    },
+    {
+      "artifact": "viewer-transfer-msedge-1790337639991/results.json",
+      "channel": "msedge",
+      "passed": true,
+      "checks": [
+        "Real two-source STORE workspace, source SHA metadata, repeated comparison group and unresolved key round trip; duplicate restore verifies packages and reuses datasets",
+        "Hostile inventories, compressed members, traversal, oversized manifest, hash mismatch, prototype keys, native DB and corrupt nested package rejected; no source mutation or temporary leftovers",
+        "Fresh profile restores and remaps all group IDs plus unresolved test identity; later corruption/cancellation preserves completed import without returning session state",
+        "Independent Python ZIP/XML inspection verifies 70,000 literal rows, actual newlines and XML/OOXML escaping, sanitized unique names, PNG relationships; 1,048,579 data rows split exactly with repeated headers and first-part image",
+        "Invalid cell values/column count/text/row budget, injected storage failure and real worker cancellation abort unpublished output and close row generators",
+        "Production DataLibraryClient/worker routes generate all eight real report sections and PNG; record converter reconstructs every original STDF record byte-for-byte, failed report cleans output, workspace routes preserve test keys"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cases": 31
+    },
+    {
+      "artifact": "viewer-lifecycle-chrome-1790338304283/results.json",
+      "channel": "chrome",
+      "checks": [
+        "Real reports stream 253 ordered devices and257 DTR records across internal pages without gaps; CSV cancellation during its final single-row page aborts publication; releases are idempotent and source remains verified",
+        "Test-only canvas gate proves cancellation between worker requests stops PNG capture before report generation and removes its hidden chart",
+        "Test-only inventory API proves deleting one token revokes all duplicate Blob URLs and removes stale rows; Escape waits for pending download request before completing modal action"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "viewer-lifecycle-msedge-1790338337657/results.json",
+      "channel": "msedge",
+      "checks": [
+        "Real reports stream 253 ordered devices and257 DTR records across internal pages without gaps; CSV cancellation during its final single-row page aborts publication; releases are idempotent and source remains verified",
+        "Test-only canvas gate proves cancellation between worker requests stops PNG capture before report generation and removes its hidden chart",
+        "Test-only inventory API proves deleting one token revokes all duplicate Blob URLs and removes stale rows; Escape waits for pending download request before completing modal action"
+      ],
+      "errors": []
+    },
+    {
+      "artifact": "compression-chrome-1790335408004/results.json",
+      "channel": "chrome",
+      "passed": true,
+      "checks": [
+        "GZ/BZ2/ZIP STORE, DEFLATE, BZIP2 and checksummed Zstandard expand exactly; concatenated streams, misleading suffix and real SQLite import deduplication preserve one known source hash",
+        "Malformed, corrupt, truncated, encrypted, multi-entry, directory/link/special-file, oversized metadata and unsupported ZIP/Zstandard inputs fail explicitly and clean their temporary files",
+        "Multi-block 3 MiB outputs agree byte-for-byte with independent fixtures; each JavaScript blob read <=1 MiB and OPFS write <=64 KiB",
+        "Test-only 4 KiB expansion cap rejects compressed bombs before excess writes; synthetic >2 GiB compressed input rejects before reading",
+        "Real worker cancellation in each compression path and injected OPFS quota exhaustion clean staging; no uploaded data or external requests"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cases": 49
+    },
+    {
+      "artifact": "compression-msedge-1790335413262/results.json",
+      "channel": "msedge",
+      "passed": true,
+      "checks": [
+        "GZ/BZ2/ZIP STORE, DEFLATE, BZIP2 and checksummed Zstandard expand exactly; concatenated streams, misleading suffix and real SQLite import deduplication preserve one known source hash",
+        "Malformed, corrupt, truncated, encrypted, multi-entry, directory/link/special-file, oversized metadata and unsupported ZIP/Zstandard inputs fail explicitly and clean their temporary files",
+        "Multi-block 3 MiB outputs agree byte-for-byte with independent fixtures; each JavaScript blob read <=1 MiB and OPFS write <=64 KiB",
+        "Test-only 4 KiB expansion cap rejects compressed bombs before excess writes; synthetic >2 GiB compressed input rejects before reading",
+        "Real worker cancellation in each compression path and injected OPFS quota exhaustion clean staging; no uploaded data or external requests"
+      ],
+      "pageErrors": [],
+      "externalRequests": [],
+      "cases": 49
+    },
+    {
+      "artifact": "frontend-chrome-1790338306360/results.json",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ],
+      "pageErrors": []
+    },
+    {
+      "artifact": "frontend-msedge-1790337254024/results.json",
+      "channel": "msedge",
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "real: automatic empty-library open and actual storage status",
+        "real: import dialog opens with keyboard, handles Escape, restores focus",
+        "real: UI imports little-endian STDF, shows retained counts, device-attempt terminology and SHA-256",
+        "real: renamed identical contents resolve to the original dataset",
+        "real: unsupported extension, multiple-file drop and malformed STDF do not publish a ready row",
+        "real: each import resets previous progress; active import remains visible on Escape; cooperative cancellation settles without a dataset",
+        "real: hostile filename is literal text; populated library fits 360px and 390px viewports",
+        "real: reload reopens existing catalog and dataset without selecting the source again",
+        "real: closing dataset details with Escape or its close button returns keyboard focus to the original name/arrow action after rows rerender",
+        "real: Library tools uses same-tab navigation; browser Back reopens the library",
+        "real: second tab reports exclusive-owner BUSY and Retry succeeds after owner closes",
+        "test-only mocked catalog: bounded 100-entry loading, 25-row pagination, full-inventory path search, name and size sorting, no-results state",
+        "test-only mocked catalog: unavailable dataset remains in the library with recovery guidance",
+        "test-only delayed metadata: closing details during an operation restores row focus after it settles",
+        "test-only mocked client: unsupported storage and corrupt-open failures are actionable without reset"
+      ],
+      "pageErrors": []
+    },
+    {
+      "artifact": "startup-chrome-1790338789815/results.json",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "actual file URLs: library, Explorer and viewer show local-server guidance, correct localhost link, no reload button, no application module/worker and no infinite spinner",
+        "normal HTTP: real STDF import completes through the UI and exposes the known saved source hash",
+        "HTTP boot recovery on all three pages: failed dependency, stale missing export and bounded module timeout show explicit reload; successful retry preserves dataset ID/hash and readable observations"
+      ],
+      "pageErrors": []
+    },
+    {
+      "artifact": "startup-msedge-1790338312738/results.json",
+      "channel": "msedge",
+      "browserVersion": "153.0.4234.48",
+      "checks": [
+        "actual file URLs: library, Explorer and viewer show local-server guidance, correct localhost link, no reload button, no application module/worker and no infinite spinner",
+        "normal HTTP: real STDF import completes through the UI and exposes the known saved source hash",
+        "HTTP boot recovery on all three pages: failed dependency, stale missing export and bounded module timeout show explicit reload; successful retry preserves dataset ID/hash and readable observations"
+      ],
+      "pageErrors": []
+    },
+    {
+      "artifact": "explorer-chrome-1790337260565/results.json",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "real SQLite: both-endian golden groups, exact declaration metadata, all selected observations/attempt joins, zero/max test numbers, sparse keyset cursors, literal search and no-PTR empty dataset",
+        "real SQLite: default page sizes and strict invalid search/test/cursor/limit rejection, including NaN, infinity, fractions and wrong types",
+        "test-only large Unicode metadata in real SQLite: 2MiB byte cap truncates a short page and resumes without lost/duplicate declarations; original metadata restored",
+        "test-only oversized restored inventory: all four queries reject 20,001 actual declarations despite a smaller manifest; only inserted rows removed and original dataset/source verification passes",
+        "test-only observation of actual SQL: measurement pages/counts use measurements_test, attempt joins use INTEGER PRIMARY KEY, group search never scans measurements",
+        "real UI: dataset overview opens Explorer in the same tab; 58-test inventory pages 50/8 and test zero is selectable",
+        "real UI: literal search retains all declaration variants; recorded limits/scales/flags distinguish omitted, empty and special floats; 25/100-row paging preserves every observation and attempt",
+        "real UI: keyboard search and page navigation restore focus after async disable; final/first page moves focus to the available direction, test selection focuses its heading",
+        "real UI: 390px layout fits, search resets cursors, max-u32 test works, no-results state, reload and browser Back reopen retained data",
+        "real UI: exclusive-owner BUSY retry, no-PTR empty state and missing/invalid dataset recovery are actionable",
+        "test-only malformed metadata in real SQLite: bad JSON, non-object, wrong types, unknown/duplicate presence and invalid undisplayed fields are reported; originals restored",
+        "test-only injected real-worker exception: loading settles into disabled error state, retry reconnects and observations remain readable",
+        "test-only adapter failures: unsupported and unavailable states show recovery guidance without stale loading text or data loss"
+      ],
+      "pageErrors": []
+    },
+    {
+      "artifact": "library-1790337358409/results.json",
+      "channel": "chrome",
+      "browserVersion": "153.0.8010.48",
+      "checks": [
+        "catalog create, reopen, exclusive ownership and retry",
+        "bounded catalog pagination",
+        "empty relative path rejected before creating an import job",
+        "STDF.io retained import, known source hash/counts, pagination and content deduplication",
+        "real sequential ImportQueue continues after invalid input and recognizes renamed duplicates",
+        "independent LE/BE goldens: every record offset/raw byte, measurement/device tuple, declaration and decoded metadata subset",
+        "missing MRR, truncated payload, unmatched site and trailing bytes fail without publishing a dataset",
+        "ten checksum-valid malicious packages reject before same-source duplicate return; existing ready data remains verified",
+        "disk-backed package export, fresh-profile restore and exact sample rows",
+        "ten checksum-valid malicious packages reject in a fresh profile, followed by successful valid restoration",
+        "full browser restart reopens retained STDF without original file selection"
+      ]
+    }
+  ],
+  "scale": {
+    "sqliteWasmBytesAfterCold": 12124160,
+    "channel": "chrome",
+    "errors": [],
+    "measurements": [
+      {
+        "name": "retained-import",
+        "elapsedMs": 126233.2998
+      },
+      {
+        "name": "cold-viewer-cache",
+        "elapsedMs": 582680.0533
+      },
+      {
+        "name": "warm-viewer-prepare",
+        "elapsedMs": 14.276699999929406
+      },
+      {
+        "name": "warm-test-catalogue",
+        "elapsedMs": 14.09409999998752
+      },
+      {
+        "name": "warm-exact-analysis",
+        "elapsedMs": 3665.891100000008
+      },
+      {
+        "name": "repeat-exact-analysis",
+        "elapsedMs": 3668.374700000044
+      },
+      {
+        "name": "warm-device-page-offset-5000",
+        "elapsedMs": 526.955900000059
+      }
+    ],
+    "sourceBytes": 936502821,
+    "browserVersion": "153.0.8010.48",
+    "caveat": "One recorded PTR run before later query-only fixes. Module heap is not total browser RSS. Cold cache time is separate from retained import and parser-only scans.",
+    "observations": 10000000,
+    "sqliteWasmBytesAfterQueries": 21037056,
+    "sourceSha256": "c6db5a736bdd12033cd570927375b179a3a2a074c4621101cd3f953b53c4c2d4",
+    "artifact": "viewer-scale-chrome-10000000-1790336429125/results.json"
+  },
+  "liveReview": {
+    "workflow": "Existing retained-v1 evaluation source reopened at the original 8766 origin; viewer histogram and stats visually reviewed; saved source preserved.",
+    "browser": "Codex in-app browser"
+  },
+  "reviewFixes": [
+    "Histogram assignment compares stored bin edges exactly",
+    "Wafer counts avoid population-sized temporary sorting",
+    "Device and datalog reports stream keyset pages",
+    "Device matrix queries seek the device index",
+    "Action and output cancellation checkpoints",
+    "Generated-file links and modal lifetime remain synchronized"
+  ],
+  "boundaries": [
+    "Engineering preview; not production disposition qualification",
+    "Chrome and Edge desktop; Firefox/Safari/mobile storage not qualified",
+    "English browser UI and presentation differences documented",
+    "Native .db sessions incompatible; .sdworkspace rebuilds viewer caches",
+    "Dense MPR/FTR, retest-heavy scale and 2GiB limits require separate qualification",
+    "No hosted CI, deployment or upstream push"
+  ]
+}

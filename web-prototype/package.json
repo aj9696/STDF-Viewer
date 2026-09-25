@@ -2,12 +2,18 @@
   "name": "semidata-browser-parser-prototype",
   "private": true,
   "type": "module",
-  "description": "Isolated browser proofs for Rust/WASM STDF parsing and local SQLite persistence",
+  "description": "Local browser STDF library and engineering viewer using Rust/WASM and SQLite",
   "scripts": {
     "build:storage": "node scripts/build-storage.mjs",
     "build:vendor": "node scripts/build-vendor.mjs",
     "test:compression": "node scripts/compression-check.mjs",
-    "test:storage": "node scripts/storage-check.mjs"
+    "test:storage": "node scripts/storage-check.mjs",
+    "test:viewer:model": "node scripts/viewer-model-check.mjs",
+    "test:viewer": "node scripts/viewer-check.mjs",
+    "test:viewer:ui": "node scripts/viewer-ui-check.mjs",
+    "test:viewer:e2e": "node scripts/viewer-e2e-check.mjs",
+    "test:viewer:transfer": "node scripts/viewer-transfer-check.mjs",
+    "test:viewer:population": "node scripts/viewer-population-check.mjs"
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.53.4-build1",

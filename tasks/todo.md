@@ -146,15 +146,29 @@ or implement all remaining frontend workflows at once.
 
 - [x] **BV-0 — Define baseline and capability map.** Inventory working upstream
   behavior, preserve native source baseline, specify browser modules and policies.
-- [ ] **BV-1 — Normalize a derived viewer cache.** Bounded PTR/MPR/FTR, effective
+- [x] **BV-1 — Normalize a derived viewer cache.** Bounded PTR/MPR/FTR, effective
   defaults, metadata/pins/wafer context; retain-v1 compatibility and failure recovery.
-- [ ] **BV-2 — Query explicit populations.** Group/head/site/current/all selection,
+- [x] **BV-2 — Query explicit populations.** Group/head/site/current/all selection,
   test/device/record tables, statistics, bounded trends/histograms/bin/wafer maps.
-- [ ] **BV-3 — Integrate investigation UI.** Multi-test selection, interactive
+- [x] **BV-3 — Integrate investigation UI.** Multi-test selection, interactive
   charts, failed/low-Cpk markers and complete device drilldown.
-- [ ] **BV-4 — Complete data opening and workspaces.** Compressed imports, product
+- [x] **BV-4 — Complete data opening and workspaces.** Compressed imports, product
   multi-file/folder queue, ordered groups, settings and portable session save/open.
-- [ ] **BV-5 — Export reports and records.** Eight report sections, chart images,
+- [x] **BV-5 — Export reports and records.** Eight report sections, chart images,
   selected data and record conversion, with population/source provenance.
-- [ ] **BV-6 — Qualify and document.** Independent numerical fixtures, Chrome/Edge
+- [x] **BV-6 — Qualify and document.** Independent numerical fixtures, Chrome/Edge
   flows, library regressions, 1M/10M behavior, code/visual review and updated guides.
+
+Delivered as an engineering browser baseline, with explicit desktop presentation
+differences and resource limits. See [parity](../docs/viewer-parity.md),
+[user guide](../web-prototype/docs/VIEWER-UI.md),
+[methods](../web-prototype/docs/VIEWER-METHODS.md) and
+[qualification](../web-prototype/docs/VIEWER-VALIDATION.md). Review corrected an
+interior histogram-edge rounding error, removed a population-sized wafer sort,
+and replaced repeated report offset scans with indexed streaming iteration.
+
+Next candidate: optimize and remeasure cold viewer indexing. The recorded 10M
+PTR source imported in 126.23 s and built its first analysis cache in 582.68 s;
+warm cache preparation was 14.3 ms. This is a documented performance limitation,
+not a parser-only benchmark or a claim of production qualification. PAT design
+and broader product roadmap remain separate engineer-selected work.

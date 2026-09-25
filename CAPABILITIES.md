@@ -26,9 +26,9 @@ PAT/DPAT recipes, wafer analysis, historical monitoring, automation, and improve
 UI. These remain separate future increments, not implied delivered features.
 
 The native evaluation workbench above remains runnable and unchanged. A separate
-browser-only data foundation now retains STDF in local SQLite, coordinates
-file/folder queues and exports/restores portable packages. Analysis is not yet
-connected to the browser library.
+browser-only library retains STDF in local SQLite, coordinates file/folder
+queues and exports/restores portable packages. Its Data viewer now supplies
+the investigation workflows listed below; the native PAT lab remains separate.
 
 ## Browser data logistics
 
@@ -53,16 +53,16 @@ source modules. Test Explorer adds bounded read-only queries and the
 `explore.html?dataset=<id>` route; see [its specification](SPEC-test-explorer.md)
 and [guide](web-prototype/docs/TEST-EXPLORER.md). Later product features remain
 separately reviewable. Normalized
-measurements currently cover PTR; MPR/FTR retain device context and exact raw
-records. Effective STDF defaults, cross-file identity, analysis and PAT policy
-remain separate decisions. Compression, background folder watching, offline
-asset caching and multi-tab collaboration are not implemented.
+retained measurements cover PTR; MPR/FTR retain device context and exact raw
+records. The separate derived viewer normalizes all three families with explicit
+defaults, identity and population policy. Compression is implemented. Background
+folder watching, offline asset caching and multi-tab collaboration are not.
 
 Provider, import and transfer contracts are in SPEC-browser-library.md,
 SPEC-browser-imports.md and SPEC-browser-transfer.md. Original native databases
 are not migrated automatically. No release or deployment is implied.
 
-## Full browser viewer (in progress, 2026-09-25)
+## Browser investigation baseline (2026-09-25)
 
 The engineer now authorized the working feature set of upstream STDF-Viewer.
 This supersedes the earlier restriction to raw inspection and logistics. The
@@ -71,3 +71,14 @@ map, data preservation and numerical policies. The [parity tracker](docs/viewer-
 separates planned from verified workflows. The existing retained library stays
 immutable; derived analysis caches provide PTR/MPR/FTR, device, bin, wafer and
 record queries. Workspace, chart and report modules consume those contracts.
+
+Delivered workflows include multi-file/folder and compressed import, ordered
+groups, test/device matrices and drilldown, exact statistics, trend/histogram,
+bins, wafer/stacked maps, datalog/original records, low-Cpk health scanning,
+settings/fonts, eight-section Excel reports, device CSV/Excel, record conversion
+and portable workspace save/restore. See the [engineer guide](web-prototype/docs/VIEWER-UI.md),
+[methods](web-prototype/docs/VIEWER-METHODS.md) and
+[qualification](web-prototype/docs/VIEWER-VALIDATION.md). Desktop presentation
+and format differences are explicit in the parity tracker. Cold viewer indexing
+of the 10M PTR workload took 9m43s after import and remains an optimization target.
+Browser PAT, history, SPC, correlation and production automation are future work.

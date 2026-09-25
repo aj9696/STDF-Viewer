@@ -139,3 +139,11 @@ independent fixtures in parallel. Then integrate workspace groups, device and
 record inspection, reports, session portability and product navigation. Review
 and qualify each boundary, preserve the actual library, and update the parity
 tracker and professional guides before claiming completion.
+
+Completed browser investigation baseline: documented decode/query/export
+contracts, independent Chrome/Edge data and UI checks, preserved legacy data,
+compressed imports, complete investigation UI, reports and workspaces. See
+docs/viewer-parity.md for differences and web-prototype/docs/VIEWER-VALIDATION.md
+for cold/warm scale evidence. No hosted release or upstream push is implied.
+Further cold-index optimization and vendor-file qualification remain visible
+follow-up work, alongside the engineer's future PAT design.

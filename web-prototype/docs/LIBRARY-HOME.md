@@ -1,7 +1,7 @@
-# Library home: first frontend feature
+# Library home
 
-Status: local engineering preview, 2026-09-24. This screen connects the browser
-library to its first product workflow: import one STDF, see the saved dataset,
+Status: local engineering preview, updated 2026-09-25. This screen connects the browser
+library to its product workflow: import STDF files or folders, see saved datasets,
 and reopen its metadata. It uses the same library as the engineering console.
 
 ## Try it as a test engineer
@@ -16,21 +16,26 @@ server. It does not attempt to open storage. A module-load failure offers an
 explicit reload; the module loader also reports a 15-second delay. These checks
 cover app-module startup, not long-running imports or all worker/storage stalls.
 
-1. Select **Import STDF**, choose or drop one completed raw `.stdf`, `.std` or
-   `.stf` file, then select **Import file**. The current limit is 2 GiB per source.
+1. Select **Import STDF**, choose/drop completed raw `.stdf`, `.std` or `.stf`
+   files, or gzip/bzip2/single-file ZIP archives. Folder selection has an explicit
+   subfolder option. Import runs sequentially and shows per-file outcomes.
+   The current limit is 2 GiB per raw/compressed source and per expanded STDF.
 2. Watch Copy, Read, Check and Save. Byte progress describes the current phase;
    it is not a percentage of total import time. **Cancel import** waits for the
    worker's actual outcome. Closing the modal is disabled while importing.
 3. Select **Open dataset**, or select a filename in the library. The overview
    shows saved measurement, device-attempt, declaration and record counts,
    source/database sizes, retained coverage and the source fingerprint.
+   **Open data viewer** opens the [full investigation UI](VIEWER-UI.md).
    **Explore tests** opens [Test Explorer](TEST-EXPLORER.md) in the same tab to
    search test numbers/names and page through recorded declarations and PTR
    observations. Its own guide describes scope and qualification evidence.
 4. Search by filename or recorded relative path. Sort by import date, filename
    or source size; use the arrow controls to page through 25 rows at a time.
 5. Reload the page and reopen the dataset without selecting its original file.
-   Importing the same bytes with another filename should reuse that dataset.
+   Importing the same expanded bytes with another filename reuses a dataset
+   with the same parser/schema version. Current imports use retained-v2;
+   legacy retained-v1 datasets remain intact and readable.
    Changed content creates another dataset even if its filename is unchanged.
 6. Open **Storage details** in the footer to inspect this origin, estimated
    usage/quota and the browser's persistence grant. A persistence request can be
@@ -60,9 +65,10 @@ inspectable through Library tools. No screen action silently resets the library.
 Long or untrusted filenames and errors are rendered as text. Native dialogs
 support keyboard navigation and Escape; Escape cannot dismiss an active import.
 
-Recorded PTR browsing is now available through [Test Explorer](TEST-EXPLORER.md).
-Folder batches, save/open workspace, recovery controls, dataset deletion,
-charts, yield and PAT are later product features. Existing
+Recorded PTR browsing is available through [Test Explorer](TEST-EXPLORER.md).
+Folder batches are available here; charts, scoped investigation, reports and
+save/open workspaces are available in [Data viewer](VIEWER-UI.md). PAT and
+dataset deletion remain separate product work. Existing
 console tools remain available for folder imports and individual `.sdlibrary`
 package export/restore. A package contains one dataset, not an entire workspace.
 There is no offline-startup guarantee, account, hosted data service or multi-tab
@@ -84,8 +90,8 @@ The module contract is [SPEC-browser-ui.md](../../SPEC-browser-ui.md).
 
 The screen consumes `DataLibraryClient` and `inventoryFiles`. It does not open
 SQLite, issue SQL or manipulate OPFS directly. The library, import and transfer
-contracts remain unchanged. There are no added runtime dependencies, external
-fonts, CDN resources or frontend framework. The existing summary parser's
+contracts remain compatible. Compression dependencies are pinned and locally
+bundled; there are no external fonts, CDN resources or frontend framework. The existing summary parser's
 `site/app.js` and root route remain separate.
 
 ## Verification

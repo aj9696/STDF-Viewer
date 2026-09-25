@@ -83,21 +83,23 @@ evaluation workbench. Existing browser behavior is documented in the
 
 | Candidate | Current browser status | Smallest useful next increment |
 | --- | --- | --- |
-| Local STDF library (F25–F26) | Delivered for raw STDF; single-file product UI | Keep using and improving the current library |
-| Folder imports and portable data | Foundation APIs/console available; product UX pending | Review each as its own feature |
-| **Test Explorer (F01)** | Delivered for saved PTR datasets: number/name search, recorded declarations and paged observations | Evaluate the [guide](../web-prototype/docs/TEST-EXPLORER.md) and [specification](../SPEC-test-explorer.md); device drill-down remains future work |
-| **Histogram (F02/F04)** | Not connected to retained browser data | One selected test, explicit population, visible units/limits and configurable binning |
-| Population selection (supports F02/F06/F11/F14) | Raw flags/attempts retained; analytical policies undecided | Make included observations, validity and attempt choices visible and reproducible |
+| Local STDF library (F25–F26) | Raw/compressed multi-file import and preserved sources | Optimize cold full-viewer indexing |
+| Folder imports and portable data | Product folder queue, dataset packages, `.sdworkspace` save/restore | Engineer evaluation of real source collections |
+| **Test/device investigation (F01)** | PTR/MPR/FTR catalog, device matrix/drilldown, original records and raw PTR Explorer | Evaluate [Data viewer](../web-prototype/docs/VIEWER-UI.md) on real test programs |
+| **Histogram/statistics (F02/F04)** | Common-edge comparisons, configurable bins, mean/median/population sigma/Cpk | Engineer feedback on controls and presentation |
+| Population selection (supports F02/F06/F11/F14) | Explicit groups/head/site/current/all, eligibility and retest semantics | Use these documented selections when specifying PAT |
 | **PAT experiment (F14/F15)** | Not implemented in the browser | Engineer-selected reference/evaluation populations, recipe preview and affected-device evidence |
-| Bin/Pareto view (F10) | Not implemented in the browser | One dataset with an explicit counting and retest policy |
-| Wafer map (F08/F09) | Raw source/context retained; product view pending | One wafer with coordinate/orientation checks and die drill-down |
-| Comparison plots/history (F03/F05/F06/F07) | Not implemented in the browser | Add one plot or comparison after selection semantics are established |
+| Bin/Pareto view (F10) | Hardware/software counts/percentages and drilldown; dedicated Pareto pending | Evaluate ranking and failure investigation needs |
+| Wafer map (F08/F09) | Soft bins, orientation, stacked failure counts and die drilldown | Parametric maps/galleries remain separate work |
+| Comparison plots/history (F03/F05/F06/F07) | Group/site trend and histogram comparisons; history/box/scatter pending | Choose the next plot or historical workflow with the engineer |
 | Production automation and advanced screening | Not implemented in the browser | Separate future designs after engineering workflows are validated |
 
-**First increment delivered: Test Explorer.** It exposes recorded evidence for
-the engineer to inspect before defining populations for histograms, comparisons
-and PAT. PAT remains a core product capability and an early candidate once
-populations are explicit. The engineer selects the next implementation slice.
+**Browser viewer baseline delivered, 2026-09-25.** The engineer subsequently
+authorized the working upstream investigation workflows. Its
+[parity tracker](viewer-parity.md), [methods](../web-prototype/docs/VIEWER-METHODS.md)
+and [qualification](../web-prototype/docs/VIEWER-VALIDATION.md) define what is
+implemented. This is not vendor-suite parity. PAT remains a core product direction;
+the engineer selects its next analytical design.
 
 Before a chart or screening feature is specified, record its treatment of
 invalid/nonfinite results, failed tests, unknown flags, repeated observations,

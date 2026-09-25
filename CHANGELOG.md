@@ -2,6 +2,17 @@
 
 ## Browser preview — unreleased
 
+- Add Data viewer with ordered file groups, PTR/MPR/FTR catalog, device matrix,
+  full-population statistics, interactive trend/histogram, bins, wafer/stacked
+  maps, original records and cancellable test-health scans.
+- Add compressed and multi-file/folder imports, settings/fonts, eight-section
+  Excel reports with charts, full device CSV/Excel, record conversion, portable
+  `.sdworkspace` save/restore and generated-file cleanup across reloads.
+- Preserve retained-v1 compatibility; new retained-v2 imports admit documented
+  default-only PTR declarations. Disposable viewer caches preserve original data.
+- Document population/units/retest rules, desktop differences, independent
+  browser qualification and the measured large-file cold-index bottleneck.
+
 - Explain direct `file://` launches before opening storage; replace app-module
   loading failures with explicit recovery guidance instead of a permanent spinner.
 

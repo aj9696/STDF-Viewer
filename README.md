@@ -25,9 +25,13 @@ The walkthrough also documents a reproducible recipe at
 
 The newer browser-only application runs separately at
 [Data library](http://127.0.0.1:8766/app.html). It provides local STDF storage and
-[Test Explorer](web-prototype/docs/TEST-EXPLORER.md) for recorded PTR declarations
-and observations. Follow its [build/run guide](web-prototype/README.md); the native
-analysis workflows below have not been ported to this browser application.
+[Data viewer](http://127.0.0.1:8766/viewer.html) for PTR/MPR/FTR investigation,
+multi-source comparisons, device tables, statistics, interactive trend/histogram,
+bin and wafer plots, Excel reports, and portable workspaces. Follow the
+[browser build/run guide](web-prototype/README.md),
+[viewer guide](web-prototype/docs/VIEWER-UI.md) and
+[upstream parity tracker](docs/viewer-parity.md). The native PAT experiment
+workflows below remain separate; browser PAT is not implemented yet.
 
 ## Delivered capabilities
 

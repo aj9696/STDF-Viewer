@@ -1,26 +1,30 @@
 # Frontend handoff: local test-data logistics
 
-Status: engineering foundation, 2026-09-24. The next product work can use a
+Status: foundation reference, updated 2026-09-25. The next product work can use a
 documented browser library API instead of building storage into UI components.
 The console demonstrates the full logistics integration. The first product
 feature, [library home](LIBRARY-HOME.md), provides single-file import,
 saved-dataset search and metadata reopen. [Test Explorer](TEST-EXPLORER.md) is the
 next implemented slice: recorded PTR test search, declarations and observation
 paging. Its Chrome/Edge qualification and limits are recorded in that guide.
-Develop and review one user-facing feature at a time with the test
-engineer; analytical behavior remains a separate design task.
+The new [Data viewer](VIEWER-UI.md) is also implemented: its
+[query contract](VIEWER-CONTRACT.md), [methods](VIEWER-METHODS.md),
+[transfer contract](VIEWER-TRANSFER.md) and [qualification](VIEWER-VALIDATION.md)
+extend this foundation. It adds separate derived caches and never mutates
+retained datasets. PAT remains a future browser capability.
 
 ## What is available
 
 | Capability | Current behavior |
 | --- | --- |
 | Persistent library | Dedicated worker, local SQLite catalog, one immutable database and exact snapshot per imported source |
-| Source selection | Multiple raw files, read-only directory handles, or folder file-input fallback; review before import |
+| Source selection | Multiple raw/compressed files, read-only directory handles, or folder file-input fallback; review before import |
 | Import queue | Sequential files, content deduplication, per-file outcomes, cancellation and explicit rescans |
 | Retained evidence | Ordered record indexes, PTR measurements, declaration metadata and device attempts; original bytes remain accessible |
 | Test Explorer | Product UI for one dataset's PTR test-number search, recorded declarations and paged observations; no inferred analytical policy |
 | Reopen and recovery | Reopen saved data without selecting original files; inspect durable job history and discard known incomplete staging |
 | Portability | Versioned source-plus-database package, bounded transfer, validation before publication, explicit temporary-export cleanup |
+| Data viewer | PTR/MPR/FTR investigation, groups, head/site/attempt populations, plots, records, reports and portable workspaces; see linked viewer contracts |
 
 The JavaScript entry points are [DataLibraryClient](../site/data-client.js),
 [sources.js](../site/sources.js), and [ImportQueue](../site/import-queue.js).
