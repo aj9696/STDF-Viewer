@@ -3,8 +3,10 @@
 Status: implemented logistics foundation, 2026-09-24. Open the
 [library engineering console](http://127.0.0.1:8766/foundation.html) after following
 [the build/run instructions](../web-prototype/README.md). This is a functional
-console for the data interfaces. The first product screen is
-[library home](../web-prototype/docs/LIBRARY-HOME.md). The
+console for the data interfaces. Product screens include
+[library home](../web-prototype/docs/LIBRARY-HOME.md) and
+[Test Explorer](../web-prototype/docs/TEST-EXPLORER.md), opened from a saved dataset
+overview to inspect PTR declarations and observations. The
 [feature comparison](feature-landscape.md) supports choosing later features one
 at a time. Analysis design remains with the engineer.
 

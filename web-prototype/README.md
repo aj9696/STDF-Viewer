@@ -5,18 +5,20 @@ exact source snapshots, reopens saved records, and exports/restores portable
 packages. A Rust/WASM decoder and SQLite run in a dedicated worker. Source files
 are read-only; no test-data upload or backend data service is involved. This
 remains an engineering evaluation build, separate from the existing native
-SemiData application. The first product screen is the library home; additional
-frontend workflows and analysis will be developed one feature at a time.
+SemiData application. Product screens now include the library home and Test
+Explorer; additional workflows and analysis are developed one feature at a time.
 
 | Page | Purpose | What it retains |
 | --- | --- | --- |
 | [Data library](http://127.0.0.1:8766/app.html) | Import one STDF, search saved datasets and reopen their metadata | The same retained library as the engineering console |
+| Test Explorer, opened from a dataset overview | Search PTR tests, inspect recorded declarations and page observations | Reads the saved dataset without reparsing or changing it |
 | [Library engineering console](http://127.0.0.1:8766/foundation.html) | Evaluate imports, folders, recovery, saved rows, and portability | Source snapshots, per-source databases, catalog and job history |
 | [Summary parser lab](http://127.0.0.1:8766/) | Measure a streaming summary scan | In-memory summaries; optional JSON download |
 | [Synthetic storage proof](http://127.0.0.1:8766/storage.html) | Reproduce the original SQLite persistence experiment | One note in an independent SQLite pool |
 
-Start with the [library home guide](docs/LIBRARY-HOME.md) to try the first product
-feature. Use the [frontend handoff](docs/FRONTEND-HANDOFF.md) for the console
+Start with the [library home guide](docs/LIBRARY-HOME.md), then choose **Explore
+tests** in a dataset overview. The [Test Explorer guide](docs/TEST-EXPLORER.md)
+explains recorded fields and paging. Use the [frontend handoff](docs/FRONTEND-HANDOFF.md) for the console
 workflow and feature boundaries. The [frontend API](docs/FRONTEND-CONTRACT.md)
 and [source/queue API](docs/SOURCES.md) define the integration surfaces. The
 [library validation record](LIBRARY-VALIDATION.md) distinguishes tested behavior

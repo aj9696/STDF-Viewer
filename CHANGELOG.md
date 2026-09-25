@@ -1,5 +1,16 @@
 # Changelog
 
+## Browser preview — unreleased
+
+- Add Test Explorer to the saved-dataset overview: literal test search, recorded
+  PTR declarations and paged observations with attempt IDs and raw flags.
+- Preserve omitted/empty fields and IEEE-754 special values in the display;
+  effective defaults, scaling and analysis remain separate design work.
+- Add bounded read-only queries with existing test/device indexes and explicit
+  limits for restored inventories. Existing databases need no migration.
+- Record Chrome/Edge verification and the engineer workflow in the
+  [Test Explorer guide](web-prototype/docs/TEST-EXPLORER.md).
+
 ## 0.1.1 — 2026-09-24
 
 - Read preflight input in bounded chunks and avoid a redundant copy for raw

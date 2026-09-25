@@ -85,7 +85,7 @@ evaluation workbench. Existing browser behavior is documented in the
 | --- | --- | --- |
 | Local STDF library (F25–F26) | Delivered for raw STDF; single-file product UI | Keep using and improving the current library |
 | Folder imports and portable data | Foundation APIs/console available; product UX pending | Review each as its own feature |
-| **Test Explorer (F01)** | Not implemented in the product UI | Search tests by number/name; inspect declarations, units, counts and measurement records |
+| **Test Explorer (F01)** | Delivered for saved PTR datasets: number/name search, recorded declarations and paged observations | Evaluate the [guide](../web-prototype/docs/TEST-EXPLORER.md) and [specification](../SPEC-test-explorer.md); device drill-down remains future work |
 | **Histogram (F02/F04)** | Not connected to retained browser data | One selected test, explicit population, visible units/limits and configurable binning |
 | Population selection (supports F02/F06/F11/F14) | Raw flags/attempts retained; analytical policies undecided | Make included observations, validity and attempt choices visible and reproducible |
 | **PAT experiment (F14/F15)** | Not implemented in the browser | Engineer-selected reference/evaluation populations, recipe preview and affected-device evidence |
@@ -94,11 +94,10 @@ evaluation workbench. Existing browser behavior is documented in the
 | Comparison plots/history (F03/F05/F06/F07) | Not implemented in the browser | Add one plot or comparison after selection semantics are established |
 | Production automation and advanced screening | Not implemented in the browser | Separate future designs after engineering workflows are validated |
 
-**Recommended next feature: Test Explorer.** It provides the selection and
-evidence layer needed by histograms, comparisons and PAT. This is a dependency
-recommendation, not a decision to prioritize yield over quality screening. PAT
-remains a core product capability and an early candidate once populations are
-explicit. The engineer selects the next implementation slice.
+**First increment delivered: Test Explorer.** It exposes recorded evidence for
+the engineer to inspect before defining populations for histograms, comparisons
+and PAT. PAT remains a core product capability and an early candidate once
+populations are explicit. The engineer selects the next implementation slice.
 
 Before a chart or screening feature is specified, record its treatment of
 invalid/nonfinite results, failed tests, unknown flags, repeated observations,

@@ -23,6 +23,12 @@ For a clean checkout, follow [Installation](docs/installation.md).
 The walkthrough also documents a reproducible recipe at
 [STDF.io Generate](https://stdf.io/generate) for independent evaluation data.
 
+The newer browser-only application runs separately at
+[Data library](http://127.0.0.1:8766/app.html). It provides local STDF storage and
+[Test Explorer](web-prototype/docs/TEST-EXPLORER.md) for recorded PTR declarations
+and observations. Follow its [build/run guide](web-prototype/README.md); the native
+analysis workflows below have not been ported to this browser application.
+
 ## Delivered capabilities
 
 | Workflow | Available in 0.1 |

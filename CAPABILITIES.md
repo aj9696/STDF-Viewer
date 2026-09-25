@@ -43,13 +43,16 @@ completing BL-2 through BL-6 while away, through frontend readiness. See
 | browser-library | Local catalog, immutable per-source SQLite, ownership, recovery, bounded reads | OPFS and pinned SQLite WASM |
 | browser-imports | Retained Rust decoding, file/folder inventory, sequential import queue and content identity | browser-library, Rust/WASM |
 | browser-transfer | Versioned source+database packages, bounded export/restore and checksums | browser-library |
-| browser-ui | Library home: single-file import, saved-dataset search, metadata reopen and storage status | browser-library, browser-imports |
+| browser-ui | Library home and Test Explorer: imports, saved datasets, recorded PTR declarations and paged observations | browser-library, browser-imports |
 
 The engineering console is `web-prototype/site/foundation.html`. The first
 product frontend is `web-prototype/site/app.html`, documented in
 [the library home guide](web-prototype/docs/LIBRARY-HOME.md) and
 [SPEC-browser-ui.md](SPEC-browser-ui.md). It consumes the existing client and
-source modules. Later product features remain separately reviewable. Normalized
+source modules. Test Explorer adds bounded read-only queries and the
+`explore.html?dataset=<id>` route; see [its specification](SPEC-test-explorer.md)
+and [guide](web-prototype/docs/TEST-EXPLORER.md). Later product features remain
+separately reviewable. Normalized
 measurements currently cover PTR; MPR/FTR retain device context and exact raw
 records. Effective STDF defaults, cross-file identity, analysis and PAT policy
 remain separate decisions. Compression, background folder watching, offline
