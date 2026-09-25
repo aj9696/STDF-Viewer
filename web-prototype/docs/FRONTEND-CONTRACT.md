@@ -1,6 +1,7 @@
 # Browser library frontend contract
 
-Version 1, 2026-09-24. This is the logistics boundary for the future frontend.
+Version 1, 2026-09-24. This is the logistics and recorded-inspection boundary for
+the browser frontend.
 It contains no yield, PAT, limits/default interpretation, or retest policy.
 Use the adapter rather than accessing OPFS, SQL, or the worker directly.
 
@@ -35,6 +36,10 @@ failure or an invitation to start a second client against the same library.
 | `listDatasets({offset=0,limit=50})` | `{items,nextOffset}`; maximum 100, newest first |
 | `listJobs({offset=0,limit=50})` | Same pagination; includes failures/interruption diagnostics |
 | `getDataset(id)` | Dataset metadata after checking referenced files/schema/manifest; no STDF reparse |
+| `listTests(id, {query='',after=null,limit=50})` | Grouped test-number inventory and literal search; maximum 100 groups; details below |
+| `getTest(id, testNumber)` | `{test_number,measurementCount,definitionCount}`; absent test rejects NOT_FOUND |
+| `readTestDefinitions(id, testNumber, {after=0,limit=25})` | `{items,nextAfter}`; original declaration columns, maximum 100 rows |
+| `readTestMeasurements(id, testNumber, {after=0,limit=100})` | `{items,nextAfter}`; measurement columns plus recorded attempt fields, maximum 1,000 rows |
 | `readRows(id, table, {after=0,limit=100})` | `{items,nextAfter}`; keyset cursor, maximum 1,000 rows and a 2 MiB JSON row-data budget |
 | `readRecord(id, seq)` | `{record,bytes}`; exact source record including its header, at most 65,539 bytes |
 | `verifyDataset(id)` | SQLite integrity, scalar type/range/text bounds, count/reference/record-span checks, and streaming source SHA-256 |
@@ -83,6 +88,74 @@ after a mutation. Row cursors are stable because completed datasets are immutabl
 milliseconds since the Unix epoch. This is a cleanup inventory, not a list of
 verified/downloaded backups: interrupted entries may have zero bytes. Its
 offset pagination can also shift after deletion; refresh from offset zero.
+
+## Test inspection queries
+
+The additive query interface is specified in
+[SPEC-test-explorer.md](../../SPEC-test-explorer.md); its first product consumer
+is [Test Explorer](TEST-EXPLORER.md). Queries call `LibraryStore.access` and close
+the read-only dataset handle in `finally`. They do not modify stored data, reparse
+STDF, resolve defaults, apply scale exponents, filter flags or combine retests.
+All four reject LIBRARY_LIMIT when the manifest reports more than 20,000
+declarations or a bounded 20,001-row probe finds additional stored definitions.
+This check covers restored packages as well as decoder-produced datasets. The
+saved dataset remains accessible through the existing Library tools workflows.
+
+`testNumber` must be an unsigned 32-bit integer, including `0` and `4294967295`.
+`listTests` accepts a string `query` of at most 128 JavaScript string code units,
+a nullable uint32 `after` cursor, and integer `limit` from 1 through 100. Defaults
+apply when an option is omitted, not when a non-nullable option is passed as null.
+Invalid types, NaN, fractions and out-of-range values reject INVALID_REQUEST.
+
+Its result is:
+
+```js
+{
+  items: [{ test_number, name, definition_count }],
+  nextAfter, totalTests, matchedTests
+}
+```
+
+The query groups declarations by test number, never the measurement table.
+`name` is the lexicographically first nonempty recorded name, or null when none
+exists. `definition_count` includes every declaration in the group. Literal
+substring search matches decimal test number or any recorded declaration name;
+SQLite's built-in ASCII case folding applies, while Unicode characters otherwise
+match literally. `%`, `_` and quotes have no wildcard or SQL meaning. Search
+selects matching groups before cursor paging; it never hides the other
+declarations of a matching test. `totalTests` counts all groups and `matchedTests`
+counts all matching groups, independently of cursor position.
+
+The first `listTests` cursor must be null to include test number zero. Zero is a
+valid returned `nextAfter`: continue while `nextAfter !== null`, not while it is
+truthy. Results are ordered by ascending test number. Test-number grouping is a
+navigation convention within one dataset, not an analytical population or a
+cross-source test identity. Multiple names, units and limits can share a number.
+
+`getTest` counts declarations and traverses the selected test's matching entries
+in the existing `measurements_test` index to count its observations. This avoids
+a whole-measurement-table scan but is not a cached or constant-time count.
+It rejects NOT_FOUND when no matching
+declaration exists. Row-page methods may instead return an empty page for an
+absent test. Their `after` cursor is a nonnegative safe integer (default zero),
+with strict integer limits: 1–100 definitions or 1–1,000 observations.
+
+`readTestDefinitions` returns original `id`, `test_number`, `name` and
+`metadata_json`, ordered by `id`. `readTestMeasurements` returns all original
+measurement columns (`seq`, `device_id`, `definition_id`, `test_number`, `head`,
+`site`, `test_flags`, `parm_flags`, `result_bits`, `result`) plus `part_id`,
+`hard_bin`, `soft_bin` and `part_flags`. It uses the `(test_number, seq)` index
+and a LEFT JOIN against the device primary key, ordered by `seq`. Do not drop an
+observation merely because joined metadata is null, or interpret `result: null`
+as zero; decode `result_bits` for special floating-point values.
+
+All three page methods limit JSON row data to 2 MiB and look ahead to decide
+whether more rows exist. A short page can still have a non-null cursor. Return
+that exact cursor to fetch the next page; IDs and sequences can be sparse.
+Stable keyset cursors rely on the completed dataset remaining immutable. The
+client's explicit dataset/test arguments take precedence over similarly named
+properties in the options object. Operations remain serialized through the
+existing owner worker; query counts are not separate concurrent requests.
 
 ## Job states and errors
 
@@ -233,6 +306,9 @@ require its generated 1M source. Test outcomes and limitations belong in
 [LIBRARY-VALIDATION.md](../LIBRARY-VALIDATION.md); this contract makes no import
 speed or universal browser-support claim.
 
-Use the engineering console to evaluate logistics. Build production screens one
-feature at a time with the engineer: first a library/reopen flow, then import and
-job feedback. Analysis screens should wait for the engineer's separate plan.
+The product [library home](LIBRARY-HOME.md) provides saved-dataset open/reopen and
+single-source import feedback. [Test Explorer](TEST-EXPLORER.md) adds recorded
+PTR inspection through the four bounded query methods. Its guide records the
+format/browser verification commands and current qualification status. Use the
+engineering console for the remaining logistics workflows. Continue one feature
+at a time; analytical policies require the engineer's separate design.

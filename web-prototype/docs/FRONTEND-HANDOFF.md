@@ -3,9 +3,12 @@
 Status: engineering foundation, 2026-09-24. The next product work can use a
 documented browser library API instead of building storage into UI components.
 The console demonstrates the full logistics integration. The first product
-feature is now [library home](LIBRARY-HOME.md): single-file import, saved-dataset
-search and metadata reopen. Develop and review one user-facing feature at a time
-with the test engineer; analytical behavior remains a separate design task.
+feature, [library home](LIBRARY-HOME.md), provides single-file import,
+saved-dataset search and metadata reopen. [Test Explorer](TEST-EXPLORER.md) is the
+next implemented slice: recorded PTR test search, declarations and observation
+paging. Its Chrome/Edge qualification and limits are recorded in that guide.
+Develop and review one user-facing feature at a time with the test
+engineer; analytical behavior remains a separate design task.
 
 ## What is available
 
@@ -15,6 +18,7 @@ with the test engineer; analytical behavior remains a separate design task.
 | Source selection | Multiple raw files, read-only directory handles, or folder file-input fallback; review before import |
 | Import queue | Sequential files, content deduplication, per-file outcomes, cancellation and explicit rescans |
 | Retained evidence | Ordered record indexes, PTR measurements, declaration metadata and device attempts; original bytes remain accessible |
+| Test Explorer | Product UI for one dataset's PTR test-number search, recorded declarations and paged observations; no inferred analytical policy |
 | Reopen and recovery | Reopen saved data without selecting original files; inspect durable job history and discard known incomplete staging |
 | Portability | Versioned source-plus-database package, bounded transfer, validation before publication, explicit temporary-export cleanup |
 
@@ -119,7 +123,9 @@ when no download needs them. The app cannot detect browser download completion.
   or offline-startup guarantee is provided.
 
 The library home implements open/reopen, saved-dataset search and single-file
-import feedback. Review that feature with the engineer before expanding it.
+import feedback. The latest product slice, Test Explorer, reads saved PTR
+declarations and observations through bounded queries; it does not perform
+analysis. Review these workflows with the engineer before expanding them.
 Keep folder batches, portability and recovery as separately reviewable user
 journeys backed by the existing methods.
 
@@ -131,6 +137,12 @@ raw indexes, and other record families remain framed/indexed as declared by
 versus empty PTR declarations remain available. They do not define a population,
 effective limit, retest rule, pass/fail decision, yield, PAT method, or cross-file
 part identity. Those decisions belong to the engineer's later analysis design.
+Test Explorer displays this evidence literally: omitted/empty fields remain
+distinct, floating-point special values come from retained bits, and result or
+limit scaling/defaults are not applied. Its [feature guide](TEST-EXPLORER.md)
+and [specification](../../SPEC-test-explorer.md) define the inspection boundary,
+verification commands and completed browser evidence independently of the
+earlier foundation qualification.
 
 Use [LIBRARY-VALIDATION.md](../LIBRARY-VALIDATION.md) for recorded evidence and
 open qualification limits; use the [README](../README.md#foundation-verification)

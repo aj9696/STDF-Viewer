@@ -18,6 +18,9 @@ profile to use the existing library. The screen opens its library automatically.
 3. Select **Open dataset**, or select a filename in the library. The overview
    shows saved measurement, device-attempt, declaration and record counts,
    source/database sizes, retained coverage and the source fingerprint.
+   **Explore tests** opens [Test Explorer](TEST-EXPLORER.md) in the same tab to
+   search test numbers/names and page through recorded declarations and PTR
+   observations. Its own guide describes scope and qualification evidence.
 4. Search by filename or recorded relative path. Sort by import date, filename
    or source size; use the arrow controls to page through 25 rows at a time.
 5. Reload the page and reopen the dataset without selecting its original file.
@@ -51,8 +54,9 @@ inspectable through Library tools. No screen action silently resets the library.
 Long or untrusted filenames and errors are rendered as text. Native dialogs
 support keyboard navigation and Escape; Escape cannot dismiss an active import.
 
+Recorded PTR browsing is now available through [Test Explorer](TEST-EXPLORER.md).
 Folder batches, save/open workspace, recovery controls, dataset deletion,
-measurement browsing, charts, yield and PAT are later product features. Existing
+charts, yield and PAT are later product features. Existing
 console tools remain available for folder imports and individual `.sdlibrary`
 package export/restore. A package contains one dataset, not an entire workspace.
 There is no offline-startup guarantee, account, hosted data service or multi-tab
