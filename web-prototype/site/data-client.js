@@ -73,4 +73,7 @@ export class DataLibraryClient {
   importFile(file, { relativePath = file.name } = {}) { return this.request("importFile", { file, relativePath }); }
   exportDataset(datasetId) { return this.request("exportDataset", { datasetId }); }
   restorePackage(file) { return this.request("restorePackage", { file }); }
+  viewer(action, selection, options = {}) { return this.request("viewer", { action, selection, options }); }
+  viewerTransfer(action, options = {}) { return this.request('viewerTransfer', { ...options, action }); }
+  viewerReport(selection, options = {}) { return this.request('viewerReport', { selection, options }); }
 }

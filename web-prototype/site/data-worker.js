@@ -14,6 +14,22 @@ async function dispatch(message, context) {
     const opened = await store.access(message.datasetId);
     try { return store.present(opened.dataset); } finally { opened.db.close(); }
   }
+  if (message.type === "viewer") {
+    const { runViewerQuery } = await import("./viewer-queries.js");
+    return runViewerQuery(store, message, context);
+  }
+  if (message.type === 'viewerTransfer') {
+    const { runViewerTransfer } = await import('./viewer-transfer.js');
+    return runViewerTransfer(store, message, context);
+  }
+  if (message.type === 'viewerReport') {
+    const { runViewerReport } = await import('./viewer-report.js');
+    return runViewerReport(store, message, context);
+  }
+  if (message.type === 'viewerDownloads') {
+    const { runViewerDownloads } = await import('./viewer-downloads.js');
+    return runViewerDownloads(message, context);
+  }
   if (["listTests", "getTest", "readTestDefinitions", "readTestMeasurements"].includes(message.type)) {
     const { runTestQuery } = await import("./test-queries.js");
     return runTestQuery(store, message);

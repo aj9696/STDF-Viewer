@@ -40,7 +40,7 @@ const result = await build({
   stdin: { resolveDir: fileURLToPath(root), contents: `
     import Bunzip from 'seek-bzip';
     export { Bunzip };
-    export { BlobReader, ZipReader, configure } from '@zip.js/zip.js/lib/zip-core.js';
+    export { BlobReader, ZipReader, ZipWriter, TextReader, Uint8ArrayReader, configure } from '@zip.js/zip.js/lib/zip-core.js';
     export { Crc32 } from './node_modules/@zip.js/zip.js/lib/core/streams/codecs/crc32.js';
     export { Decompress as ZstdDecoder } from 'fzstd';
     export { createXXHash64 } from 'hash-wasm';
