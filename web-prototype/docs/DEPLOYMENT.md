@@ -116,3 +116,20 @@ Clearing site data, removing a profile or browser storage eviction can remove
 the local library; persistence requests are not backups. Keep exported copies
 of important work. Deployment rollback restores application assets, not local
 databases, and must be checked for compatibility with stored schema versions.
+
+## Published release verification — 2026-09-25
+
+The first production deployment at [semidata.pages.dev](https://semidata.pages.dev/)
+serves revision [`3f703a9`](https://github.com/aj9696/STDF-Viewer/commit/3f703a9860df76faff5762daf83a6b40949f70fe),
+with `sourceDirty: false`: 104 packaged files, 3,752,867 bytes before ZIP compression.
+The public root, library, viewer, parser WASM, SQLite WASM, library module and
+attribution file matched their packaged SHA-256 values. Both WASM responses used
+`application/wasm`; application assets returned `Cache-Control: no-cache` and
+a nonexistent route returned HTTP 404.
+
+An isolated Chrome profile passed example import (48 devices), two-file
+comparison (96 devices), chart rendering, workspace download, and persistence
+after a full browser restart. A fresh profile restored the workspace with the
+same source hashes and device totals. The run observed no JavaScript errors,
+failed requests or off-origin application requests. This is a small-fixture
+deployment check, not a large-file performance qualification.
