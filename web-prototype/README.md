@@ -35,6 +35,8 @@ from remaining qualifications. The original summary experiment has its own
 
 ## Run the library foundation
 
+For a public static release, follow the [Cloudflare Pages deployment guide](docs/DEPLOYMENT.md).
+
 From the repository root, with Node.js 22 or later and the repository's local
 Python/Rust environment available:
 
