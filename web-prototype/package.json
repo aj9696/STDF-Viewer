@@ -6,6 +6,7 @@
   "scripts": {
     "build:storage": "node scripts/build-storage.mjs",
     "build:vendor": "node scripts/build-vendor.mjs",
+    "package:pages": "node scripts/package-pages.mjs",
     "test:compression": "node scripts/compression-check.mjs",
     "test:storage": "node scripts/storage-check.mjs",
     "test:viewer:model": "node scripts/viewer-model-check.mjs",
