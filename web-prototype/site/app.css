@@ -121,7 +121,7 @@ h1 { margin-top: 9px; color: var(--ink); font-size: 34px; font-weight: 650; line
 .sort-field select { max-width: 170px; padding: 6px 5px; border: 0; border-radius: 4px; background: transparent; color: #58687f; font-size: 12px; cursor: pointer; }
 .table-scroll { width: 100%; overflow-x: auto; }
 .file-table { width: 100%; border-collapse: collapse; table-layout: auto; text-align: left; }
-.file-table th { position: relative; padding: 12px 12px; border-top: 1px solid #edf0f5; border-bottom: 1px solid #edf0f5; background: #fafbfd; color: var(--muted); font-size: 11px; font-weight: 500; white-space: nowrap; }
+.file-table th { position: relative; padding: 12px 12px; border-top: 1px solid #edf0f5; border-bottom: 1px solid #edf0f5; background: #fafbfd; color: var(--muted); font-size: 12px; font-weight: 500; white-space: nowrap; }
 .file-table th:first-child, .file-table td:first-child { padding-left: 25px; }
 .file-table th:last-child, .file-table td:last-child { padding-right: 20px; }
 .file-table th:nth-child(2), .file-table th:nth-child(3) { text-align: right; }
@@ -134,7 +134,7 @@ h1 { margin-top: 9px; color: var(--ink); font-size: 34px; font-weight: 650; line
 .file-glyph svg { width: 18px; height: 18px; }
 .file-name { display: block; max-width: clamp(140px, 23vw, 410px); padding: 0; overflow: hidden; border-radius: 3px; background: transparent; color: #34465e; font-size: 13px; font-weight: 600; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .file-name:hover { color: var(--blue); }
-.file-meta { display: block; max-width: clamp(140px, 23vw, 410px); margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.file-meta { display: block; max-width: clamp(140px, 23vw, 410px); margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .number-cell { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .date-cell { white-space: nowrap; }
 .status-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 7px; border: 1px solid #e0eee6; border-radius: 5px; background: #f2f8f4; color: #386c50; font-size: 11px; font-weight: 500; white-space: nowrap; }

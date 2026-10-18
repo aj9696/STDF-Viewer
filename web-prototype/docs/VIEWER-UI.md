@@ -27,6 +27,12 @@ the left list. Check several tests to display them together, up to twelve. The
 filename stays above the plot; **Library** returns to the saved-file list.
 An empty library links to **Try example data**.
 
+The view tabs and **Tools** share a toolbar that wraps on narrower screens. The
+**Tests** catalog is a native disclosure: it starts open on desktop and collapsed
+at widths of 760 pixels or less. Open **Tests** to search or change the selection;
+closing it only hides its controls and keeps selected tests unchanged. Secondary
+labels use readable text sizes while the chart remains the main content.
+
 Reloading the current page resumes its edited selection; a file/example link
 initializes its history entry only once. Opening the viewer without a dataset
 link resumes the last group/test selection, tab and chart-series choice,
@@ -95,6 +101,10 @@ exclusions and interpretation warnings remain visible. Trend/histogram interval 
 query full-population devices, including observations omitted by display
 reduction. Hidden series do not participate in picks. Bin and die picks retain
 their exact category/coordinate and group scope.
+
+When comparing series, the compact summaries align labels and values in columns
+on wider screens and wrap on narrower screens. The layout does not change the
+population, calculation or number-format settings.
 
 Under **Chart tools**, **Pointer drag** selects Inspect data, Zoom rectangle, or Pan view. Dedicated
 zoom and four pan buttons provide keyboard operation. Zoom/pan changes the
@@ -198,6 +208,11 @@ standalone consumers must retain them alongside the PNG. Report rendering uses
 separate full-extent chart instances.
 
 ## Presentation differences from the desktop baseline
+
+The October 2026 presentation cleanup used
+[UI UX Pro Max at revision 56ea9cf](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/tree/56ea9cf174ed86786187daa9de0e6247cb0747e4)
+as advisory guidance for a data-dense interface. Navigation decisions follow
+the existing engineering workflows and observed usability issues.
 
 The browser implements the investigation workflows with a new web layout; it
 does not reproduce every desktop presentation preference. Navigation and

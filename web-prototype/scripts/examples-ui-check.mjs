@@ -115,12 +115,25 @@ try {
     if (example.id === 'site-shift') {
       assert.equal(state.seriesBy, 'site'); assert.equal(await page.locator('#viewer-series').inputValue(), 'site');
       assert.equal((await page.evaluate(() => semidataViewer.query('devices', {}))).total, 96);
+      const navigation = await page.evaluate(() => ({ tabs: document.querySelector('.viewer-tabs').getBoundingClientRect().top, tools: document.querySelector('.viewer-tool-row').getBoundingClientRect().top }));
+      assert.ok(Math.abs(navigation.tabs - navigation.tools) < 5, 'Desktop tools and tabs share one row');
       await screenshot('desktop-site-shift.png');
     }
     if (example.id === 'wafer') assert.equal((await page.evaluate(() => semidataViewer.query('wafers', {}))).items.length, 1);
     if (example.id === 'mixed') {
       await page.setViewportSize({ width: 360, height: 800 }); await fits(); await screenshot('mobile-mixed.png');
+      const catalog = page.locator('#viewer-test-catalog'), summary = catalog.locator('> summary');
+      assert.equal(await catalog.getAttribute('open'), null, 'Narrow screens start with the test catalog collapsed');
+      const selectedBefore = await page.evaluate(() => semidataViewer.getState().tests);
+      await summary.focus(); await page.keyboard.press('Enter');
+      assert.equal(await page.locator('#viewer-test-query').isVisible(), true);
+      await summary.focus(); await page.keyboard.press('Enter');
+      assert.equal(await page.locator('#viewer-test-query').isVisible(), false);
+      assert.deepEqual(await page.evaluate(() => semidataViewer.getState().tests), selectedBefore);
+      checks.push('Keyboard opens and closes the narrow-screen test catalog without changing the selected tests');
       await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.waitForFunction(() => document.querySelector('#viewer-test-catalog').open);
+      assert.notEqual(await catalog.getAttribute('open'), null, 'Desktop restores the full test catalog');
     }
     snapshots.push({ id: example.id, state });
   }

@@ -20,6 +20,7 @@ export function compactChart(container) {
 }
 export function renderStatSummary(container, analysis, settings) {
   const summary = element('div', undefined, 'viewer-stat-summary');
+  if (analysis.series.length > 1) summary.classList.add('has-series');
   for (const series of analysis.series) {
     const row = element('div', undefined, 'viewer-stat-row');
     if (analysis.series.length > 1) row.append(element('span', series.label, 'viewer-stat-label'));

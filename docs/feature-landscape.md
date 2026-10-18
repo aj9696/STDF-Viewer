@@ -107,6 +107,20 @@ retests, units/scales and changing/omitted limits. Keep original results separat
 from experimental labels. These are our engineering requirements, not inferred
 vendor algorithms. No new analytical policy is approved by this comparison.
 
+### Deferred: AI-assisted investigations
+
+On 2026-10-18, the engineer identified AI-assisted investigation of the saved
+test-data library as a future addition. It is deferred; the current UI cleanup
+does not implement an AI engine or connect the library to a model.
+
+The intended direction is to let an assistant request structured queries and
+existing deterministic analysis routines. Findings would carry source-file
+provenance, test identities, population filters and reproducible calculation
+evidence, so an engineer can inspect the scope and check the result. Potential
+workflows include program-revision comparisons, site shifts, recurring wafer
+patterns and PAT evaluation. Model choice, local versus cloud execution, and
+which data a cloud service could access remain unresolved design decisions.
+
 ## Evidence boundaries and maintenance
 
 - Public product pages can describe optional modules or suites. Confirm exact

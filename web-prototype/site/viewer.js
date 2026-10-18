@@ -19,6 +19,14 @@ let library, running = Promise.resolve(), retryWork = null, chartHandles = [], d
 let cancelRequested = false;
 const dialogOpeners = new WeakMap();
 const actions = {};
+const compactCatalog = matchMedia('(max-width: 760px)');
+function arrangeCatalog() {
+  const catalog = $('viewer-test-catalog'), summary = catalog.querySelector('summary');
+  if (compactCatalog.matches && catalog.contains(document.activeElement)) summary.focus();
+  catalog.open = !compactCatalog.matches;
+}
+arrangeCatalog();
+compactCatalog.addEventListener('change', arrangeCatalog);
 const actionButtons = [['viewer-export', 'export'], ['viewer-save-session', 'saveSession'], ['viewer-open-session', 'openSession'], ['viewer-manage-downloads', 'manageDownloads']];
 function runAction(work) { return run(async () => { actionRunning = true; try { await work(); } finally { actionRunning = false; } }); }
 function changed() {
@@ -431,6 +439,6 @@ window.semidataViewer = {
   },
 };
 installViewerActions(window.semidataViewer);
-window.addEventListener('pagehide', () => { disposed = true; disposeCharts(); library?.terminate(); }, { once: true });
+window.addEventListener('pagehide', () => { disposed = true; compactCatalog.removeEventListener('change', arrangeCatalog); disposeCharts(); library?.terminate(); }, { once: true });
 window.addEventListener('pageshow', (event) => { if (event.persisted) location.reload(); });
 run(startup);

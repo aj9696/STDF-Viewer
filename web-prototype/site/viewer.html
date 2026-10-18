@@ -29,17 +29,21 @@
         <button id="viewer-reset-filters" class="quiet-button" data-ready disabled>Reset filters</button><p class="viewer-help">Ctrl/Cmd-click to select multiple heads or sites. Current attempts exclude superseded retests.</p>
       </div></details>
       <div class="viewer-layout">
-        <aside class="library-panel viewer-catalog" aria-labelledby="catalog-heading">
-          <div class="panel-heading"><div><h2 id="catalog-heading">Tests</h2><p id="viewer-test-count">Loading test catalog…</p></div><span id="viewer-selected-count">0 / 12</span></div>
+        <aside class="viewer-catalog" aria-labelledby="catalog-heading">
+          <details id="viewer-test-catalog" class="library-panel" open>
+          <summary class="panel-heading"><div><h2 id="catalog-heading">Tests</h2><p id="viewer-test-count">Loading test catalog…</p></div><span id="viewer-selected-count" title="Selected tests (up to 12)">0 / 12</span></summary>
           <form id="viewer-test-search"><div class="search-line"><input id="viewer-test-query" aria-label="Test number or name" type="search" maxlength="128" placeholder="Find test…" data-ready disabled /><button class="button secondary" data-ready disabled>Find</button></div><details class="viewer-detail"><summary>Search options</summary><div class="catalog-options"><label><input id="viewer-wildcard" type="checkbox" data-ready disabled /> Wildcards * and ?</label><label>Order<select id="viewer-test-order" data-ready disabled><option value="original">Original</option><option value="number">Number</option><option value="name">Name</option></select></label></div></details></form>
           <div id="viewer-tests" class="viewer-test-list"></div><div class="viewer-pager"><button id="viewer-tests-prev" class="quiet-button" disabled>Previous tests</button><span id="viewer-test-page"></span><button id="viewer-tests-next" class="quiet-button" disabled>Next tests</button></div>
           <details class="viewer-detail viewer-selection-details"><summary>Selected tests</summary><div id="viewer-selected" class="selected-tests"></div></details><button id="viewer-clear-tests" class="quiet-button" data-ready disabled>Clear selection</button>
           <details class="viewer-health viewer-detail"><summary>Find failing tests</summary><button id="viewer-scan-health" class="button secondary" data-ready disabled>Scan test health</button><p id="viewer-health-status" class="viewer-help">Check failures and low Cpk for all tests.</p></details>
+          </details>
         </aside>
         <section class="viewer-content" aria-label="Investigation">
-          <div class="viewer-tool-row"><label id="viewer-tool-label" for="viewer-tool">Tools</label><select id="viewer-tool" data-ready disabled><option value="">Choose a tool…</option></select></div>
+          <div class="viewer-navigation">
           <div class="viewer-tabs" role="tablist" aria-label="Data views">
             <button role="tab" data-tab="histogram" aria-selected="false" aria-controls="viewer-panel" id="tab-histogram" data-ready disabled>Histogram</button><button role="tab" data-tab="trend" aria-selected="false" aria-controls="viewer-panel" id="tab-trend" data-ready disabled>Trend</button><button role="tab" data-tab="tests" aria-selected="false" aria-controls="viewer-panel" id="tab-tests" data-ready disabled>Statistics</button><button role="tab" data-tab="devices" aria-selected="false" aria-controls="viewer-panel" id="tab-devices" data-ready disabled>Devices</button><button role="tab" data-tab="bins" aria-selected="false" aria-controls="viewer-panel" id="tab-bins" data-ready disabled>Bins</button><button role="tab" data-tab="wafers" aria-selected="false" aria-controls="viewer-panel" id="tab-wafers" data-ready disabled>Wafers</button><button role="tab" data-tab="overview" aria-selected="true" aria-controls="viewer-panel" id="tab-overview" data-ready disabled>File info</button><button role="tab" data-tab="records" aria-selected="false" aria-controls="viewer-panel" id="tab-records" data-ready disabled>Records</button>
+          </div>
+          <div class="viewer-tool-row"><label id="viewer-tool-label" for="viewer-tool">Tools</label><select id="viewer-tool" data-ready disabled><option value="">Choose a tool…</option></select></div>
           </div>
           <section id="viewer-panel" class="library-panel" role="tabpanel" aria-labelledby="tab-overview" tabindex="-1"><div class="viewer-empty"><h2>Opening data…</h2></div></section>
         </section>
