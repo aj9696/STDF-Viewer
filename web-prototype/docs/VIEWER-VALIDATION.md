@@ -421,3 +421,52 @@ The published `7fecc60` release also passed independent Chrome/Edge checks again
 the stable public origin, including exact asset hashes, all five local font faces,
 MIME headers, source-preserving example import and fresh-profile workspace restore.
 See the deployment record for the immutable revision and final screenshot paths.
+
+## All-test statistics and help — 2026-10-18
+
+Implemented against `STATISTICS-AND-HELP.md`; help writing/interaction policy is
+in `VIEWER-HELP.md`. The existing framed-sheet design is retained.
+
+Local verification passed:
+
+- `viewer-summary-model-check.mjs`: global numeric sorting with missing values
+  last in both directions; search and pagination; partial cancellation/resume
+  without duplicate batches; empty scopes and FTR numeric suppression.
+- `viewer-summaries-check.mjs chrome` and `msedge`: six provider check groups,
+  both byte orders, exact equality with chart analysis, independent moments,
+  invalid values and changing limits, filters, retests, independent groups,
+  unresolved identities, compact catalog equivalence, request bounds and
+  cancellation during both scans and between tiny tests.
+- `viewer-ui-check.mjs chrome` and `msedge`: all 53 identities without checkbox
+  selection, numeric sorting across page boundaries, cached search/paging,
+  no-observation rows, exact test-to-histogram drilldown, cancellation after ten
+  completed tests and resume of the remaining 43, and scope/series invalidation.
+- `viewer-e2e-check.mjs chrome` and `msedge`: ten population rows for five real
+  PTR/MPR/FTR identities in two groups. All counts and physical numeric moments
+  match full analysis. Existing selected statistics, device matrix, nested
+  source drilldown, eight-sheet XLSX with eleven PNGs, source checksum checks,
+  workspace restore and reload persistence still pass.
+- `viewer-help-check.mjs chrome` and `msedge`: 27 topics including all fifteen
+  tools; context selection, related topics, keyboard trapping, modal isolation,
+  focus return, internal scrolling, reduced motion, and 44px mobile controls.
+  The conservative sentence-length check passes; it is not an STE dictionary or
+  conformance audit.
+
+Desktop and 360px all-test screenshots were inspected. Wide tables stay inside
+scrollable regions with a fixed identity column. Help screenshots were inspected
+at 1440, 768, 390 and 360px; the reading column and persistent Close/Topic controls
+fit. No new large-file timing claim or actual browser-zoom qualification is made.
+
+Independent review corrected empty CSS class tokens, unnecessary catalog pin
+metadata retention, response-sized batches, full chart cache growth after table
+navigation, and generic retry behavior after cancellation. Help review corrected
+control names, site-series scope and test-limit/specification-overlay language.
+
+Evidence directories under `results/`:
+
+- `viewer-summaries-chrome-1792376476086/`, `viewer-summaries-msedge-1792376476082/`
+- `viewer-ui-chrome-1792376634238/`, `viewer-ui-msedge-1792376634235/`
+- `viewer-e2e-chrome-1792376634242/`, `viewer-e2e-msedge-1792376634238/`
+- `viewer-help-chrome-1792376593500/`, `viewer-help-msedge-1792376593492/`
+
+Public deployment is qualified separately in `DEPLOYMENT.md`.

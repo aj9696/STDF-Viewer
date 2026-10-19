@@ -330,3 +330,14 @@ Published as clean asset revision `7fecc60` on 2026-10-18. Independent Chrome/Ed
 public checks confirmed exact asset hashes, local font loading, import/comparison
 and workspace persistence/restoration. The source and deployment records are
 pushed to the user's GitHub fork. The visual implementation is complete.
+
+### All-test statistics and contextual help — 2026-10-18
+
+User authorized two additions: an all-test statistics table and a right-side help
+panel written in simplified technical English based on ASD-STE100. The existing
+framed-sheet design and selected-test workflow remain the baseline.
+`web-prototype/docs/STATISTICS-AND-HELP.md` records the specification, bounded
+provider contract, cache/cancellation behavior and acceptance checks. Implement
+and verify compact provider summaries, then the table, then contextual help.
+Independent review and Chrome/Edge regression checks precede a clean production
+package; deployed verification is recorded separately. No storage migration.

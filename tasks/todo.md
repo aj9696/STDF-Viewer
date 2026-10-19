@@ -344,3 +344,15 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
     `web-prototype/docs/DEPLOYMENT.md`, `tasks/plan.md`, `tasks/todo.md`.
     Review shared changes independently before release; retain any remaining
     qualification gaps explicitly.
+
+
+### All-test statistics and help — 2026-10-18
+
+- [x] Compact provider summaries share exact existing calculations and scope.
+- [x] All-test table supports search, global numeric sort, pagination and drilldown.
+- [x] Partial scans retain completed batches and resume; scope changes invalidate.
+- [x] Selected-test statistics and matrix remain available.
+- [x] Contextual right help panel covers every view, all 15 tools and definitions.
+- [x] Controlled-English writing policy, API bounds and engineer guide documented.
+- [x] Independent review and local Chrome/Edge provider, UI, real E2E and help checks.
+- [ ] Publish clean package and verify the public revision in Chrome and Edge.

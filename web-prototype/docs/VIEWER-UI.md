@@ -62,7 +62,7 @@ series overlap intentionally; they are not disjoint cohorts to sum.
 | --- | --- |
 | File info | Outcome metrics for the selected current/all policy, attempt history counts, source hash, warnings and recorded headers. Unknown outcomes are separate; displayed yield excludes unknowns. |
 | Devices | Searchable/sortable attempt table, 50 rows per page. Open a device for all its recorded observations. Plot selections retain their original population and can be cleared explicitly. |
-| Statistics | Full-population statistics for up to twelve selected identities and a device-by-test matrix joined by original device identity. Repeated executions are retained. |
+| Statistics | **All tests** shows a searchable, sortable table for every test identity, with separate population rows. Select a test name to open its histogram. **Selected tests** retains statistics and the device matrix for up to twelve selected identities. |
 | Trend | Reduced display points with full recorded/eligible counts and extrema retained by the provider. Statistics are computed from the full population. |
 | Histogram | Common, equal-width provider bins across compared series. Intervals are half-open except the final upper endpoint. |
 | Bins | Recomputed hardware/software counts, percentages and outcome counts. Expand **Bin table** for the table, paged at 50 rows. |
@@ -92,6 +92,22 @@ result ordinal alongside normalized values. **Transpose this page** changes the
 current page presentation only. Paging still retrieves every recorded execution.
 **Export CSV** and **Export Excel** export all recorded observations for that
 attempt, beyond the current page and selected-test set.
+
+## All-test statistics and help
+
+**Statistics → All tests** reads the active scope without requiring test
+checkboxes. Select a column heading to sort all completed results before paging.
+Use **Find in statistics** to search test names, numbers, units or populations.
+The first visit computes the summary; later visits reuse it until scope or series
+changes. Cancellation preserves completed batches and offers **Resume scan**.
+Partial results are explicitly labelled. This table includes tests hidden by
+display rules. **Selected tests** keeps the existing matrix workflow.
+
+**Help** opens a panel on the right for the current view or tool. Choose another
+topic to read its steps, results and limits. **Column help** opens the statistic
+definitions. Use **Close** or Escape to return to the control that opened help.
+The help text uses simplified technical English; its writing basis is documented
+in `VIEWER-HELP.md`. See `STATISTICS-AND-HELP.md` for contracts and bounds.
 
 ## Chart interaction and settings
 

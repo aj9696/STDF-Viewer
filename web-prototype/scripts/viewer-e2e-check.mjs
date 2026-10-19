@@ -154,6 +154,32 @@ try {
   checks.push('Files & groups UI preserves ordered sources; current retest follows last file; independent comparison and head/site/all-attempt filters render six scoped attempts');
 
   await selectTests(); await tab('tests');
+  const allStats = page.getByRole('region', { name: 'All test statistics', exact: true });
+  assert.equal(await page.getByRole('button', { name: 'All tests', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.equal(await allStats.locator('tbody tr').count(), 10, 'Every test identity has separate rows for both comparison groups');
+  const expectedSummaries = await page.evaluate(async () => {
+    const { formatNumber } = await import('./viewer-number.js'), { testTitle } = await import('./viewer-view.js');
+    const snapshot = semidataViewer.getState(), result = await semidataViewer.query('tests', { limit: 100, order: 'original' });
+    const rows = [];
+    for (const test of result.items) {
+      const analysis = await semidataViewer.query('analyze', { testKey: test.key, bins: snapshot.settings.bins, seriesBy: snapshot.seriesBy, includeAggregate: snapshot.includeAggregate });
+      for (const series of analysis.series) rows.push({ title: testTitle(test), label: series.label,
+        counts: ['total', 'count', 'fail', 'pass', 'unknown', 'excluded'].map(key => series.stats[key].toLocaleString()),
+        moments: ['mean', 'median', 'stdev', 'min', 'max'].map(key => test.family === 20 || series.stats[key] == null ? '—' : formatNumber(series.stats[key], snapshot.settings.precision, snapshot.settings.notation)) });
+    }
+    return rows;
+  });
+  const actualSummaries = await allStats.locator('tbody tr').evaluateAll(rows => rows.map(row => {
+    const cells = [...row.querySelectorAll('td')];
+    return { title: cells[0].querySelector('button').textContent, label: cells[1].textContent,
+      counts: [3, 4, 5, 15, 16, 17].map(index => cells[index].textContent), moments: [6, 7, 8, 9, 10].map(index => cells[index].textContent) };
+  }));
+  const byIdentity = (a, b) => (a.title + a.label).localeCompare(b.title + b.label);
+  assert.deepEqual(actualSummaries.sort(byIdentity), expectedSummaries.sort(byIdentity), 'Compact summaries display the same exact counts and moments as full analysis for PTR, MPR, FTR, and separate groups');
+  assert.equal(await page.evaluate(() => semidataViewer.getState().tests.length), 3);
+  await screenshot('desktop-all-test-statistics.png');
+  checks.push('All-test table displays ten independent-population rows for five real PTR/MPR/FTR identities; all counts and numeric moments match full analysis without changing checkbox selection');
+  await page.getByRole('button', { name: 'Selected tests', exact: true }).click(); await ready();
   const stats = page.getByRole('region', { name: 'Full-population test statistics', exact: true });
   assert.equal(await stats.locator('tbody tr').count(), 6);
   assert.match(await stats.textContent(), /MULTI/); assert.match(await stats.textContent(), /SCAN/);
@@ -206,7 +232,11 @@ try {
   checks.push('Export dialog generates and downloads complete Excel report with real chart PNGs; workspace download restores settings, selected tests, tab and ordered groups in an existing library');
 
   await page.setViewportSize({ width: 360, height: 900 }); await fits(); await screenshot('mobile-histogram.png', true);
-  for (const name of ['overview', 'devices', 'tests', 'trend', 'histogram', 'bins', 'wafers', 'records']) { await tab(name); await fits(); }
+  for (const name of ['overview', 'devices', 'tests', 'trend', 'histogram', 'bins', 'wafers', 'records']) {
+    await tab(name);
+    if (name === 'tests') { await page.getByRole('button', { name: 'All tests', exact: true }).click(); await ready(); assert.equal(await allStats.locator('tbody tr').count(), 10); await screenshot('mobile-all-test-statistics.png', true); }
+    await fits();
+  }
   await page.locator('#viewer-groups').click(); await openDialog('viewer-groups-dialog'); await fits(); await screenshot('mobile-groups.png');
   await page.getByRole('button', { name: 'Close files and groups', exact: true }).click(); await closedDialog('viewer-groups-dialog');
   await tab('devices'); await page.getByRole('region', { name: 'Device attempts', exact: true }).getByRole('button', { name: 'DUPLICATE', exact: true }).first().click(); await ready(); await openDialog('viewer-device-dialog');

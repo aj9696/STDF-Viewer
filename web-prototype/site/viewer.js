@@ -8,6 +8,9 @@ import { installViewerActions } from './viewer-actions.js';
 import { previewTestExclusions, orientationForDisplay } from './viewer-preferences.js';
 import { renderStudy, STUDY_TOOLS, STUDY_TOOL_GROUPS } from './viewer-study-ui.js';
 import { waferSummary, pinnedDieControl } from './viewer-wafer-detail.js';
+import { newTestSummary } from './viewer-summary-model.js';
+import { renderTestSummary } from './viewer-test-summary.js';
+import { installViewerHelp } from './viewer-help.js';
 import { $, fmt, hex, button, empty, section, detail, disclosure, compactChart, renderStatSummary, warnings, table, pager, selectField, testTitle, renderCatalog, renderOverview, renderStats, renderDevices, renderObservations, renderRecord } from './viewer-view.js';
 
 const PAGE = 50, WORKSPACE_KEY = 'semidata.viewer.workspace.v1', TABS = ['histogram', 'trend', 'tests', 'devices', 'bins', 'wafers', 'overview', 'records', 'study'];
@@ -17,6 +20,8 @@ const state = { ready: false, opened: false, busy: false, datasets: [], selectio
   recordOffset: 0, recordQuery: '', recordFamily: 'datalog', rawAfter: 0, rawHistory: [], rawSource: '', waferKey: 'stacked', waferBounds: null, binKind: 'soft', analyses: new Map(), health: new Map(), scanAnalyses:new Map(), scanComplete:false };
 let library, running = Promise.resolve(), retryWork = null, chartHandles = [], disposed = false, returnFocus = null, actionRunning = false;
 let cancelRequested = false;
+let testSummary = newTestSummary(), statisticsMode = 'all', summaryDrilldown = null;
+const help = installViewerHelp({ getTopic: () => state.tab === 'study' ? state.tool : state.tab });
 const dialogOpeners = new WeakMap();
 const actions = {};
 const compactCatalog = matchMedia('(max-width: 760px)');
@@ -96,6 +101,10 @@ async function query(action, options = {}) {
   return result;
 }
 function progress(value) {
+  if (value.phase === 'viewer-test-summaries') {
+    $('viewer-progress-title').textContent = 'Reading test statistics';
+    $('viewer-progress-text').textContent = `${(testSummary.done + value.completed).toLocaleString()} / ${testSummary.total?.toLocaleString() ?? '…'} tests`; return;
+  }
   $('viewer-progress-title').textContent = value.phase === 'viewer-query' || value.phase === 'viewer-distribution' ? 'Reading full-population observations' : 'Preparing local analysis indexes';
   $('viewer-progress-text').textContent = [value.name, value.phase, value.rows != null ? `${value.rows.toLocaleString()} rows` : '', value.bytesRead != null ? `${value.bytesRead.toLocaleString()} bytes` : '', value.records != null ? `${value.records.toLocaleString()} records` : ''].filter(Boolean).join(' · ');
 }
@@ -120,7 +129,7 @@ function drawCatalog() {
   renderCatalog({...state.catalog,items}, state.selected, (item, checked) => {
     if (state.busy) return;
     if (checked && state.selected.size >= 12) { showError(new Error('Select up to twelve tests at a time.')); drawCatalog(); return; }
-    checked ? state.selected.set(item.key, item) : state.selected.delete(item.key); if (!checked) state.analyses.delete(item.key); changed(); drawCatalog(); run(renderPanel);
+    summaryDrilldown = null; checked ? state.selected.set(item.key, item) : state.selected.delete(item.key); if (!checked) state.analyses.delete(item.key); changed(); drawCatalog(); run(renderPanel);
   }, (key) => { if (state.busy) return; state.selected.delete(key); state.analyses.delete(key); changed(); drawCatalog(); run(renderPanel); }, state.health, state.settings.cpkThreshold); controls();
   if(state.settings.skipTests.enabled){
     const note=element('p',`${state.catalog.items.length-items.length} hidden on this page · ${exclusions.hidden} excluded / ${exclusions.examined} evaluated. ${state.scanComplete?'Full catalog scanned.':'Scan test health to evaluate the full catalog.'}`,'viewer-help');
@@ -132,7 +141,7 @@ async function loadCatalog(offset = 0) {
   state.catalog = await query('tests', { query: state.testQuery, wildcard: state.wildcard, order: state.testOrder, offset, limit: PAGE }); drawCatalog();
 }
 async function reloadWorkspace({ selectFirst = false, testNumber = null } = {}) {
-  clearHealth(); state.analyses.clear(); state.deviceOffset = 0; state.recordOffset = 0; state.pick = null; disposeCharts();
+  clearHealth(); testSummary = newTestSummary(); summaryDrilldown = null; state.analyses.clear(); state.deviceOffset = 0; state.recordOffset = 0; state.pick = null; disposeCharts();
   await query('prepare'); state.overview = await query('overview'); state.ready = true; renderFilterOptions();
   await loadCatalog(0);
   if (selectFirst && !state.selected.size) {
@@ -296,10 +305,32 @@ async function renderPanel() {
   }
   if (state.tab === 'overview') { renderOverview(panel, state.overview); return; }
   if (state.tab === 'devices') { await drawDevices(panel); return; }
+  if (state.tab === 'tests') {
+    const modes = element('div', undefined, 'statistics-modes'); modes.setAttribute('role', 'group'); modes.setAttribute('aria-label', 'Statistics scope');
+    for (const [value, label] of [['all', 'All tests'], ['selected', 'Selected tests']]) {
+      const control = button(label, () => { statisticsMode = value; run(renderPanel); }, 'quiet-button');
+      control.setAttribute('aria-pressed', String(statisticsMode === value)); modes.append(control);
+    }
+    panel.append(modes);
+    if (statisticsMode === 'all') {
+      await renderTestSummary(panel, { summary: testSummary, settings: state.settings, query, checkCancelled,
+        seriesBy: state.seriesBy, includeAggregate: state.includeAggregate,
+        onProgress: summary => { $('viewer-progress-title').textContent = 'Reading test statistics'; $('viewer-progress-text').textContent = `${summary.done.toLocaleString()} / ${summary.total?.toLocaleString() ?? '…'} tests`; },
+        onChange: () => run(renderPanel), onHelp: topic => help.open(topic),
+        onOpen: test => {
+          if (state.busy) return;
+          state.selected.clear(); state.selected.set(test.key, test); state.analyses.clear(); summaryDrilldown = test.key;
+          state.tab = 'histogram'; changed(); drawCatalog(); run(renderPanel);
+        },
+      }); return;
+    }
+  }
   if (['tests', 'trend', 'histogram'].includes(state.tab)) {
-    if (!state.selected.size) { empty(panel, 'Choose a test', 'Select up to twelve tests from the catalog to compare statistics, distributions and devices.'); return; }
-    const allAnalyses = await getAnalyses(), exclusions = previewTestExclusions(allAnalyses, state.settings), excluded = new Set(exclusions.hiddenKeys), analyses = allAnalyses.filter(a => !excluded.has(a.test.key));
-    if (exclusions.hidden) { const notice = element('p', `${exclusions.hidden} / ${exclusions.examined} analyzed tests hidden by display rules.`, 'viewer-selection-note'); notice.append(button('Show all', () => { state.settings.skipTests.enabled = false; saveSettings(state.settings); changed(); run(renderPanel); }, 'quiet-button')); panel.append(notice); }
+    if (!state.selected.size) { const box = element('div'); panel.append(box); empty(box, 'Choose a test', 'Select up to twelve tests from the catalog to compare statistics, distributions and devices.'); return; }
+    const allAnalyses = await getAnalyses(), exclusions = previewTestExclusions(allAnalyses, state.settings), excluded = new Set(exclusions.hiddenKeys);
+    if (excluded.delete(summaryDrilldown)) panel.append(element('p', 'This test is shown from All tests. A display rule would hide it.', 'viewer-selection-note'));
+    const analyses = allAnalyses.filter(a => !excluded.has(a.test.key));
+    if (excluded.size) { const notice = element('p', `${excluded.size} / ${exclusions.examined} analyzed tests hidden by display rules.`, 'viewer-selection-note'); notice.append(button('Show all', () => { state.settings.skipTests.enabled = false; saveSettings(state.settings); changed(); run(renderPanel); }, 'quiet-button')); panel.append(notice); }
     if (state.tab === 'tests') {
       renderStats(section(panel, 'Full-population test statistics'), analyses, state.settings);
       for (const item of state.selected.values()) if (item.pins?.length) detail(panel, `Pin metadata · ${testTitle(item)}`, item.pins);
@@ -382,14 +413,15 @@ async function restoreFont(settings) {
 }
 
 $('viewer-cancel').addEventListener('click', () => { cancelRequested = true; $('viewer-cancel').disabled = true; $('viewer-progress-text').textContent = 'Cancelling at a safe boundary…'; library?.cancel(); });
-$('viewer-retry').addEventListener('click', () => run(library?.worker && state.ready ? retryWork ?? renderPanel : startup));
+$('viewer-retry').addEventListener('click', () => { if (state.tab === 'tests' && statisticsMode === 'all') testSummary.paused = false; run(library?.worker && state.ready ? retryWork ?? renderPanel : startup); });
 $('viewer-groups').addEventListener('click', () => editGroups(state.selection, state.datasets, (selection) => { state.selection = selection; state.selected.clear(); state.rawSource = ''; run(reloadWorkspace); }));
 $('viewer-settings').addEventListener('click', () => editSettings(state.settings, (settings) => { state.settings = settings; state.analyses.clear(); drawCatalog(); changed(); run(renderPanel); }, { analyses: exclusionAnalyses(),scope:state.scanComplete?'Full catalog for current filters':state.scanAnalyses.size?'Partial catalog scan for current filters':'Analyzed tests only' }));
 for (const [id, field] of [['viewer-head', 'heads'], ['viewer-site', 'sites']]) $(id).addEventListener('change', () => {
   const values = [...$(id).selectedOptions].map((o) => o.value).filter((value) => value !== 'all').map(Number); state.selection[field] = values.length ? values : null; run(reloadWorkspace);
 });
 $('viewer-attempts').addEventListener('change', () => { state.selection.attempts = $('viewer-attempts').value; run(reloadWorkspace); });
-$('viewer-series').addEventListener('change', () => { const value = $('viewer-series').value; state.seriesBy = value === 'aggregate' ? 'aggregate' : 'site'; state.includeAggregate = value === 'both'; state.analyses.clear(); clearHealth(); drawCatalog(); renderFilterSummary(); changed(); run(renderPanel); });
+$('viewer-help-open').addEventListener('click', () => help.open());
+$('viewer-series').addEventListener('change', () => { testSummary = newTestSummary(); const value = $('viewer-series').value; state.seriesBy = value === 'aggregate' ? 'aggregate' : 'site'; state.includeAggregate = value === 'both'; state.analyses.clear(); clearHealth(); drawCatalog(); renderFilterSummary(); changed(); run(renderPanel); });
 $('viewer-reset-filters').addEventListener('click', () => { state.selection.heads = null; state.selection.sites = null; state.selection.attempts = 'current'; state.seriesBy = 'aggregate'; state.includeAggregate = false; $('viewer-series').value = 'aggregate'; run(reloadWorkspace); });
 $('viewer-scan-health').addEventListener('click', () => run(scanHealth));
 $('viewer-test-search').addEventListener('submit', (e) => { e.preventDefault(); state.testQuery = $('viewer-test-query').value; state.wildcard = $('viewer-wildcard').checked; state.testOrder = $('viewer-test-order').value; run(() => loadCatalog()); });

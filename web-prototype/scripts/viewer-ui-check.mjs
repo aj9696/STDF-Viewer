@@ -23,13 +23,21 @@ function mockProvider() {
     async cancel() { window.mock.cancel?.(); }
     async viewer(action, selection, options = {}) {
       window.mock.calls.push({ action, selection: structuredClone(selection), options: structuredClone(options) });
-      if (window.mock.delay) await new Promise((resolve, reject) => { const timer = setTimeout(resolve, window.mock.delay); window.mock.cancel = () => { clearTimeout(timer); reject(Object.assign(new Error('Operation cancelled'), { code: 'CANCELLED' })); }; });
+      const delay = action === 'testSummaries' && window.mock.calls.filter(call => call.action === 'testSummaries').length === window.mock.summaryDelayAt ? 5000 : window.mock.delay;
+      if (delay) await new Promise((resolve, reject) => { const timer = setTimeout(resolve, delay); window.mock.cancel = () => { clearTimeout(timer); reject(Object.assign(new Error('Operation cancelled'), { code: 'CANCELLED' })); }; });
       if (window.mock.error) { window.mock.error = false; throw new Error('Deliberate recoverable provider failure'); }
       const page = (rows) => { const offset = options.offset ?? 0, limit = options.limit ?? 50; return { items: rows.slice(offset, offset + limit), total: rows.length, offset, nextOffset: offset + limit < rows.length ? offset + limit : null }; };
       const seriesKey = JSON.stringify([0, 1, null]);
       if (action === 'prepare') return {};
       if (action === 'overview') return { groups: selection.groups.map((g) => ({ ...g, total: 120, superseded: 5, passed: 100, failed: 10, unknown: 5, yield: 100 / 110 })), heads: [1, 2], sites: [{ head: 1, site: 0 }, { head: 1, site: 1 }], sources: sources.filter((s) => selection.groups.some((g) => g.datasetIds.includes(s.id))).map((s) => ({ ...s, datasetId: s.id })) };
       if (action === 'tests') return { ...page(tests.filter((t) => !options.query || t.name.includes(options.query))), countScope: 'All recorded observations before head/site/current filters.' };
+      if (action === 'testSummaries') return { items: options.tests.map(key => {
+        const test = tests.find(test => test.key === key), index = test.number;
+        const mean = index === 52 ? 1000 : index === 51 ? -1000 : index === 50 ? null : (index - 25) / 10;
+        const stats = { total: 120, count: index === 50 ? 0 : 115, excluded: index === 50 ? 120 : 5, pass: 110 - index, fail: index, unknown: 10, mean, median: mean, stdev: mean == null ? null : .2, min: mean == null ? null : mean - .5, max: mean == null ? null : mean + .5, lsl: -2000, usl: 2000, cpk: mean == null ? null : (53 - index) / 10, cpkReason: mean == null ? 'No valid numeric measurements.' : null };
+        const sites = options.seriesBy === 'site' ? [0, 1] : [null];
+        return { test, population: { observations: 120, attempts: 120 }, warnings: [], series: selection.heads?.includes(2) ? [] : sites.map(site => ({ key: JSON.stringify([0, 1, site]), label: `Group 1 · Head 1 · ${site == null ? 'All selected sites' : `Site ${site}`}`, group: 0, head: 1, site, stats })) };
+      }) };
       if (action === 'analyze') { const test = tests.find((t) => t.key === options.testKey); return { test, population: { observations: 120, attempts: 120 }, warnings: [], series: [{ key: seriesKey, label: 'Group 1 Ã‚Â· Head 1 Ã‚Â· All selected sites', group: 0, head: 1, site: null, count: 120, stats: { total: 120, count: 115, excluded: 5, pass: 100, fail: 10, unknown: 10, mean: 1.2, median: 1.1, stdev: .2, min: .5, max: 1.9, lsl: 0, usl: 2, cpk: 1.1 }, bins: [{ low: 0, high: 1, count: 50, last: false }, { low: 1, high: 2, count: 65, last: true }], points: [{ x: 0, value: .5, lsl: 0, usl: 2 }, { x: 50, value: 1.2, lsl: 0, usl: 2 }, { x: 119, value: 1.9, lsl: 0, usl: 2 }] }] }; }
       if (action === 'devices') return page(Array.from({ length: 73 }, (_, index) => ({ id: index + 1, dataset_id: ids[0], source_name: sources[0].name, group_id: 0, head: 1, site: index % 2, part_id: `DUT ${index}`, x_index: index, part_flags: index % 2 ? 8 : 0, retired: false, hard_bin: 1, soft_bin: 2, x: index, y: 0, wafer_id: 1, test_time: 20, num_tests: 3, testResults: Object.fromEntries((options.tests ?? []).map((k) => [k, [{ seq: 10, value: 1.23456789, test_flags: 0 }]])) })));
       if (action === 'device') return { attempt: { ...options, part_flags: 0 }, items: tests.slice(0, 3).map((t, i) => ({ ...t, test_name: t.name, seq: 10 + i, ordinal: 0, value: i ? 1.2345 : -0, low: 0, high: 2, test_flags: 0, parm_flags: 0, raw_bits: 0x80000000 })), nextAfter: null };
@@ -76,7 +84,58 @@ try {
   await page.locator('#viewer-tests-next').click(); await idle(); assert.equal(await page.locator('#viewer-tests input').count(), 3); await page.locator('#viewer-tests-prev').click(); await idle();
   await page.locator('#viewer-tests input').nth(0).check(); await idle(); await page.locator('#viewer-tests input').nth(1).check(); await idle();
   await page.locator('.viewer-health > summary').click(); await page.locator('#viewer-scan-health').click(); await idle(); assert.match(await page.locator('#viewer-health-status').textContent(), /Complete scan: 53 \/ 53/); assert.equal(await page.locator('#viewer-tests .health-warning').count(), 50); assert.equal(await page.evaluate(() => semidataViewer.getState().tests.length), 2);
-  await tab('tests'); assert.match(await page.locator('#viewer-panel').textContent(), /Original device identity|Values join by original device identity/); assert.equal(await page.locator('#viewer-panel tbody').first().locator('tr').count(), 2);
+  await tab('tests');
+  const allStats = page.getByRole('region', { name: 'All test statistics', exact: true });
+  const summaryCalls = () => page.evaluate(() => mock.calls.filter(call => call.action === 'testSummaries').length);
+  const findSummary = async (text) => { await page.locator('#viewer-summary-query').fill(text); await page.locator('.summary-search').getByRole('button', { name: 'Find', exact: true }).click(); await idle(); };
+  const summaryRows = () => allStats.locator('tbody tr');
+  assert.equal(await page.getByRole('button', { name: 'All tests', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.equal(await summaryRows().count(), 50); assert.equal(await summaryCalls(), 6);
+  assert.equal(await page.evaluate(() => semidataViewer.getState().tests.length), 2, 'An all-test scan must not replace the selected tests');
+  await page.locator('.viewer-all-tests .viewer-pager').getByRole('button', { name: 'Next page', exact: true }).click(); await idle();
+  assert.equal(await summaryRows().count(), 3); assert.match(await summaryRows().last().textContent(), /52 · Test 52/);
+  await allStats.getByRole('button', { name: /^Mean/ }).click(); await idle();
+  assert.match(await summaryRows().first().textContent(), /51 · Test 51/, 'Global numeric ascending sort includes a test beyond the original first page');
+  await allStats.getByRole('button', { name: /^Mean/ }).click(); await idle();
+  assert.match(await summaryRows().first().textContent(), /52 · Test 52/, 'Global numeric descending sort includes the largest mean beyond the original first page');
+  assert.equal(await allStats.locator('th').filter({ has: page.getByRole('button', { name: /^Mean/ }) }).getAttribute('aria-sort'), 'descending');
+  await findSummary('Test 50'); assert.equal(await summaryRows().count(), 1);
+  assert.equal(await summaryRows().first().locator('td').nth(4).textContent(), '0');
+  assert.equal(await summaryRows().first().locator('td').nth(6).textContent(), '—', 'A test without valid numeric values keeps its row and has no mean');
+  await findSummary('FTR'); assert.equal(await summaryRows().count(), 1); assert.equal(await summaryRows().first().locator('td').nth(6).textContent(), '—', 'Functional flags are not displayed as measurement means');
+  await findSummary('nothing matches'); assert.equal(await allStats.locator('tbody button').count(), 0); assert.match(await page.locator('.viewer-all-tests').textContent(), /No tests match/);
+  await findSummary('Test 52'); const beforeDrilldown = await summaryCalls();
+  await allStats.getByRole('button', { name: 'Open histogram for 52 · Test 52', exact: true }).click(); await idle();
+  assert.equal(await page.locator('#tab-histogram').getAttribute('aria-selected'), 'true');
+  assert.deepEqual(await page.evaluate(() => semidataViewer.getState().tests), [await page.evaluate(() => mock.tests[52].key)]);
+  await tab('tests'); assert.equal(await summaryCalls(), beforeDrilldown, 'Returning to summary reuses the compact result cache');
+  await findSummary(''); await page.locator('#viewer-clear-tests').click(); await idle();
+  assert.equal(await summaryRows().count(), 50); assert.deepEqual(await page.evaluate(() => semidataViewer.getState().tests), []);
+  assert.equal(await summaryCalls(), beforeDrilldown, 'Search, global sort, pagination, and checkbox selection do not rescan');
+  await page.locator('#viewer-tests input').nth(0).check(); await idle(); await page.locator('#viewer-tests input').nth(1).check(); await idle();
+  await page.evaluate(() => { mock.summaryDelayAt = mock.calls.filter(call => call.action === 'testSummaries').length + 2; });
+  await page.locator('#viewer-series').selectOption('site');
+  await page.waitForFunction(() => mock.calls.filter(call => call.action === 'testSummaries').length === mock.summaryDelayAt);
+  await page.locator('#viewer-cancel').click(); await idle();
+  assert.match(await page.locator('.viewer-all-tests').textContent(), /Partial results · 10 \/ 53 tests/);
+  assert.equal(await summaryRows().count(), 20, 'A completed batch remains available after cancellation');
+  const pausedCalls = await summaryCalls();
+  await page.evaluate(() => { mock.summaryDelayAt = 0; });
+  await page.getByRole('button', { name: 'Resume scan', exact: true }).click(); await idle();
+  assert.equal(await summaryCalls(), pausedCalls + 5, 'Resume starts at the cancelled batch, not the first batch');
+  assert.match(await page.locator('.viewer-all-tests').textContent(), /53 \/ 53 tests/);
+  assert.equal(await page.locator('.viewer-all-tests .viewer-pager').textContent().then(text => text.includes('of 106')), true);
+  await page.locator('#viewer-filters > summary').click(); await page.locator('#viewer-head').selectOption('2'); await idle();
+  assert.equal(await summaryCalls(), pausedCalls + 11, 'Changing population scope invalidates summaries');
+  assert.match(await summaryRows().first().textContent(), /No observations in this scope/);
+  assert.equal(await summaryRows().first().locator('td').nth(3).textContent(), '0');
+  await page.locator('#viewer-reset-filters').click(); await idle();
+  assert.equal(await summaryCalls(), pausedCalls + 17); assert.equal(await page.evaluate(() => semidataViewer.getState().seriesBy), 'aggregate');
+  await page.screenshot({ path: resolve(output, 'all-test-statistics.png'), fullPage: true });
+  checks.push('All 53 tests: full-population global numeric sort, bounded pages, search, FTR and no-valid-value handling, exact histogram drilldown, and selection-independent cached results');
+  checks.push('Partial summary cancellation preserves completed batches; resume retries only unfinished work; site series and head scope invalidate the cache and keep empty identities visible');
+  await page.getByRole('button', { name: 'Selected tests', exact: true }).click(); await idle();
+  assert.match(await page.locator('#viewer-panel').textContent(), /Original device identity|Values join by original device identity/); assert.equal(await page.locator('#viewer-panel tbody').first().locator('tr').count(), 2);
   await tab('trend'); assert.equal(await page.locator('canvas').count(), 2); await page.screenshot({ path: resolve(output, 'trend.png'), fullPage: true });
   await page.locator('.chart-tools > summary').first().click(); await page.getByRole('button', { name: 'Inspect range', exact: true }).first().click(); await idle();
   const picked = await page.evaluate(() => mock.calls.filter((r) => r.action === 'devices').at(-1)); assert.equal(picked.options.pick.type, 'trend'); assert.equal(picked.options.testKey, await page.evaluate(() => mock.tests[0].key));
@@ -124,7 +183,17 @@ try {
     await page.evaluate(() => semidataViewer.checkCancelled());
   }
   checks.push('Cancellation during a no-worker capture gap blocks explicit checkpoints and the next query; idle checks do not retain stale cancellation');
-  for (const name of ['overview', 'tests', 'trend', 'bins', 'wafers', 'records']) { await tab(name); await page.setViewportSize({ width: 360, height: 850 }); assert.ok(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `${name} overflows 360px`); }
+  for (const name of ['overview', 'tests', 'trend', 'bins', 'wafers', 'records']) {
+    await tab(name); await page.setViewportSize({ width: 360, height: 850 });
+    if (name === 'tests') {
+      await page.getByRole('button', { name: 'All tests', exact: true }).click(); await idle();
+      assert.equal(await summaryRows().count(), 50);
+      const tableBounds = await allStats.evaluate(element => ({ client: element.clientWidth, scroll: element.scrollWidth }));
+      assert.ok(tableBounds.scroll > tableBounds.client, 'A wide summary scrolls inside its table region on mobile');
+      await page.screenshot({ path: resolve(output, 'mobile-all-test-statistics.png'), fullPage: true });
+    }
+    assert.ok(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `${name} overflows 360px`);
+  }
   await page.screenshot({ path: resolve(output, 'mobile-360.png'), fullPage: true }); checks.push('360px no horizontal page overflow across six views');
   await page.goto(`${url}?empty=1`); await idle(); await page.evaluate(() => { semidataViewer.installActions({ openSession: async () => { mock.empty = false; await semidataViewer.applyWorkspace({ selection: { groups: [{ name: 'Restored', datasetIds: [mock.ids[0]] }] }, settings: { font: 'SemiDataLocalFont' }, tests: [] }); } }); }); assert.equal(await page.locator('#viewer-open-session').isEnabled(), true); await workspaceAction(page, 'viewer-open-session'); await idle(); assert.equal(await page.locator('#viewer-groups').isEnabled(), true); assert.equal(await page.evaluate(() => semidataViewer.getState().settings.font), 'Segoe UI'); assert.match(await page.locator('#viewer-notice').textContent(), /font is unavailable/); checks.push('Empty-library workspace restore refreshes dataset catalog and survives missing custom font');
   await page.goto(`${url}?datasets=12345678-1234-1234-1234-123456789012,12345678-1234-1234-1234-123456789013&example=site-shift&tab=trend&series=site&test=1`); await idle();
