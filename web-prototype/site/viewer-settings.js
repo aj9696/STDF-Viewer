@@ -2,7 +2,7 @@ import { tr } from './viewer-i18n.js';
 import { element } from './library-home-view.js';
 import { DEFAULT_PREFERENCES, validatePreferences, applyPreferences, preferencesEditor, colorPreset } from './viewer-preferences.js';
 const KEY = 'semidata.viewer.settings.v1';
-export const DEFAULT_SETTINGS = Object.freeze({ bins: 30, precision: 3, notation: 'adaptive', dotSize: 3, showLimits: true, showSpecs: false, showMean: true, showMedian: false, showSigma: true, showGaussian: true, cpkThreshold: 1.33, font: 'Segoe UI', siteColors: {}, binColors: {}, ...DEFAULT_PREFERENCES });
+export const DEFAULT_SETTINGS = Object.freeze({ bins: 30, precision: 3, notation: 'adaptive', dotSize: 3, showLimits: true, showSpecs: false, showMean: true, showMedian: false, showSigma: true, showGaussian: true, cpkThreshold: 1.33, font: 'IBM Plex Sans', siteColors: {}, binColors: {}, ...DEFAULT_PREFERENCES });
 export function validateSettings(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Viewer settings must be an object.');
   const result = { ...DEFAULT_SETTINGS };
@@ -15,7 +15,7 @@ export function validateSettings(input = {}) {
     if (input[key] !== undefined && typeof input[key] !== 'boolean') throw new Error(`Invalid ${key} setting.`);
     result[key] = input[key] ?? result[key];
   }
-  if (input.font !== undefined && !['Segoe UI', 'Arial', 'Consolas', 'SemiDataLocalFont'].includes(input.font)) throw new Error('Choose an available font.');
+  if (input.font !== undefined && !['IBM Plex Sans', 'Segoe UI', 'Arial', 'Consolas', 'SemiDataLocalFont'].includes(input.font)) throw new Error('Choose an available font.');
   result.font = input.font ?? result.font;
   if (input.notation !== undefined && !['adaptive', 'fixed', 'scientific'].includes(input.notation)) throw new Error('Choose adaptive, fixed or scientific number notation.');
   result.notation = input.notation ?? result.notation;
@@ -63,7 +63,10 @@ export async function applyFont(settings) {
     const saved = await fontRecord(); if (!saved?.bytes) throw new Error('The saved local font is unavailable. Choose a system font or add the font again.');
     await installFont(saved.bytes);
   }
+  // Load before painting canvas labels or exporting charts; explicit saved fonts still win.
+  if (settings.font === 'IBM Plex Sans') await document.fonts.load('400 12px "IBM Plex Sans"');
   document.body.style.setProperty('--viewer-font', `"${settings.font}", system-ui, sans-serif`);
+  document.body.style.setProperty('--viewer-mono', settings.font === 'IBM Plex Sans' ? 'var(--font-mono)' : `"${settings.font}", system-ui, sans-serif`);
   applyPreferences(settings);
 }
 export function editSettings(settings, onApply, options = {}) {
@@ -77,7 +80,7 @@ export function editSettings(settings, onApply, options = {}) {
   }
   const fontLabel = element('label', tr('Display font')), font = element('select');
   font.setAttribute('aria-label', tr('Display font'));
-  for (const name of ['Segoe UI', 'Arial', 'Consolas', 'SemiDataLocalFont']) { const option = element('option', name === 'SemiDataLocalFont' ? 'Your local font' : name); option.value = name; font.append(option); }
+  for (const name of ['IBM Plex Sans', 'Segoe UI', 'Arial', 'Consolas', 'SemiDataLocalFont']) { const option = element('option', name === 'SemiDataLocalFont' ? 'Your local font' : name); option.value = name; font.append(option); }
   font.value = settings.font; fontLabel.append(font); grid.append(fontLabel);
   const notationLabel = element('label', tr('Number notation')), notation = element('select'); notation.setAttribute('aria-label', tr('Number notation'));
   for (const [value, name] of [['adaptive', 'Adaptive'], ['fixed', 'Fixed decimal'], ['scientific', 'Scientific']]) { const option = element('option', tr(name)); option.value = value; notation.append(option); }

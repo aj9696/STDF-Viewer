@@ -21,6 +21,7 @@ function options(settings = {}) {
     dotSize: clamp(finite(settings.dotSize) ? settings.dotSize : 3, 1, 10) };
 }
 const format = formatNumber;
+const chartFont = (font) => ["IBM Plex Sans", "Segoe UI", "Arial", "Consolas", "SemiDataLocalFont"].includes(font) ? font : "IBM Plex Sans";
 function extent(values, includeZero = false) {
   let lo = includeZero ? 0 : Infinity, hi = includeZero ? 0 : -Infinity;
   for (const value of values) if (finite(value)) { lo = Math.min(lo, value); hi = Math.max(hi, value); }
@@ -204,7 +205,7 @@ function axes(chart, xDomain, yDomain, xLabel, yLabel, flipX = false, flipY = fa
   chart.caption.textContent = `${yLabel} · ${xLabel}`;
   chart.fullDomain = { x: [...xDomain], y: [...yDomain] }; chart.flipX = flipX; chart.flipY = flipY;
   if (chart.viewport) { xDomain = chart.viewport.x; yDomain = chart.viewport.y; }
-  const font = ["Segoe UI", "Arial", "Consolas", "SemiDataLocalFont"].includes(settings.font) ? settings.font : "Segoe UI";
+  const font = chartFont(settings.font);
   ctx.font = `12px "${font}", sans-serif`; ctx.lineWidth = 1;
   const yTicks = axisTicks(yDomain, integer.y);
   const labelWidth = Math.max(0, ...yTicks.map((value) => ctx.measureText(format(value, settings.precision, settings.notation)).width));
@@ -219,17 +220,17 @@ function axes(chart, xDomain, yDomain, xLabel, yLabel, flipX = false, flipY = fa
   const y = (v) => mix(flipY ? top : bottom, flipY ? bottom : top, fraction(v, ...yDomain));
   for (const xv of axisTicks(xDomain, integer.x)) {
     const px = x(xv);
-    ctx.strokeStyle = "#e4e9f1"; ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
+    ctx.strokeStyle = "#f0f3f3"; ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
     const text = format(xv, settings.precision, settings.notation), halfWidth = ctx.measureText(text).width / 2;
-    ctx.fillStyle = "#58687f"; ctx.textAlign = "center"; ctx.fillText(text, clamp(px, halfWidth + 2, a.width - halfWidth - 2), bottom + 18);
+    ctx.fillStyle = "#58696b"; ctx.textAlign = "center"; ctx.fillText(text, clamp(px, halfWidth + 2, a.width - halfWidth - 2), bottom + 18);
   }
   for (const yv of yTicks) {
     const py = y(yv);
-    ctx.strokeStyle = "#e4e9f1"; ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
-    ctx.fillStyle = "#58687f";
+    ctx.strokeStyle = yv === 0 ? "#cdd9da" : "#e9eeee"; ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
+    ctx.fillStyle = "#58696b";
     ctx.textAlign = "right"; ctx.fillText(format(yv, settings.precision, settings.notation), left - 8, py + 4);
   }
-  ctx.fillStyle = "#35475f"; ctx.textAlign = "center"; ctx.fillText(xLabel, (left + right) / 2, a.height - 6);
+  ctx.fillStyle = "#344d50"; ctx.textAlign = "center"; ctx.fillText(xLabel, (left + right) / 2, a.height - 6);
   ctx.save(); ctx.translate(12, (top + bottom) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(yLabel, 0, 0); ctx.restore();
   chart.scale = { x, y, fromX: (px) => mix(...xDomain, clamp(fraction(px, flipX ? right : left, flipX ? left : right), 0, 1)), fromY: (py) => mix(...yDomain, clamp(fraction(py, flipY ? top : bottom, flipY ? bottom : top), 0, 1)), left, right, top, bottom };
   ctx.beginPath(); ctx.rect(left, top, right - left, bottom - top); ctx.clip();
@@ -422,9 +423,9 @@ export function renderBins(container, { series = [], settings = {}, onPick, titl
     // Category labels replace numeric x ticks; selected/hovered bins retain their exact identity even on dense charts.
     const shown = chart.viewport?.x ?? [-.6, numbers.length - .4], step = Math.max(1, Math.ceil((shown[1] - shown[0]) / Math.max(2, (scale.right - scale.left) / 45)));
     chart.afterPaint = () => {
-      const font = ['Segoe UI', 'Arial', 'Consolas', 'SemiDataLocalFont'].includes(chart.settings.font) ? chart.settings.font : 'Segoe UI'; chart.ctx.font = `11px "${font}", sans-serif`;
+      chart.ctx.font = `12px "${chartFont(chart.settings.font)}", sans-serif`;
       chart.ctx.fillStyle = "#fff"; chart.ctx.fillRect(scale.left - 18, scale.bottom + 3, scale.right - scale.left + 36, 22);
-      chart.ctx.fillStyle = "#58687f"; chart.ctx.textAlign = "center";
+      chart.ctx.fillStyle = "#58696b"; chart.ctx.textAlign = "center";
       numbers.forEach((number, i) => { const x = scale.x(i); if (i % step === 0 && x >= scale.left && x <= scale.right) chart.ctx.fillText(String(number), x, scale.bottom + 18); });
     };
     const numberIndices = new Map(numbers.map((number, i) => [number, i]));

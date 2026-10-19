@@ -282,3 +282,17 @@ values, orientation/aspect, all-passing stacks, disposal and 50,000-coordinate
 bounded-DOM rendering. Both harnesses write screenshots and JSON summaries to
 ignored `web-prototype/results/` directories and do not touch the user's saved
 browser library.
+
+## Visual system — 2026-10-18
+
+Library and Viewer now share a tinted frame and white work sheet, a wafer mark,
+locally bundled IBM Plex typography, and quieter controls and chart grids.
+The test catalog identifies selected tests with a numbered row and accent edge.
+Study forms use the same spacing, fields and surface tokens. See the maintained
+[design system](DESIGN-SYSTEM.md) for rationale, tokens and asset provenance.
+
+IBM Plex Sans is the default for new settings. Existing saved display fonts and
+custom fonts remain selected. Choose **Settings → Display font → IBM Plex Sans**
+to use it in an existing workspace. The font is loaded before plotting/export;
+a load failure falls back to Segoe UI with a recoverable notice. Engineering
+precision, source scope, series colors, export contents and storage are unchanged.

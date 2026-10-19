@@ -310,3 +310,18 @@ still to be collected. Production release `69d4e51` was published to
 session. Separate Chrome/Edge deployment checks verified asset hashes, example
 imports, persistence and fresh-profile workspace restore. The deployed revision
 and evidence are recorded in `web-prototype/docs/DEPLOYMENT.md`.
+
+### Taste visual implementation — 2026-10-18
+
+The subsequent request for stronger visual design adopts Taste's framed-sheet
+direction, seed 20261019, with a cool teal-grey frame, locally served IBM Plex,
+wafer identity, a distinct selected-test catalog, consistent study forms and
+quieter chart chrome. `web-prototype/docs/DESIGN-SYSTEM.md` is the implementation
+record and token reference. Existing font choices and all analytical semantics
+are retained. No storage migration, parser or provider changes are included.
+
+Validation reuses the existing Chrome/Edge example, viewer, study, settings and
+production E2E workflows, plus Taste inspection of real synthetic STDF comparisons.
+The release is packaged only after independent review. Public verification is
+recorded separately after publication; actual browser-zoom qualification remains
+the previously documented limitation.

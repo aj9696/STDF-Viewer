@@ -372,3 +372,47 @@ Production release `69d4e51` was subsequently verified at
 packaged asset hashes, example imports, the new controls, full-browser restart
 persistence and fresh-profile workspace restore; they do not broaden the
 numerical or performance qualification above.
+
+## Taste visual release — 2026-10-18
+
+This pass changes visual presentation and the default display font. No parser,
+storage schema, query provider or analytical formula changed. Existing system
+and local font preferences remain supported; a focused browser regression loads
+the bundled Plex face and verifies that saved Consolas overrides both text and
+identifier typography. The source revision is recorded in the deployment manifest.
+
+| Suite | Chrome | Edge |
+| --- | --- | --- |
+| Five example workflows and responsive Library/comparison | 9 passed | 9 passed |
+| Production STDF E2E, picks, CSV/XLSX and workspace round trip | 9 passed | 9 passed |
+| Study tools, PAT and balanced Gauge R&R | 17 passed | 17 passed |
+| Display preferences and bundled/saved fonts | 6 passed | 6 passed |
+| Viewer routing, safe text, cancellation and recovery | 10 passed | Not repeated this pass |
+| Chart limits, picks, PNG and 50k-die bounded rendering | 12 passed | Not repeated this pass |
+
+The production E2E export contains all eight expected sheets and 11 chart PNGs;
+both original sources retain their hashes after reports, workspace restore and
+generated-file deletion. Neither browser reported JavaScript errors.
+
+Evidence directories under ignored `web-prototype/results/`:
+
+- `examples-ui-chrome-1792374530260`, `examples-ui-msedge-1792375038178`
+- `viewer-e2e-chrome-1792374768736`, `viewer-e2e-msedge-1792374835585`
+- `viewer-tools-ui-chrome-1792374531289`, `viewer-tools-ui-msedge-1792374835613`
+- `viewer-preferences-chrome-1792374768766`, `viewer-preferences-msedge-1792374835615`
+- `viewer-ui-chrome-1792374703113`, `viewer-charts-chrome-1792374438291`
+
+Taste static lint and browser inspection of empty Library and a real two-source
+STDF comparison pass with no failures at 1440/768/390px. Screenshots, reports and
+the selected direction are under `taste-product-direction/`. Early Chrome example
+captures exposed an SVG test-server MIME issue and an encoded text chevron;
+these were fixed with inline SVG and a CSS chevron before the subsequent viewer
+and Edge runs. Independent review corrected mobile action heights and font-error
+recovery wording. Final design decisions and warning explanations are in
+[DESIGN-SYSTEM.md](DESIGN-SYSTEM.md). Existing zoom, device and browser qualification
+limits above remain applicable.
+
+The example screenshot helper now waits two animation frames after viewport
+changes, allowing responsive catalog collapse and canvas resize to settle. This
+corrects an Edge full-page capture artifact; the settled page did not have a scroll
+gap. The final Edge example run above passed after this harness correction.

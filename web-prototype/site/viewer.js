@@ -372,8 +372,12 @@ async function startup() {
 async function restoreFont(settings) {
   try { await applyFont(settings); }
   catch (error) {
+    const wasLocalFont = settings.font === 'SemiDataLocalFont';
     settings.font = 'Segoe UI'; await applyFont(settings);
-    $('viewer-notice').hidden = false; $('viewer-notice').textContent = `${error.message} This workspace uses Segoe UI until you add that font in Settings.`;
+    $('viewer-notice').hidden = false;
+    $('viewer-notice').textContent = wasLocalFont
+      ? `${error.message} This workspace uses Segoe UI until you add that font in Settings.`
+      : 'The bundled display font could not be loaded. Using Segoe UI; choose IBM Plex Sans in Settings to try again.';
   }
 }
 

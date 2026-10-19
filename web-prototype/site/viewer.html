@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#142331" />
+  <meta name="theme-color" content="#eaf0f0" />
   <title>SemiData · Data viewer</title>
+  <link rel="icon" href="./semidata-mark.svg" type="image/svg+xml" />
+  <link rel="preload" href="./fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="./app.css" />
   <link rel="stylesheet" href="./viewer.css" />
   <link rel="stylesheet" href="./viewer-charts.css" />
@@ -14,7 +16,11 @@
 <body class="data-viewer">
   <a class="skip-link" href="#main">Skip to data viewer</a>
   <div class="workspace">
-    <header class="topbar"><a class="viewer-brand" href="./app.html">SemiData</a><nav class="breadcrumb" aria-label="Workspace"><a href="./app.html">Library</a><span aria-hidden="true">/</span><strong>Viewer</strong></nav><span id="connection-status" role="status">Opening library…</span></header>
+    <header class="topbar"><a class="viewer-brand" href="./app.html"><svg class="brand-mark" aria-hidden="true" focusable="false" viewBox="0 0 32 32" fill="none">
+  <path d="M13 2.3a14 14 0 1 0 6 0L16 5Z" stroke="#1b6c80" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M11 8v17M21 8v17M6 12h20M6 21h20" stroke="#1b6c80" stroke-width="1.1"/>
+  <path d="M11.6 12.6h8.8v7.8h-8.8z" fill="#1b6c80"/>
+</svg>SemiData</a><nav class="breadcrumb" aria-label="Workspace"><a href="./app.html">Library</a><span aria-hidden="true">/</span><strong>Viewer</strong></nav><span id="connection-status" role="status">Opening library…</span></header>
     <main id="main" tabindex="-1" aria-busy="true">
       <div class="page-heading"><div><h1 id="viewer-subtitle">Opening data…</h1></div><div class="viewer-actions"><button id="viewer-groups" class="button secondary" data-ready disabled>Files &amp; groups</button><button id="viewer-settings" class="button secondary" data-ready disabled>Settings</button><button id="viewer-workspace" class="button secondary" type="button" popovertarget="viewer-workspace-menu" disabled>Workspace</button></div></div>
       <section id="viewer-workspace-menu" class="workspace-menu" popover aria-labelledby="workspace-menu-title">

@@ -40,6 +40,8 @@ async function viewerReady() {
   assert.equal(await page.locator('#viewer-groups').isEnabled(), true);
 }
 async function screenshot(name) {
+  // Let matchMedia catalog collapse and ResizeObserver chart layout settle after a viewport change.
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.screenshot({ path: resolve(output, name), fullPage: true }); screenshots.push(name);
 }
 async function fits() {

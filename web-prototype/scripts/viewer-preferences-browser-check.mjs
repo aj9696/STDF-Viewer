@@ -30,6 +30,19 @@ try {
     window.render = (value) => { const container = document.querySelector('#table'); container.replaceChildren(); prefs.applyPreferences(value); view.renderDevices(container, { items: [device] }, new Map([['key', test]]), { groups: [{ name: 'Fixture' }] }, () => {}, value, [analysis]); };
     window.current = settings.validateSettings({ table: { hardBin: false, appliedLimits: true, moments: true, capability: true, outcomes: true, density: 'compact', unitSuffix: true } }); window.render(window.current);
   });
+  const fontCheck = await page.evaluate(async () => {
+    const { settings } = prefsTest;
+    await settings.applyFont(current);
+    const bundled = [...document.fonts].some(face => face.family === 'IBM Plex Sans' && face.status === 'loaded');
+    const saved = settings.saveSettings({ ...current, font: 'Consolas' });
+    await settings.applyFont(settings.loadSettings());
+    const selected = getComputedStyle(document.body).fontFamily.includes('Consolas');
+    const identifiers = document.body.style.getPropertyValue('--viewer-mono').includes('Consolas');
+    settings.saveSettings(current); await settings.applyFont(current);
+    return { bundled, selected, identifiers, font: saved.font };
+  });
+  assert.deepEqual(fontCheck, { bundled: true, selected: true, identifiers: true, font: 'Consolas' });
+  checks.push('Bundled IBM Plex loads; a persisted system font overrides text and identifier typography');
   assert.equal(await page.getByRole('columnheader', { name: 'Hard bin', exact: true }).count(), 0); assert.equal(await page.getByRole('columnheader', { name: 'Soft bin', exact: true }).count(), 1);
   assert.equal(await page.locator('.viewer-measurement.value-fail').count(), 1);
   assert.match(await page.locator('#table').textContent(), /0 V ≤ value ≤ 6 V/); assert.equal(await page.locator('#table script').count(), 0);
