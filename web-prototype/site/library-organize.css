@@ -1,0 +1,41 @@
+/* Library groups share the table's full width; the existing sheet supplies its frame. */
+.library-home .library-toolbar { flex-wrap: wrap; gap: 12px 24px; }
+.library-order-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.library-home .sort-field { gap: 4px; }
+.library-home .file-table { min-width: 1040px; }
+.library-home .file-table th:first-child { width: 36px; }
+.library-home .file-table th:nth-child(2) { width: 32%; }
+.library-home .file-table th:nth-child(2), .library-home .file-table th:nth-child(3) { text-align: left; }
+.library-home .file-table th:nth-child(4), .library-home .file-table th:nth-child(5), .library-home .file-table th:nth-child(6) { text-align: right; }
+.library-home .file-name { max-width: clamp(220px, 26vw, 520px); }
+.library-home .library-check-cell { padding-right: 4px; }
+.library-check-cell label { display: inline-flex; align-items: center; justify-content: center; width: 32px; min-height: 40px; cursor: pointer; }
+.library-check-cell input { width: 17px; height: 17px; margin: 0; accent-color: var(--blue); cursor: pointer; }
+.library-check-cell input:disabled { cursor: default; }
+.library-identity-cell span, .library-identity-cell small { display: block; max-width: 220px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.library-home .library-test-date { text-align: right; font: 12px var(--font-mono); white-space: nowrap; }
+.library-home .file-table .library-group-row th { padding: 12px 0 8px; border: 0; text-align: left; width: auto; }
+.library-group-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 32px; }
+.library-group-heading > span { color: var(--ink); font-weight: 500; }
+.library-group-heading small { margin-left: 10px; color: var(--muted); font-size: 12px; font-weight: 400; }
+.library-group-heading button { font-size: 12px; padding: 5px 8px; }
+.library-selection { position: sticky; top: 0; z-index: 2; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); }
+.library-selection-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.library-selection-heading strong { font-size: 13px; font-weight: 500; }
+.library-selection-heading > div { display: flex; align-items: center; gap: 12px; }
+.library-selection details { margin-top: 6px; }
+.library-selection summary { width: fit-content; padding: 4px 0; color: var(--muted); font-size: 12px; cursor: pointer; }
+.library-selected-files { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; }
+.library-selected-files button { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 30px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--ink); font-size: 12px; cursor: pointer; }
+.library-selected-files button span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.library-selection p { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+@media (max-width: 760px) {
+  .library-order-controls { display: grid; width: 100%; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .library-home .library-toolbar .sort-field { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; margin-left: 0; }
+  .library-home .library-toolbar .sort-field select { width: 100%; max-width: 100%; padding-left: 0; }
+  .library-selection-heading { align-items: flex-start; flex-wrap: wrap; }
+  .library-selection-heading > div { margin-left: auto; }
+  .library-selected-files button { min-height: 44px; }
+  .library-selection summary { min-height: 44px; display: list-item; align-content: center; }
+  .library-check-cell label { width: 44px; min-height: 44px; }
+}

@@ -33,7 +33,7 @@ failure or an invitation to start a second client against the same library.
 | `open()` | Runtime/schema versions, pool capacity/files, dataset/interrupted-job counts; fails without a temporary fallback |
 | `close()` | Releases SQLite handles/lock and terminates worker; call only when idle |
 | `importFile(file, {relativePath})` | `{dataset, duplicate, metrics}`; copy/hash, parse, validate, publish |
-| `listDatasets({offset=0,limit=50})` | `{items,nextOffset}`; maximum 100, newest first |
+| `listDatasets({offset=0,limit=50})` | `{items,nextOffset}`; maximum 100, newest import first; additive `test_metadata` below |
 | `listJobs({offset=0,limit=50})` | Same pagination; includes failures/interruption diagnostics |
 | `getDataset(id)` | Dataset metadata after checking referenced files/schema/manifest; no STDF reparse |
 | `listTests(id, {query='',after=null,limit=50})` | Grouped test-number inventory and literal search; maximum 100 groups; details below |
@@ -81,6 +81,22 @@ Counts are observations/attempts, not yield or unique production devices.
 Device IDs identify individual PIR/PRR attempts within one source, not a merged
 cross-file part identity. PTR result bits remain authoritative for NaN payloads,
 infinities and signed zero; JSON/SQLite numeric output is not an exact substitute.
+
+Since 2026-10-19, each `listDatasets` item also contains
+`test_metadata:{startTime,partNumber,lotId,sublotId,program,revision,tester,status,warning}`.
+`startTime` is MIR.START_T in UTC Unix seconds or null. Strings are recorded MIR
+values, trimmed, or empty when missing. `status` is `recorded`, `not-recorded`,
+or `unavailable`; `warning` is null or explanatory text. Library UI sorting by
+test date is separate from the API's import-order pagination. `getDataset` and
+import responses keep their existing shape.
+
+The worker reads only the indexed retained header prefix: 64 records per page,
+at most 4,096 records, stopping at the first MIR or device/test record. It never
+falls back to import time or builds viewer caches. The disposable OPFS file
+`semidata-library-metadata-v1.json` holds at most 1,000 entries and 4 MiB. Cache
+identity includes dataset ID, source hash, parser/schema versions and source size.
+Unavailable headers are retried. Cache failures do not hide library files.
+Retained-v1/v2 imports and portable restores require no schema migration.
 
 Catalog pagination uses offsets and may shift when imports are added. Refresh
 after a mutation. Row cursors are stable because completed datasets are immutable.

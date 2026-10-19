@@ -1,6 +1,6 @@
 # Library home
 
-Status: engineering preview, updated 2026-10-18. This screen connects the browser
+Status: engineering preview, updated 2026-10-19. This screen connects the browser
 library to its product workflow: import STDF files or folders, see saved datasets,
 and open the data viewer. It uses the same library as the engineering console.
 
@@ -37,8 +37,17 @@ cover app-module startup, not long-running imports or all worker/storage stalls.
    first available test. **Details** beside a file opens retained PTR counts,
    device attempts, source/database sizes, coverage and SHA-256. Its **Raw records**
    link opens the older [Test Explorer](TEST-EXPLORER.md).
-4. Search by filename or recorded relative path. Sort by import date, filename
-   or source size; use the arrow controls to page through 25 rows at a time.
+4. Use **Group by** to organize files by test date, part number or lot. Dates
+   are the recorded STDF start dates in UTC, with the newest dates first.
+   Missing values have their own group. Search also matches part, lot, sublot,
+   program, revision and tester. Sort within groups, or select **None** to sort
+   the whole list. Arrow controls page through 25 files at a time.
+   Check up to eight files, then select **Open in Viewer**. Selections remain
+   when you search, change groups or change pages. **Review selected files**
+   lists them and lets you remove one. **Select group** selects all ready
+   files in the matching group only when they fit the eight-file limit.
+   The Viewer opens each file as a separate comparison group. To combine
+   related sources or define a retest order, use **Files & groups** there.
 5. Reload the page and reopen the dataset without selecting its original file.
    Importing the same expanded bytes with another filename reuses a dataset
    with the same parser/schema version. Current imports use retained-v2;
@@ -75,8 +84,10 @@ in Viewer. Raw source records remain preserved.
 
 The client loads catalog metadata in pages of 100, with a 1,000-dataset inventory
 limit, then searches/sorts the loaded inventory. It renders at most 25 table rows.
-Opening the overview checks saved availability and metadata through the existing
-API; it does not read every measurement or perform a complete integrity scan.
+The first listing reads bounded retained STDF headers and caches their test
+metadata. Later listings reuse the cache. It does not parse measurements or
+build viewer indexes. Missing test dates never use the import date instead.
+This does not perform a complete integrity scan.
 
 Interrupted imports and unavailable datasets get explicit guidance and remain
 inspectable through Library tools. No screen action silently resets the library.
@@ -105,6 +116,9 @@ The module contract is [SPEC-browser-ui.md](../../SPEC-browser-ui.md).
 | `site/app.css` | Workspace design, responsive layout, focus and reduced-motion styling |
 | `site/library-home.js` | Serialized client operations, UI state, progress and page lifecycle |
 | `site/library-home-view.js` | Text-safe rendering, icons and count/size/date formatting |
+| `site/library-organize.js` | Metadata search, grouping, sort and bounded selection |
+| `site/library-organize.css` | Grouped table and selection controls |
+| `site/library-metadata.js` | Worker-only bounded MIR extraction and disposable cache |
 | `site/example-picker.js` | Bundled example selection, source validation and ordinary import flow |
 | `scripts/frontend-check.mjs` | Isolated browser workflow and UI failure-state checks |
 
@@ -125,6 +139,12 @@ node web-prototype/scripts/frontend-check.mjs chrome
 node web-prototype/scripts/frontend-check.mjs msedge
 node web-prototype/scripts/startup-check.mjs chrome
 node web-prototype/scripts/startup-check.mjs msedge
+node web-prototype/scripts/library-metadata-unit.mjs
+node web-prototype/scripts/library-metadata-check.mjs chrome
+node web-prototype/scripts/library-metadata-check.mjs msedge
+node web-prototype/scripts/library-organize-check.mjs
+node web-prototype/scripts/library-organize-ui-check.mjs chrome
+node web-prototype/scripts/library-organize-ui-check.mjs msedge
 ```
 
 The harness requires the repository's `.venv/Scripts/python.exe`, Node.js 22+

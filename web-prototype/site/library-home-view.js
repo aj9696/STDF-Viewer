@@ -1,3 +1,5 @@
+import { libraryGroup, LIBRARY_SELECTION_LIMIT, testDate, testMetadata } from './library-organize.js';
+
 export const $ = (id) => document.getElementById(id);
 export const count = (value) => Number(value ?? 0).toLocaleString();
 export function bytes(value) {
@@ -40,10 +42,35 @@ export function icon(name) {
 export function hydrateIcons() {
   document.querySelectorAll('[data-icon]').forEach((node) => node.replaceChildren(icon(node.dataset.icon)));
 }
-export function renderRows(rows) {
+export function renderRows(rows, { selectedIds = new Set(), groupBy = 'none', groups = new Map() } = {}) {
   const fragment = document.createDocumentFragment();
+  let previousGroup;
   for (const dataset of rows) {
+    const metadata = testMetadata(dataset), group = libraryGroup(dataset, groupBy);
+    if (groupBy !== 'none' && group.key !== previousGroup) {
+      previousGroup = group.key;
+      const items = groups.get(group.key)?.items ?? [], ready = items.filter(item => item.status === 'ready');
+      const allSelected = ready.length > 0 && ready.every(item => selectedIds.has(item.id));
+      const available = ready.filter(item => !selectedIds.has(item.id)).length;
+      const headingRow = element('tr', undefined, 'library-group-row'), heading = element('th');
+      heading.colSpan = 8; heading.scope = 'rowgroup';
+      const content = element('div', undefined, 'library-group-heading');
+      const caption = element('span', group.label);
+      caption.append(element('small', ` ${count(items.length)} file${items.length === 1 ? '' : 's'}`));
+      const select = element('button', allSelected ? 'Deselect group' : 'Select group', 'quiet-button');
+      select.type = 'button'; select.dataset.selectGroup = group.key;
+      select.disabled = !ready.length || (!allSelected && selectedIds.size + available > LIBRARY_SELECTION_LIMIT);
+      select.title = select.disabled ? `Select individual files. The Viewer accepts up to ${LIBRARY_SELECTION_LIMIT} files.` : `${allSelected ? 'Deselect' : 'Select'} ${ready.length} ready file${ready.length === 1 ? '' : 's'} in ${group.label}`;
+      content.append(caption, select); heading.append(content); headingRow.append(heading); fragment.append(headingRow);
+    }
     const row = element('tr'); row.dataset.id = dataset.id;
+    const selectionCell = element('td', undefined, 'library-check-cell'), selectionLabel = element('label');
+    const selection = document.createElement('input'); selection.type = 'checkbox'; selection.dataset.selectId = dataset.id;
+    selection.checked = selectedIds.has(dataset.id);
+    selection.disabled = dataset.status !== 'ready' || (!selection.checked && selectedIds.size >= LIBRARY_SELECTION_LIMIT);
+    selection.setAttribute('aria-label', `Select ${dataset.name}`);
+    selection.title = dataset.status !== 'ready' ? 'This file needs attention.' : `Select for Viewer (up to ${LIBRARY_SELECTION_LIMIT} files)`;
+    selectionLabel.append(selection); selectionCell.append(selectionLabel);
     const fileCell = element('td'), file = element('div', undefined, 'file-cell');
     const glyph = element('span', undefined, 'file-glyph'); glyph.append(icon('file'));
     const copy = element('div'), name = element('button', dataset.name, 'file-name'); name.title = dataset.name;
@@ -55,8 +82,14 @@ export function renderRows(rows) {
     const actionCell = element('td'), action = element('button', 'Details', 'quiet-button row-open');
     action.type = 'button'; action.dataset.datasetId = dataset.id;
     action.setAttribute('aria-label', `Details for ${dataset.name}`); actionCell.append(action);
-    row.append(fileCell, element('td', count(dataset.manifest.counts.measurements), 'number-cell'),
-      element('td', bytes(dataset.source_bytes), 'number-cell'), element('td', date(dataset.created_at), 'date-cell'), statusCell, actionCell);
+    const identityCell = element('td', undefined, 'library-identity-cell');
+    const part = element('span', metadata.partNumber || '—'); part.title = metadata.partNumber || 'Part number not recorded';
+    const lot = element('small', metadata.lotId || '—', 'file-meta'); lot.title = metadata.lotId ? `Lot ${metadata.lotId}` : 'Lot ID not recorded';
+    identityCell.append(part, lot);
+    const dateCell = element('td', testDate(dataset) || '—', 'date-cell library-test-date');
+    dateCell.title = testDate(dataset, true) || metadata.warning || 'Test start time not recorded';
+    row.append(selectionCell, fileCell, identityCell, dateCell, element('td', count(dataset.manifest.counts.measurements), 'number-cell'),
+      element('td', bytes(dataset.source_bytes), 'number-cell'), statusCell, actionCell);
     fragment.append(row);
   }
   $('dataset-rows').replaceChildren(fragment);
@@ -78,6 +111,11 @@ export function renderDataset(dataset) {
   }
   const source = element('section', undefined, 'detail-section');
   source.append(element('h3', 'Saved source'), facts([['Original file', bytes(dataset.source_bytes)], ['Database', bytes(dataset.db_bytes)], ['Location', 'This browser · this device']]));
+  const metadata = testMetadata(dataset), test = element('section', undefined, 'detail-section');
+  test.append(element('h3', 'Test information'), facts([['Test start', testDate(dataset, true) || 'Not recorded'], ['Part number', metadata.partNumber || 'Not recorded'],
+    ['Lot ID', metadata.lotId || 'Not recorded'], ['Sublot ID', metadata.sublotId || 'Not recorded'], ['Program', metadata.program || 'Not recorded'],
+    ['Revision', metadata.revision || 'Not recorded'], ['Tester', metadata.tester || 'Not recorded']]));
+  if (metadata.warning) test.append(element('p', metadata.warning, 'muted'));
   const coverage = element('details', undefined, 'detail-section detail-coverage');
   coverage.append(element('summary', 'Record coverage'));
   const families = dataset.manifest.coverage?.measurement_families;
@@ -90,5 +128,5 @@ export function renderDataset(dataset) {
   const explore = element('a', 'Raw records', 'quiet-button');
   explore.href = `./explore.html?dataset=${encodeURIComponent(dataset.id)}`;
   explore.append(icon('right'));
-  $('dataset-info').replaceChildren(viewer, explore, grid, source, coverage, identity);
+  $('dataset-info').replaceChildren(viewer, explore, grid, test, source, coverage, identity);
 }

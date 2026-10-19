@@ -4,12 +4,14 @@ import { ImportQueue } from './import-queue.js';
 import { createExamplePicker } from './example-picker.js';
 import { createAtdfImporter } from './library-atdf-ui.js';
 import { $, bytes, count, element, hydrateIcons, renderRows, renderDataset } from './library-home-view.js';
+import { groupDatasets, LIBRARY_SELECTION_LIMIT, organizeDatasets, selectLibraryFiles } from './library-organize.js';
 
 const PAGE_SIZE = 25;
 let library, datasets = [], page = 0, ready = false, busy = false, generation = 0;
 let selected = null, importedId = null, importing = false, cancelling = false;
 let datasetReturnFocus = null, restoreDatasetFocus = false;
 let selectedItems = [], sourceFiles = [], activeQueue = null;
+let viewerSelection = new Set();
 
 function returnToDataset() {
   if (!restoreDatasetFocus || busy || $('dataset-dialog').open) return;
@@ -25,8 +27,21 @@ function notice(message, error = false) {
   $('library-notice').classList.toggle('error-notice', error);
 }
 function controls() {
-  for (const id of ['add-file', 'add-atdf', 'empty-import', 'try-examples', 'refresh-files', 'search-files', 'sort-files']) $(id).disabled = !ready || busy;
+  for (const id of ['add-file', 'add-atdf', 'empty-import', 'try-examples', 'refresh-files', 'search-files', 'sort-files', 'group-files', 'clear-selection']) $(id).disabled = !ready || busy;
   document.querySelectorAll('[data-dataset-id]').forEach((button) => { button.disabled = !ready || busy; });
+  document.querySelectorAll('[data-select-id]').forEach(input => {
+    input.disabled = !ready || busy || datasets.find(item => item.id === input.dataset.selectId)?.status !== 'ready'
+      || (!input.checked && viewerSelection.size >= LIBRARY_SELECTION_LIMIT);
+  });
+  document.querySelectorAll('[data-remove-selection]').forEach(button => { button.disabled = !ready || busy; });
+  const visibleGroups = groupDatasets(filtered(), $('group-files').value);
+  for (const button of document.querySelectorAll('[data-select-group]')) {
+    const group = visibleGroups.get(button.dataset.selectGroup);
+    const readyItems = group?.items.filter(item => item.status === 'ready') ?? [];
+    const allSelected = readyItems.length > 0 && readyItems.every(item => viewerSelection.has(item.id));
+    button.disabled = !ready || busy || !readyItems.length || (!allSelected && viewerSelection.size + readyItems.filter(item => !viewerSelection.has(item.id)).length > LIBRARY_SELECTION_LIMIT);
+  }
+  $('open-selected').disabled = !ready || busy || !viewerSelection.size || viewerSelection.size > LIBRARY_SELECTION_LIMIT;
   $('previous-page').disabled = !ready || busy || page === 0;
   $('next-page').disabled = !ready || busy || (page + 1) * PAGE_SIZE >= filtered().length;
   $('retry-open').disabled = busy;
@@ -41,12 +56,20 @@ function controls() {
   document.querySelectorAll('.tools-link').forEach((link) => { link.setAttribute('aria-disabled', String(busy)); });
 }
 function filtered() {
-  const query = $('search-files').value.trim().toLocaleLowerCase();
-  return datasets.filter((item) => `${item.name}\n${item.relative_path}`.toLocaleLowerCase().includes(query)).sort((a, b) => {
-    if ($('sort-files').value === 'name') return a.name.localeCompare(b.name) || a.id.localeCompare(b.id);
-    if ($('sort-files').value === 'size') return b.source_bytes - a.source_bytes || a.id.localeCompare(b.id);
-    return b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id);
-  });
+  return organizeDatasets(datasets, { query: $('search-files').value, sort: $('sort-files').value, groupBy: $('group-files').value });
+}
+function renderSelection() {
+  $('library-selection').hidden = !viewerSelection.size;
+  $('selection-count').textContent = `${viewerSelection.size} of ${LIBRARY_SELECTION_LIMIT} files selected`;
+  const files = document.createDocumentFragment();
+  for (const id of viewerSelection) {
+    const name = datasets.find(item => item.id === id)?.name ?? id;
+    const button = element('button'); button.type = 'button'; button.dataset.removeSelection = id;
+    button.setAttribute('aria-label', `Remove ${name} from selection`); button.title = name;
+    const close = element('span', '×'); close.setAttribute('aria-hidden', 'true');
+    button.append(element('span', name), close); files.append(button);
+  }
+  $('selected-files').replaceChildren(files);
 }
 function renderLibrary() {
   const rows = filtered();
@@ -64,7 +87,9 @@ function renderLibrary() {
   $('library-caption').textContent = ready ? `${count(datasets.length)} saved files` : 'Library disconnected';
   const start = page * PAGE_SIZE;
   $('page-label').textContent = `${count(start + 1)}–${count(Math.min(start + PAGE_SIZE, rows.length))} of ${count(rows.length)} datasets`;
-  renderRows(ready ? rows.slice(start, start + PAGE_SIZE) : []);
+  $('sort-label').textContent = $('group-files').value === 'none' ? 'Sort by' : 'Sort within groups';
+  renderRows(ready ? rows.slice(start, start + PAGE_SIZE) : [], { selectedIds: viewerSelection, groupBy: $('group-files').value, groups: groupDatasets(rows, $('group-files').value) });
+  renderSelection();
   controls();
 }
 async function loadCatalog(epoch) {
@@ -78,6 +103,7 @@ async function loadCatalog(epoch) {
     offset = batch.nextOffset;
   } while (offset !== null);
   datasets = items;
+  viewerSelection = selectLibraryFiles(viewerSelection, [], datasets);
   return true;
 }
 async function operation(work) {
@@ -257,7 +283,11 @@ async function openDataset(id) {
   await operation(async (epoch) => {
     try {
       const dataset = await library.getDataset(id);
-      if (epoch === generation) renderDataset(dataset);
+      if (epoch === generation) {
+        const sameSource = dataset.status === cached?.status && dataset.source_hash === cached?.source_hash && dataset.source_bytes === cached?.source_bytes;
+        renderDataset({ ...dataset, test_metadata: dataset.test_metadata ?? (sameSource ? cached?.test_metadata :
+          { status: 'unavailable', warning: 'Test information is unavailable. Refresh the library.' }) });
+      }
     } catch (error) {
       if (epoch !== generation) return;
       $('dataset-subtitle').textContent = 'This dataset needs attention';
@@ -297,11 +327,48 @@ $('add-atdf').addEventListener('click', () => atdf.open());
 for (const id of ['add-file', 'empty-import']) $(id).addEventListener('click', showImport);
 $('retry-open').addEventListener('click', connect);
 $('refresh-files').addEventListener('click', () => operation(async (epoch) => { await loadCatalog(epoch); notice('Library refreshed.'); }));
-for (const id of ['search-files', 'sort-files']) $(id).addEventListener(id === 'search-files' ? 'input' : 'change', () => { page = 0; renderLibrary(); });
+for (const id of ['search-files', 'sort-files', 'group-files']) $(id).addEventListener(id === 'search-files' ? 'input' : 'change', () => { page = 0; renderLibrary(); });
 $('clear-search').addEventListener('click', () => { $('search-files').value = ''; page = 0; renderLibrary(); $('search-files').focus(); });
 $('previous-page').addEventListener('click', () => { --page; renderLibrary(); });
 $('next-page').addEventListener('click', () => { ++page; renderLibrary(); });
+$('clear-selection').addEventListener('click', () => { if (!ready || busy) return; viewerSelection.clear(); renderLibrary(); $('search-files').focus(); });
+$('selected-files').addEventListener('click', event => {
+  const target = event.target.closest('[data-remove-selection]');
+  if (!target || !ready || busy) return;
+  viewerSelection.delete(target.dataset.removeSelection); renderLibrary();
+  ($('selected-files').querySelector('button') ?? $('search-files')).focus();
+});
+$('open-selected').addEventListener('click', () => {
+  if (!ready || busy || !viewerSelection.size || viewerSelection.size > LIBRARY_SELECTION_LIMIT) return;
+  const ids = [...viewerSelection];
+  if (!ids.every(id => datasets.find(item => item.id === id)?.status === 'ready')) return;
+  openViewer(ids);
+});
+$('dataset-rows').addEventListener('change', event => {
+  const input = event.target.closest('[data-select-id]');
+  if (!input || !ready || busy) return;
+  const id = input.dataset.selectId;
+  try {
+    if (input.checked) viewerSelection = selectLibraryFiles(viewerSelection, [id], datasets);
+    else viewerSelection.delete(id);
+  } catch (error) { notice(error.message, true); }
+  renderLibrary();
+  [...document.querySelectorAll('[data-select-id]')].find(node => node.dataset.selectId === id)?.focus();
+});
 $('dataset-rows').addEventListener('click', (event) => {
+  const groupButton = event.target.closest('[data-select-group]');
+  if (groupButton && ready && !busy) {
+    const key = groupButton.dataset.selectGroup;
+    const group = groupDatasets(filtered(), $('group-files').value).get(key);
+    const ids = group?.items.filter(item => item.status === 'ready').map(item => item.id) ?? [];
+    try {
+      if (ids.every(id => viewerSelection.has(id))) for (const id of ids) viewerSelection.delete(id);
+      else viewerSelection = selectLibraryFiles(viewerSelection, ids, datasets);
+    } catch (error) { notice(error.message, true); }
+    renderLibrary();
+    [...document.querySelectorAll('[data-select-group]')].find(node => node.dataset.selectGroup === key)?.focus();
+    return;
+  }
   const button = event.target.closest('[data-dataset-id]');
   if (!button || !ready || busy) return;
   const id = button.dataset.datasetId;

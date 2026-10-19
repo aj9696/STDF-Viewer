@@ -8,7 +8,10 @@ async function dispatch(message, context) {
   if (message.type === "open") return store.open();
   if (message.type === "close") return store.close();
   if (!store.catalog) throw libraryError("NOT_OPEN", "Open the library first.");
-  if (message.type === "listDatasets") return store.list("datasets", message);
+  if (message.type === "listDatasets") {
+    const { hydrateDatasetMetadata } = await import('./library-metadata.js');
+    return hydrateDatasetMetadata(store, store.list("datasets", message), context);
+  }
   if (message.type === "listJobs") return store.list("jobs", message);
   if (message.type === "getDataset") {
     const opened = await store.access(message.datasetId);
