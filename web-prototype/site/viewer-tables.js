@@ -67,6 +67,17 @@ export function deviceFilter(view, options) {
   const query = textOption(options.query ?? '');
   if (query) { parts.push('(instr(lower(d.part_id),lower(?))>0 OR instr(lower(d.part_text),lower(?))>0 OR CAST(d.dut_index AS TEXT)=?)'); bind.push(query, query, query); }
   if (options.group !== undefined) { parts.push('d.group_id=?'); bind.push(boundedInteger(options.group, 0, view.selection.groups.length - 1, 'Group')); }
+  if (options.datasetIds !== undefined) {
+    if (!Array.isArray(options.datasetIds) || !options.datasetIds.length || options.datasetIds.length > 8) invalid('Select one to eight source files.');
+    const ids = options.datasetIds.map(datasetId), allowed = new Set((options.group === undefined ? view.selection.groups : [view.selection.groups[options.group]]).flatMap((group) => group.datasetIds));
+    if (new Set(ids).size !== ids.length || ids.some((id) => !allowed.has(id))) invalid('Choose distinct sources from the selected workspace or group.');
+    parts.push(`d.dataset_id IN(${ids.map(() => '?').join(',')})`); bind.push(...ids);
+  }
+  if (options.outcome !== undefined) {
+    const outcomes = { pass: '(d.part_flags&28)=0', fail: '(d.part_flags&20)=0 AND (d.part_flags&8)!=0', unknown: '(d.part_flags IS NULL OR (d.part_flags&20)!=0)' };
+    if (typeof options.outcome !== 'string' || !Object.hasOwn(outcomes, options.outcome)) invalid('Choose pass, fail, or unknown outcomes.');
+    parts.push(`(${outcomes[options.outcome]})`);
+  }
   if (options.bin) {
     if (!['hard', 'soft'].includes(options.bin.kind)) invalid('Choose hardware or software bins.');
     parts.push(`d.${options.bin.kind}_bin=?`); bind.push(boundedInteger(options.bin.number, 0, 65535, 'Bin'));

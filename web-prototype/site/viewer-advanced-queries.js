@@ -3,6 +3,7 @@ import { invalid } from './viewer-model.js';
 /** Fixed routing keeps UI tools on the same validated, read-only population. */
 export async function runAdvancedQuery(view, options) {
   switch (options.kind) {
+    case 'yieldManager': return (await import('./viewer-yield-manager.js')).yieldManager(view);
     case 'dashboard': return (await import('./viewer-dashboard.js')).dashboard(view, options);
     case 'recordSummary': return (await import('./viewer-dashboard.js')).recordSummary(view, options);
     case 'distributions': return (await import('./viewer-distributions.js')).compareDistributions(view, options);
