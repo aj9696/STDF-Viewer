@@ -210,3 +210,124 @@ and [viewer qualification](../web-prototype/docs/VIEWER-VALIDATION.md).
   source content and STDF field names stay unchanged.
 - [ ] Qualify new studies/authoring/report performance on large vendor files;
   prior parser/cache benchmarks do not qualify these new operations.
+
+## UI refinement — authorized 2026-10-18
+
+See the matching section in [the plan](plan.md). Every slice includes the shared
+visual/accessibility checks there and a short engineer exercise. These tasks
+are authorized through completion. Record demonstrations without blocking on
+engineer feedback; retain the feedback checkpoints for later evaluation.
+
+- [x] **UX-1 — Scan and open files in Library.** Dependencies: none. Scope: medium.
+  - Delivered: compact file rows, neutral surfaces, readable filenames and
+    numeric columns, touch-sized controls. Chrome examples workflow passed;
+    screenshots: `examples-ui-chrome-1792369427420` in ignored results.
+  - Acceptance: apply the compact type/spacing/control rules to the existing
+    file flow; keep Import STDF obvious and ATDF/examples available; show honest
+    PTR-only counts, duplicate outcomes and actionable loading/error states.
+  - Verification: fresh before/after captures, keyboard import/open/retry, long
+    names, empty/populated library and duplicate reuse; run
+    `node web-prototype/scripts/examples-ui-check.mjs chrome` plus the existing
+    library workflow checks where import rendering changes.
+  - Likely files: `site/app.html`, `site/app.css`, `site/library-home-view.js`,
+    `scripts/examples-ui-check.mjs`, `docs/LIBRARY-HOME.md` under `web-prototype/`.
+
+- [ ] **UX-2 — Keep investigation scope and test selection clear.** Depends UX-1.
+  Scope: medium.
+  - Acceptance: one compact scope summary retains files/groups, heads, sites,
+    attempts and series mode; search and selected tests are easy to reach;
+    changing views preserves selection and the narrow catalog still folds.
+  - Verification: Site shift comparison and Fail to pass current/all counts,
+    keyboard selection across catalog pages, browser return/reload;
+    `node web-prototype/scripts/viewer-ui-check.mjs chrome` and examples UI checks.
+  - Likely files: `site/viewer.html`, `site/viewer.css`, `site/viewer.js`,
+    `scripts/viewer-ui-check.mjs`, `docs/VIEWER-UI.md` under `web-prototype/`.
+
+### Checkpoint after UX-1 and UX-2
+
+- [ ] Demonstrate import → select test → compare sites with the small examples;
+  record engineer feedback and adjust the next slice before extending the style.
+- [ ] Shared styling leaves other viewer tabs and one existing study usable.
+
+- [ ] **UX-3 — Make plots and their controls easier to read.** Depends UX-2.
+  Scope: medium.
+  - Acceptance: titles/units, legend and aligned statistics identify each series;
+    common controls and advanced overlays have a clear hierarchy; existing
+    preferences, binning, extrema, drilldowns and warnings retain their meaning.
+  - Verification: compare Site shift, inspect wafer-edge failures, check mixed
+    numeric/functional results and extreme values; run
+    `node web-prototype/scripts/viewer-charts-check.mjs chrome` and viewer UI checks.
+  - Likely files: `site/viewer-charts.js`, `site/viewer-charts.css`,
+    `site/viewer-view.js`, `scripts/viewer-charts-check.mjs`, `docs/VIEWER-UI.md`
+    under `web-prototype/`. Split further if settings wiring needs more files.
+
+- [ ] **UX-4 — Group the existing engineering tools.** Depends UX-2. Scope: medium.
+  - Acceptance: all 15 tool IDs remain reachable under meaningful groups; PAT,
+    Gauge R&R and comparison tools have visible names; navigation preserves
+    scope, active tool and localization behaviour.
+  - Verification: enumerate tool IDs before/after, exercise each group with
+    keyboard and pointer, reload a selected tool;
+    `node web-prototype/scripts/viewer-tools-ui-check.mjs chrome`.
+  - Likely files: `site/viewer-study-ui.js`, `site/viewer.js`,
+    `site/viewer-i18n.js`, `scripts/viewer-tools-ui-check.mjs`, `docs/TOOLS.md`
+    under `web-prototype/`. Start with native grouped options before adding a
+    custom menu or search component.
+
+### Checkpoint after UX-3 and UX-4
+
+- [ ] Engineer can identify the shifted site, inspect contributing devices and
+  find PAT/Gauge R&R; record friction rather than relying on aesthetic scores.
+- [ ] Numerical outputs and source/attempt identity match the unchanged fixtures.
+
+- [ ] **UX-5 — Clarify the PAT form.** Depends UX-3 and UX-4. Scope: medium.
+  - Acceptance: current population, reference selection and method are explicit;
+    required fields and advanced options are separated; run, exclusions,
+    result/recipe export and screened-copy actions have distinct meanings.
+  - Verification: use the existing PAT fixture, compare decisions/provenance,
+    cancel/retry and change scope; run tools UI and PAT recipe checks.
+  - Likely files: `site/viewer-study-ui.js`, `site/viewer-studies.css`,
+    `scripts/viewer-tools-ui-check.mjs`, `docs/TOOLS.md` under `web-prototype/`.
+    Add a documented small engineer example only if existing fixtures do not
+    exercise the form; keep method/default changes outside this presentation task.
+
+- [ ] **UX-6 — Clarify the Gauge R&R form.** Depends UX-5. Scope: medium.
+  - Acceptance: study inputs and supported design are explicit before running;
+    validation appears beside the relevant input; results retain method,
+    population and missing/unsupported-condition explanations.
+  - Verification: reproduce the existing independent study fixture and its
+    rejection cases; run study numerical checks and tools UI checks; provide a
+    small documented exercise rather than inferring a study from arbitrary STDF.
+  - Likely files: `site/viewer-study-ui.js`, `site/viewer-studies.css`,
+    `scripts/viewer-tools-ui-check.mjs`, `docs/TOOLS.md` under `web-prototype/`.
+
+### Checkpoint after UX-5 and UX-6
+
+- [ ] Engineer can explain the selected study population/method and distinguish
+  an exported result from a derived source file. Record feedback on both forms.
+
+- [ ] **UX-7 — Make workspace and export actions easy to find.** Depends UX-2 and
+  UX-4. Scope: medium.
+  - Acceptance: save/open/export/download actions have consistent placement;
+    opening a saved workspace is discoverable from an empty library; distinguish
+    a portable workspace from a report and keep storage/origin guidance concise.
+  - Verification: roundtrip a workspace into an isolated profile, verify selected
+    tests/settings/sources, open from an empty library and recover downloads;
+    `node web-prototype/scripts/viewer-transfer-check.mjs chrome` plus viewer UI.
+  - Likely files: `site/app.html`, `site/viewer.html`, `site/viewer-actions.js`,
+    `scripts/viewer-ui-check.mjs`, `docs/VIEWER-TRANSFER.md` under `web-prototype/`.
+    Reuse the existing viewer action boundary and empty-library restore path;
+    split additional routing work into a separate slice if necessary.
+
+- [ ] **UX-8 — Qualify and hand off the refined UI.** Depends UX-1 through UX-7.
+  Scope: small documentation/release slice.
+  - Acceptance: all five example workflows and the two study exercises work on
+    desktop Chrome/Edge; screenshots and guides describe the delivered revision;
+    production verification is recorded separately from local validation.
+  - Verification: focused regressions on both browsers, keyboard/zoom/narrow
+    layouts, workspace restore, export contents and bounded long-catalog
+    rendering; `npm.cmd --prefix web-prototype run package:pages`, then deployed
+    smoke checks when the release is published.
+  - Likely files: `web-prototype/docs/VIEWER-VALIDATION.md`,
+    `web-prototype/docs/DEPLOYMENT.md`, `tasks/plan.md`, `tasks/todo.md`.
+    Review shared changes independently before release; retain any remaining
+    qualification gaps explicitly.

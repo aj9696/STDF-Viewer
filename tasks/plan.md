@@ -170,3 +170,122 @@ Verification combines independent numerical/byte-level oracles, real browser
 workflows, export readers and rendered document inspection. Exact remaining
 translation and recipient-format work stays in the coverage matrix; no upstream
 push, hosted deployment or production qualification is implied.
+
+## 2026-10-18: UI refinement with Taste Skill and UI UX Pro Max
+
+Status: implementation authorized on 2026-10-18 ("full send"). Continue through
+all slices and record demonstrations without waiting between them. Engineer
+feedback can steer subsequent work; it is not a permission gate. This extends
+the existing UI simplification work. Other open tasks remain open.
+
+### Objective and baseline
+
+Make the existing engineering workflows easier to discover and use during long
+desktop sessions. Deliver one usable workflow at a time, with a short exercise
+for the engineer after each slice. AI investigations remain a future addition.
+
+Baseline: source revision `75312f5`, the current viewer and library guides, and
+the saved desktop library/site-comparison screenshots from
+`web-prototype/results/examples-ui-chrome-1792367205134/`. These are local build
+evidence, not a fresh inspection of the deployed site. Capture fresh screenshots
+before implementation and record the release revision when publishing.
+
+The library already supports files/folders, compressed imports, examples,
+deduplication, search and paging. The viewer already has a collapsible catalog,
+eight views, scope controls, 15 engineering tools, exports and portable
+workspaces. This plan improves their presentation and access.
+
+### Design direction
+
+Use a light engineering workspace: a pale neutral frame, white work area,
+compact controls, aligned figures and space given to the active chart or table.
+Keep the existing top navigation and system font. The distinctive content is
+the selected test, its unit, source/site comparison and wafer/device evidence.
+
+| Decision | Starting point |
+| --- | --- |
+| Type | 14px working text, 12px secondary labels, 20–24px page titles; tabular numbers aligned right |
+| Density | 4px spacing increments; 8–16px within controls/panels; row height chosen for one or two lines of actual content |
+| Colour | Neutral navigation/surfaces, existing blue for selection/actions where useful, stable site/bin colours with labels |
+| Structure | Library for files; Viewer for investigation; tests on the left, active result in the centre, scope above it |
+| Copy | Short action labels; explanations beside unfamiliar choices or in expandable help; interpretation warnings remain visible |
+| Interaction | Visible keyboard focus, clear selected states, labelled controls, short feedback transitions and reduced-motion support |
+| Narrow screens | Fold the catalog; keep comparison tables scrollable inside their own region; use at least 44px touch targets |
+
+Taste Skill's app draw (`analytics`, light, seed `20261018`) offered
+`framed-sheet`, `accent-ladder` and `achromatic-ledger`. Use `framed-sheet` as the
+starting reference because it separates controls from the work area without
+decorative effects. Adapt it to the existing top bar; adding another navigation
+sidebar would take space from the test catalog and plots. Freeze the specific
+tokens against real examples in the first slice.
+
+UI UX Pro Max's explicit `dense data dashboard` style match supports compact
+tables, neutral surfaces and readable data. Its broader design-system search
+also returned an Enterprise Gateway marketing layout; that portion was rejected.
+The `keyboard focus modal` search supports visible, unobscured focus.
+
+These skills are design inputs. Semiconductor requirements take precedence over
+generic rules: preserve multi-series colours, exact identities, scientific
+notation, bounded paging and the existing chart engine. Do not apply Taste's
+rules for rounding money to measurement calculations, impose its four-hue limit,
+replace meaningful missing data with zeros, or clip outliers for visual balance.
+Use subtle table striping if actual dense-table evaluation supports it.
+
+Skill sources: [Taste Skill](https://github.com/Leonxlnx/taste-skill/tree/a9c73c3d5dbf401e3e47f86e7b41f29ede1687df/skills/taste-skill)
+and [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/tree/56ea9cf174ed86786187daa9de0e6247cb0747e4).
+
+### Delivery sequence
+
+| Stage | User-visible result | Engineer exercise |
+| --- | --- | --- |
+| 1. Library | Consistent type/controls, easier file scanning, clear import and open actions; secondary format/storage actions grouped sensibly | Import Clean lot, reopen it, import it again and identify the reused file |
+| 2. Investigation workspace | Test search/selection and active source/head/site/attempt scope are easy to see; comparisons take fewer steps | Open Site shift, select Active current and switch between combined and separate sites |
+| 3. Charts and tables | Legible axes, compact legends/statistics and grouped chart controls; details remain available | Find the shifted population, inspect a bin and return without losing scope |
+| 4. Tool navigation | Existing tools grouped by task: Compare, Screening, Wafer, Studies, and Data/report utilities | Find PAT, Gauge R&R and wafer tools without knowing where they were placed |
+| 5. Study forms | Refine PAT first, then Gauge R&R, each with a clear setup, run action, result and export path | Reproduce a small documented study and identify its population, method and exclusions |
+| 6. Workspaces and handoff | Save/open/export actions are consistent and accessible; storage scope is explained where it matters | Save a workspace, restore it in an isolated library and verify files, selections and settings |
+
+Detailed tasks and dependencies are in `tasks/todo.md` (UX-1 through UX-8).
+The first deliverable is the Library slice. Check the design direction there
+before spreading shared styling to other workflows. Each study form is its own
+slice, so learning from PAT can inform Gauge R&R without combining the changes.
+
+### Verification and documentation
+
+For every slice, record before/after screenshots and walk the changed workflow
+at 1440px and 1280px desktop widths, 768px tablet width and 390px phone width.
+Retain the existing 360px overflow checks. Check keyboard-only use, 200% zoom,
+long test/file names and empty/loading/error states. Aim for 4.5:1 normal text
+contrast; test meaningful focus/control boundaries against their backgrounds.
+
+Use the five existing examples: Clean lot, Site shift, Fail to pass, Wafer edge
+failures, and Pins and digital tests. Use existing study fixtures for PAT and
+Gauge R&R; add only a missing small evaluation scenario, with independent
+expected results. Do not present the teaching examples as qualified capability
+studies. Preserve the documented 24-current versus 30-all retest counts and the
+mixed example's missing, invalid and unknown outcomes.
+
+Run the focused existing browser suite for the changed path, then the relevant
+regressions when shared components change. Use isolated browser profiles and
+synthetic data. Preserve worker queries, bounded rendering and import/index
+behaviour; UI changes must not materialize entire measurement populations.
+Update the corresponding user guide with each implemented slice. Keep a short
+record of visual decisions, exceptions and engineer feedback in VIEWER-UI.md.
+
+Final verification includes Chrome/Edge workflows, workspace roundtrip and
+export checks, followed by static packaging and a separate deployed smoke check.
+A passing local screenshot check does not establish that the live site changed.
+
+### Risks and boundaries
+
+| Risk | Control |
+| --- | --- |
+| Shorter UI hides analytical scope | Keep source/group, site, attempt policy and active selections visible; preserve provenance in exports |
+| Shared CSS improves one page but harms another | Change tokens incrementally and inspect Library, Viewer and one study together |
+| Cleaner charts change interpretation | Preserve bin edges, full-population calculations, exclusions, limits and display-reduction labels |
+| Navigation loses an existing tool | Inventory all 15 tool IDs and verify each remains reachable with keyboard and pointer |
+| New visual rules make dense data harder to read | Judge actual engineering tasks and allow documented exceptions to skill preferences |
+
+No framework migration, new charting dependency, font CDN, analysis-method change,
+storage migration or AI feature is needed for this work. Browser-local storage
+and the current source-preserving architecture remain the foundation.

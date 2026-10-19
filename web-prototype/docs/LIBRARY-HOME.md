@@ -1,8 +1,15 @@
 # Library home
 
-Status: local engineering preview, updated 2026-09-25. This screen connects the browser
+Status: engineering preview, updated 2026-10-18. This screen connects the browser
 library to its product workflow: import STDF files or folders, see saved datasets,
 and open the data viewer. It uses the same library as the engineering console.
+
+The file list uses compact rows, aligned numeric columns and readable file names.
+Import remains the primary action; examples and ATDF remain available beside it.
+Controls expand for touch screens, and the table scrolls within its own panel.
+The PTR count is deliberately labelled: it is not a count of every MPR/FTR
+observation available in Viewer. Source hashes, import outcomes and storage
+behaviour are unchanged by this visual update.
 
 ## Try it as a test engineer
 
