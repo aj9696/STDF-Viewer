@@ -355,3 +355,8 @@ then integrate the lot table, source-time plot, bins/sites and controlled-Englis
 help. Verify counts against real SQLite fixtures, review independently, check
 Chrome/Edge layouts and regressions, then publish and verify the clean release.
 Preserve the existing local library and current-attempt semantics. No migration.
+
+Published as clean asset revision `16fee86` on 2026-10-19. Chrome and Edge public
+checks verified exact asset hashes, lot/time/bin workflows, source-scoped device
+drill-down and portable workspace restoration. Release provenance and test
+evidence are in `web-prototype/docs/DEPLOYMENT.md`.

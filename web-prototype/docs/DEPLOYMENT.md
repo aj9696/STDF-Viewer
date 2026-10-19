@@ -238,3 +238,40 @@ and the test workspace. Cloudflare confirmation is
 `results/statistics-help-deployment-success.jpg`. These public checks use
 synthetic data in disposable profiles. Documentation-only commits after
 `da2b635` record this deployment without changing its asset revision.
+
+## Yield Manager release — 2026-10-19
+
+Cloudflare deployment `2f1efbb8-4068-4faa-8437-d918b4c7990d` published source
+revision [`16fee86`](https://github.com/aj9696/STDF-Viewer/commit/16fee867cdb5803f93815bc2e137ea58cb57e8c8)
+to [SemiData](https://semidata.pages.dev/). This release adds lot review, yield
+at recorded source start times, failing-bin and site breakdowns, exact device
+drill-down and controlled-English contextual help.
+
+The clean package (`sourceDirty: false`) contains 122 files and 4,177,895 bytes
+before compression. The rebuilt ZIP contains the same 122 entries, verified
+byte-for-byte against `dist/pages` and the release manifest before upload.
+ZIP size: 1,543,898 bytes. SHA-256:
+`a94b75dc295a3a982c29619182e13d57795da4429095e11fb11fc13d4f55e382`.
+Cloudflare confirmed 122/122 files uploaded and deployment success.
+
+Separate Chrome and Edge public checks passed all thirteen check groups. Each
+verified 120 public assets by SHA-256 and size, plus release.json separately;
+`_headers` is consumed as deployment configuration. WASM/font/SVG MIME types,
+cache/no-sniff headers, missing-route 404 and all five local font faces pass.
+
+Both browsers imported the 48-device example and opened the 96-device source
+comparison. Yield Manager displayed two separate lots, both recorded-date
+points and contextual help. Clicking a lot count returned exactly its source
+devices without changing the workspace selection. The mobile view fits.
+All-test statistics, the fifteen tools, workspace download, full browser restart,
+fresh-profile restore and reload persistence remain correct. Restored source
+hashes match the originals. No JavaScript errors, failed app requests or
+third-party app requests were recorded.
+
+Evidence: `results/release-smoke-chrome-1792411228282/` and
+`results/release-smoke-msedge-1792411228273/`. These contain `results.json`,
+`yield-manager.png`, `yield-manager-mobile.png`, statistics/help screenshots,
+comparison/restoration images and the portable test workspace. Checks use
+synthetic data in disposable profiles. The release makes no storage migration
+and does not upload an engineer's STDF files. Documentation-only commits after
+`16fee86` record the release without changing the deployed asset revision.

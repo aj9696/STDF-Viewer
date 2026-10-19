@@ -365,4 +365,4 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 - [x] Build lot review, failing bins, site results and source-time view.
 - [x] Integrate tab, cache lifecycle, workspace persistence and contextual help.
 - [x] Independent review; real-provider and Chrome/Edge UI regression checks.
-- [ ] Publish clean release and verify the public assets and workflows.
+- [x] Publish clean release and verify the public assets and workflows.
