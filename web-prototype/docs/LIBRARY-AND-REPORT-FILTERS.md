@@ -1,6 +1,7 @@
 # Library organization and report device filters
 
-Status: implementation, 2026-10-19.
+Status: implemented and deployed, 2026-10-19. See [validation](VIEWER-VALIDATION.md)
+and [release provenance](DEPLOYMENT.md).
 
 ## Requested workflows
 

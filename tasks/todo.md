@@ -374,4 +374,4 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 - [x] Add Library grouping/search and selection of up to eight files.
 - [x] Add coherent report outcome scope, chart capture and export provenance.
 - [x] Verify report contents, retest behavior and Chrome/Edge Library/report UI.
-- [ ] Review, document, publish and verify the public release.
+- [x] Review, document, publish and verify the public release.

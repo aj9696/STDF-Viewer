@@ -275,3 +275,42 @@ comparison/restoration images and the portable test workspace. Checks use
 synthetic data in disposable profiles. The release makes no storage migration
 and does not upload an engineer's STDF files. Documentation-only commits after
 `16fee86` record the release without changing the deployed asset revision.
+
+## Library organization and report filters release — 2026-10-19
+
+Cloudflare deployment `3015a721-65d2-4bff-bb8e-7358cb928175` published clean source
+revision [`8a0a616`](https://github.com/aj9696/STDF-Viewer/commit/8a0a616ff04263e96fcd1adf742e24702c6e04ae)
+to [SemiData](https://semidata.pages.dev/). It adds recorded-date/part/lot Library
+organization, metadata search, selection of up to eight source files, and
+consistent device-outcome filters for investigation and document reports.
+
+The package has `sourceDirty: false`, 126 files and 4,209,483 uncompressed bytes.
+Its rebuilt ZIP was compared byte-for-byte against `dist/pages` and every release
+manifest hash before upload. ZIP size is 1,553,894 bytes; SHA-256 is
+`e2069675e74ca633037e3bfca84c73e4262f12f3e5f4407ceaea86b7a5ef26e8`.
+Cloudflare confirmed 126/126 files uploaded and deployment success.
+
+Fresh Chrome and Edge profiles each pass fifteen public check groups. All 124
+public manifest assets match their packaged SHA-256 and sizes; release.json
+matches separately and `_headers` is consumed as configuration. Cache/no-sniff,
+WASM/font/SVG MIME types, missing-route 404 and the five local font faces pass.
+Direct Python urllib retrieval returned HTTP 403; browser delivery is verified
+by both complete public checks.
+
+Both browsers import the 48-device baseline and 96-device comparison, read real
+MIR metadata, group by date/part/lot, search part numbers, and open two checked
+files as separate Viewer groups. Report controls offer all/non-failed/pass,
+default to all, hide for raw records, and leave workspace selection unchanged.
+Statistics, help, Yield Manager, exact source drill-down, full browser restart,
+workspace download, fresh-profile restore and reload remain correct. Restored
+source hashes match. No JavaScript errors, failed application requests or
+external application requests were recorded.
+
+Evidence: `results/release-smoke-chrome-1792421824900/` and
+`results/release-smoke-msedge-1792421824900/`. Library and report-control screenshots
+were inspected. Local generated-report verification, including PDF/Word/Excel/
+PNG scope and chart/table agreement, is detailed in `VIEWER-VALIDATION.md`.
+The existing live Viewer was refreshed while idle and retained its local source
+and Yield Manager view. No source/package schema migration is required.
+Documentation-only commits after `8a0a616` record this release without changing
+the deployed asset revision.

@@ -370,3 +370,9 @@ Library UI in parallel with report population scope, then integrate report
 controls and chart capture. Preserve independent source groups and existing
 replacement rules. Validate generated contents and real browser workflows before
 publishing; existing local data must survive without a schema migration.
+
+Published as clean asset revision `8a0a616` on 2026-10-19. Chrome and Edge public
+checks pass all fifteen groups, including metadata organization, two-file
+selection, report controls and workspace restoration. Generated document and
+workbook contents passed local provider/UI checks in both browsers. See
+`web-prototype/docs/VIEWER-VALIDATION.md` and `DEPLOYMENT.md` for evidence.
