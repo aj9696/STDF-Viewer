@@ -425,7 +425,8 @@ progress:indeterminate::-webkit-progress-bar { background: transparent; }
   .library-home .page-heading { align-items: flex-start; }
   .library-home .button, .library-home .icon-button, .library-home .quiet-button, .library-home .sort-field select { min-height: 44px; }
   .library-home .icon-button { min-width: 44px; }
-  .library-home .file-name, .library-home .row-open { display: inline-flex; align-items: center; min-height: 44px; }
+  .library-home .file-name { display: block; min-height: 44px; }
+  .library-home .row-open { display: inline-flex; align-items: center; min-height: 44px; }
   .library-home .file-table td { height: 64px; }
   .library-home .search-field { height: 44px; }
   .library-home .library-summary { gap: 6px 16px; }

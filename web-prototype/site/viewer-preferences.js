@@ -102,6 +102,11 @@ export function previewTestExclusions(analyses, settings = {}) {
 }
 
 const LABELS = {
+  'viewer-workspace': ['Workspace', '작업 공간', '工作区'], 'workspace-menu-title': ['Workspace', '작업 공간', '工作区'],
+  'workspace-open-help': ['Restore files, selections and settings from a .sdworkspace file.', '.sdworkspace 파일에서 소스 파일, 선택 항목 및 설정을 복원합니다.', '从 .sdworkspace 文件恢复源文件、选择和设置。'],
+  'workspace-save-help': ['Download a portable copy of this investigation.', '이 분석 작업의 이동 가능한 사본을 다운로드합니다.', '下载此分析工作区的可移植副本。'],
+  'workspace-export-help': ['Export results and charts for sharing.', '공유할 결과와 차트를 내보냅니다.', '导出结果和图表以供分享。'],
+  'workspace-downloads-help': ['Retrieve or remove generated files kept in this browser.', '이 브라우저에 보관된 생성 파일을 다운로드하거나 삭제합니다.', '下载或删除保存在此浏览器中的生成文件。'],
   'viewer-groups': ['Files & groups', '파일 및 그룹', '文件与分组'], 'viewer-settings': ['Settings', '설정', '设置'],
   'catalog-heading': ['Tests', '테스트', '测试'], 'viewer-clear-tests': ['Clear selection', '선택 해제', '清除选择'],
   'viewer-reset-filters': ['Reset filters', '필터 초기화', '重置筛选'], 'viewer-scan-health': ['Scan test health', '테스트 상태 검사', '检查测试状态'],
@@ -121,6 +126,7 @@ export function applyPreferences(settings) {
   for (const [id, labels] of Object.entries(LABELS)) { const node = document.getElementById(id); if (node) node.textContent = labels[index]; }
   const toolsLabel = document.getElementById('viewer-tool-label'); if (toolsLabel) toolsLabel.textContent = tr('Tools');
   for (const option of document.querySelectorAll('#viewer-tool option[data-ui-label]')) option.textContent = tr(option.dataset.uiLabel);
+  for (const group of document.querySelectorAll('#viewer-tool optgroup[data-ui-label]')) group.label = tr(group.dataset.uiLabel);
   const emptyTool = document.querySelector('#viewer-tool option[value=""]'); if (emptyTool) emptyTool.textContent = tr('Choose a tool…');
   if (!document.getElementById('viewer-preferences-style')) {
     const link = document.createElement('link'); link.id = 'viewer-preferences-style'; link.rel = 'stylesheet'; link.href = new URL('./viewer-preferences.css', import.meta.url).href; document.head.append(link);

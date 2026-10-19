@@ -218,6 +218,13 @@ visual/accessibility checks there and a short engineer exercise. These tasks
 are authorized through completion. Record demonstrations without blocking on
 engineer feedback; retain the feedback checkpoints for later evaluation.
 
+Implementation and local qualification completed on 2026-10-18. UX-1 through
+UX-7 are delivered; Chrome/Edge workflow, numerical fixture, export and restore
+evidence is recorded in `web-prototype/docs/VIEWER-VALIDATION.md`. UX-8's local
+review is complete; production publication and actual 200% browser zoom remain
+pending. The connected Cloudflare browser requires sign-in. Narrow/reflow checks
+are passed, but are not recorded as an actual browser zoom test.
+
 - [x] **UX-1 — Scan and open files in Library.** Dependencies: none. Scope: medium.
   - Delivered: compact file rows, neutral surfaces, readable filenames and
     numeric columns, touch-sized controls. Chrome examples workflow passed;
@@ -232,7 +239,7 @@ engineer feedback; retain the feedback checkpoints for later evaluation.
   - Likely files: `site/app.html`, `site/app.css`, `site/library-home-view.js`,
     `scripts/examples-ui-check.mjs`, `docs/LIBRARY-HOME.md` under `web-prototype/`.
 
-- [ ] **UX-2 — Keep investigation scope and test selection clear.** Depends UX-1.
+- [x] **UX-2 — Keep investigation scope and test selection clear.** Depends UX-1.
   Scope: medium.
   - Acceptance: one compact scope summary retains files/groups, heads, sites,
     attempts and series mode; search and selected tests are easy to reach;
@@ -247,9 +254,9 @@ engineer feedback; retain the feedback checkpoints for later evaluation.
 
 - [ ] Demonstrate import → select test → compare sites with the small examples;
   record engineer feedback and adjust the next slice before extending the style.
-- [ ] Shared styling leaves other viewer tabs and one existing study usable.
+- [x] Shared styling leaves other viewer tabs and one existing study usable.
 
-- [ ] **UX-3 — Make plots and their controls easier to read.** Depends UX-2.
+- [x] **UX-3 — Make plots and their controls easier to read.** Depends UX-2.
   Scope: medium.
   - Acceptance: titles/units, legend and aligned statistics identify each series;
     common controls and advanced overlays have a clear hierarchy; existing
@@ -261,7 +268,7 @@ engineer feedback; retain the feedback checkpoints for later evaluation.
     `site/viewer-view.js`, `scripts/viewer-charts-check.mjs`, `docs/VIEWER-UI.md`
     under `web-prototype/`. Split further if settings wiring needs more files.
 
-- [ ] **UX-4 — Group the existing engineering tools.** Depends UX-2. Scope: medium.
+- [x] **UX-4 — Group the existing engineering tools.** Depends UX-2. Scope: medium.
   - Acceptance: all 15 tool IDs remain reachable under meaningful groups; PAT,
     Gauge R&R and comparison tools have visible names; navigation preserves
     scope, active tool and localization behaviour.
@@ -277,9 +284,9 @@ engineer feedback; retain the feedback checkpoints for later evaluation.
 
 - [ ] Engineer can identify the shifted site, inspect contributing devices and
   find PAT/Gauge R&R; record friction rather than relying on aesthetic scores.
-- [ ] Numerical outputs and source/attempt identity match the unchanged fixtures.
+- [x] Numerical outputs and source/attempt identity match the unchanged fixtures.
 
-- [ ] **UX-5 — Clarify the PAT form.** Depends UX-3 and UX-4. Scope: medium.
+- [x] **UX-5 — Clarify the PAT form.** Depends UX-3 and UX-4. Scope: medium.
   - Acceptance: current population, reference selection and method are explicit;
     required fields and advanced options are separated; run, exclusions,
     result/recipe export and screened-copy actions have distinct meanings.
@@ -290,7 +297,7 @@ engineer feedback; retain the feedback checkpoints for later evaluation.
     Add a documented small engineer example only if existing fixtures do not
     exercise the form; keep method/default changes outside this presentation task.
 
-- [ ] **UX-6 — Clarify the Gauge R&R form.** Depends UX-5. Scope: medium.
+- [x] **UX-6 — Clarify the Gauge R&R form.** Depends UX-5. Scope: medium.
   - Acceptance: study inputs and supported design are explicit before running;
     validation appears beside the relevant input; results retain method,
     population and missing/unsupported-condition explanations.
@@ -305,7 +312,7 @@ engineer feedback; retain the feedback checkpoints for later evaluation.
 - [ ] Engineer can explain the selected study population/method and distinguish
   an exported result from a derived source file. Record feedback on both forms.
 
-- [ ] **UX-7 — Make workspace and export actions easy to find.** Depends UX-2 and
+- [x] **UX-7 — Make workspace and export actions easy to find.** Depends UX-2 and
   UX-4. Scope: medium.
   - Acceptance: save/open/export/download actions have consistent placement;
     opening a saved workspace is discoverable from an empty library; distinguish

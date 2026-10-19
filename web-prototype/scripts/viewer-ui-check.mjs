@@ -53,6 +53,10 @@ const server = createServer(async (request, response) => {
   } catch { response.writeHead(404); response.end(); }
 });
 await new Promise((done) => server.listen(0, '127.0.0.1', done));
+async function workspaceAction(target, id) {
+  if (!(await target.locator('#viewer-workspace-menu').evaluate(el => el.matches(':popover-open')))) await target.locator('#viewer-workspace').click();
+  await target.locator('#' + id).click();
+}
 let browser, page; const checks = [], errors = [];
 try {
   browser = await chromium.launch({ channel, headless: true }); page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }); page.on('pageerror', (e) => errors.push(e.message));
@@ -60,6 +64,11 @@ try {
   const idle = async () => { await page.waitForFunction(() => window.semidataViewer && document.querySelector('#main').getAttribute('aria-busy') === 'false'); };
   const tab = async (name) => { await page.locator(`#tab-${name}`).click(); await idle(); };
   await page.goto(url); await idle();
+  assert.equal(await page.locator('#viewer-series').isVisible(), true, 'Site comparison is reachable with filters collapsed');
+  assert.equal(await page.locator('.viewer-selection-details').getAttribute('open'), '', 'Selected tests are initially visible');
+  assert.equal(await page.locator('#viewer-tool optgroup').count(), 5);
+  const toolIds = await page.locator('#viewer-tool optgroup option').evaluateAll(options => options.map(option => option.value));
+  assert.equal(toolIds.length, 15); assert.equal(new Set(toolIds).size, 15);
   assert.equal(await page.locator('#tab-histogram').getAttribute('aria-selected'), 'true'); assert.equal(await page.locator('#viewer-tests input').first().isChecked(), true); assert.equal(await page.locator('#viewer-filters').getAttribute('open'), null); assert.equal(await page.locator('.chart-tools').first().getAttribute('open'), null);
   await page.screenshot({ path: resolve(output, 'simplified-first-view.png'), fullPage: true });
   assert.deepEqual(await page.evaluate(async () => { const { formatNumber } = await import('./viewer-number.js'); return [formatNumber(-0, 3), formatNumber(-0, 3, 'fixed'), formatNumber(-0, 3, 'scientific'), formatNumber(1e-8, 3), formatNumber(1.234567, 3, 'scientific'), formatNumber(NaN)]; }), ['-0', '-0.000', '-0.000e+0', '1.000e-8', '1.235e+0', 'Not available']);
@@ -94,7 +103,7 @@ try {
   await page.evaluate(() => { mock.delay = 250; }); await page.locator('#tab-devices').click(); assert.equal(await page.locator('#viewer-panel').getAttribute('inert'), ''); await idle(); await page.evaluate(() => { mock.delay = 1000; }); await page.locator('#tab-bins').click(); await page.locator('#viewer-cancel').click(); await idle(); assert.match(await page.locator('#viewer-error-text').textContent(), /cancelled/); await page.evaluate(() => { mock.delay = 0; }); await page.locator('#viewer-retry').click(); await idle(); assert.equal(await page.locator('#viewer-error').isVisible(), false);
   await page.evaluate(() => { mock.delay = 150; }); await page.locator('#viewer-scan-health').click(); await page.locator('#viewer-cancel').click(); await idle(); assert.match(await page.locator('#viewer-health-status').textContent(), /Partial scan/); await page.evaluate(() => { mock.delay = 0; });
   await page.evaluate(() => { mock.error = true; }); await page.locator('#tab-devices').click(); await idle(); assert.match(await page.locator('#viewer-error-text').textContent(), /Deliberate/); await page.locator('#viewer-retry').click(); await idle();
-  await page.evaluate(() => { semidataViewer.installActions({ openSession: async () => { await semidataViewer.applyWorkspace({ ...semidataViewer.getState(), tests: [mock.tests[2].key] }); window.applied = true; } }); }); await page.locator('#viewer-open-session').click(); await idle(); assert.equal(await page.evaluate(() => window.applied), true);
+  await page.evaluate(() => { semidataViewer.installActions({ openSession: async () => { await semidataViewer.applyWorkspace({ ...semidataViewer.getState(), tests: [mock.tests[2].key] }); window.applied = true; } }); }); await workspaceAction(page, 'viewer-open-session'); await idle(); assert.equal(await page.evaluate(() => window.applied), true);
   checks.push('New controls remain inert during operations; cancellation, retry, action-safe workspace application');
   for (const checkpoint of ['explicit', 'query']) {
     await page.evaluate((checkpoint) => {
@@ -108,7 +117,7 @@ try {
         } catch (error) { window.gapError = error.code; throw error; }
       } });
     }, checkpoint);
-    await page.locator('#viewer-export').click(); await page.waitForFunction(() => window.gapReady);
+    await workspaceAction(page, 'viewer-export'); await page.waitForFunction(() => window.gapReady);
     const count = await page.evaluate(() => mock.calls.length);
     await page.locator('#viewer-cancel').click(); await page.evaluate(() => window.releaseCapture()); await idle();
     assert.equal(await page.evaluate(() => window.gapError), 'CANCELLED'); assert.equal(await page.evaluate(() => window.gapFinished), false); assert.equal(await page.evaluate(() => mock.calls.length), count);
@@ -117,7 +126,7 @@ try {
   checks.push('Cancellation during a no-worker capture gap blocks explicit checkpoints and the next query; idle checks do not retain stale cancellation');
   for (const name of ['overview', 'tests', 'trend', 'bins', 'wafers', 'records']) { await tab(name); await page.setViewportSize({ width: 360, height: 850 }); assert.ok(await page.evaluate(() => document.body.scrollWidth <= innerWidth), `${name} overflows 360px`); }
   await page.screenshot({ path: resolve(output, 'mobile-360.png'), fullPage: true }); checks.push('360px no horizontal page overflow across six views');
-  await page.goto(`${url}?empty=1`); await idle(); await page.evaluate(() => { semidataViewer.installActions({ openSession: async () => { mock.empty = false; await semidataViewer.applyWorkspace({ selection: { groups: [{ name: 'Restored', datasetIds: [mock.ids[0]] }] }, settings: { font: 'SemiDataLocalFont' }, tests: [] }); } }); }); assert.equal(await page.locator('#viewer-open-session').isEnabled(), true); await page.locator('#viewer-open-session').click(); await idle(); assert.equal(await page.locator('#viewer-groups').isEnabled(), true); assert.equal(await page.evaluate(() => semidataViewer.getState().settings.font), 'Segoe UI'); assert.match(await page.locator('#viewer-notice').textContent(), /font is unavailable/); checks.push('Empty-library workspace restore refreshes dataset catalog and survives missing custom font');
+  await page.goto(`${url}?empty=1`); await idle(); await page.evaluate(() => { semidataViewer.installActions({ openSession: async () => { mock.empty = false; await semidataViewer.applyWorkspace({ selection: { groups: [{ name: 'Restored', datasetIds: [mock.ids[0]] }] }, settings: { font: 'SemiDataLocalFont' }, tests: [] }); } }); }); assert.equal(await page.locator('#viewer-open-session').isEnabled(), true); await workspaceAction(page, 'viewer-open-session'); await idle(); assert.equal(await page.locator('#viewer-groups').isEnabled(), true); assert.equal(await page.evaluate(() => semidataViewer.getState().settings.font), 'Segoe UI'); assert.match(await page.locator('#viewer-notice').textContent(), /font is unavailable/); checks.push('Empty-library workspace restore refreshes dataset catalog and survives missing custom font');
   await page.goto(`${url}?datasets=12345678-1234-1234-1234-123456789012,12345678-1234-1234-1234-123456789013&example=site-shift&tab=trend&series=site&test=1`); await idle();
   assert.equal(await page.evaluate(() => semidataViewer.getState().selection.groups.length), 2); assert.equal(await page.evaluate(() => semidataViewer.getState().tab), 'trend'); assert.equal(await page.evaluate(() => semidataViewer.getState().seriesBy), 'site'); assert.equal(await page.locator('#viewer-tests input').nth(1).isChecked(), true);
   await page.locator('#viewer-test-catalog > summary').click();

@@ -16,25 +16,35 @@
   <div class="workspace">
     <header class="topbar"><a class="viewer-brand" href="./app.html">SemiData</a><nav class="breadcrumb" aria-label="Workspace"><a href="./app.html">Library</a><span aria-hidden="true">/</span><strong>Viewer</strong></nav><span id="connection-status" role="status">Opening library…</span></header>
     <main id="main" tabindex="-1" aria-busy="true">
-      <div class="page-heading"><div><h1 id="viewer-subtitle">Opening data…</h1></div><div class="viewer-actions"><button id="viewer-groups" class="button secondary" data-ready disabled>Files &amp; groups</button><button id="viewer-settings" class="button secondary" data-ready disabled>Settings</button></div></div>
+      <div class="page-heading"><div><h1 id="viewer-subtitle">Opening data…</h1></div><div class="viewer-actions"><button id="viewer-groups" class="button secondary" data-ready disabled>Files &amp; groups</button><button id="viewer-settings" class="button secondary" data-ready disabled>Settings</button><button id="viewer-workspace" class="button secondary" type="button" popovertarget="viewer-workspace-menu" disabled>Workspace</button></div></div>
+      <section id="viewer-workspace-menu" class="workspace-menu" popover aria-labelledby="workspace-menu-title">
+        <h2 id="workspace-menu-title">Workspace</h2>
+        <div><button id="viewer-open-session" type="button" class="quiet-button" aria-describedby="workspace-open-help" disabled>Open workspace</button><small id="workspace-open-help">Restore files, selections and settings from a .sdworkspace file.</small></div>
+        <div><button id="viewer-save-session" type="button" class="quiet-button" aria-describedby="workspace-save-help" disabled>Save workspace</button><small id="workspace-save-help">Download a portable copy of this investigation.</small></div>
+        <div><button id="viewer-export" type="button" class="quiet-button" aria-describedby="workspace-export-help" disabled>Export report</button><small id="workspace-export-help">Export results and charts for sharing.</small></div>
+        <div><button id="viewer-manage-downloads" type="button" class="quiet-button" aria-describedby="workspace-downloads-help" disabled>Downloads</button><small id="workspace-downloads-help">Retrieve or remove generated files kept in this browser.</small></div>
+        <input id="viewer-session-file" type="file" accept=".sdworkspace" hidden />
+      </section>
       <div id="boot-error" class="notice error-notice" role="alert" hidden><div><strong id="boot-error-title">The app files could not be loaded</strong><p id="boot-error-text">Open the app through its local address, then reload. Your saved library has not been reset.</p></div><a id="boot-library" class="button secondary" href="http://127.0.0.1:8766/app.html">Open Data library</a><button id="boot-reload" class="button secondary" type="button" onclick="location.reload()">Reload app</button></div>
       <div id="viewer-error" class="notice error-notice" role="alert" hidden><div><strong>Unable to complete this view</strong><p id="viewer-error-text"></p></div><button id="viewer-retry" class="button secondary">Try again</button></div>
       <p id="viewer-notice" class="notice" role="status" hidden></p>
       <div id="viewer-progress" class="notice" role="status"><div><strong id="viewer-progress-title">Opening library…</strong><p id="viewer-progress-text"></p></div><button id="viewer-cancel" class="button secondary" disabled>Cancel</button></div>
+      <div class="viewer-scope">
       <details id="viewer-filters" class="viewer-filters"><summary>Filters <span id="viewer-filter-summary">All heads · All sites · Current attempts</span></summary><div class="viewer-filterbar">
         <label>Heads<select id="viewer-head" multiple size="3" data-ready disabled><option value="all" selected>All heads</option></select></label>
         <label>Sites<select id="viewer-site" multiple size="3" data-ready disabled><option value="all" selected>All sites</option></select></label>
         <label>Attempts<select id="viewer-attempts" data-ready disabled><option value="current">Current attempts</option><option value="all">All attempts</option></select></label>
-        <label>Chart series<select id="viewer-series" data-ready disabled><option value="aggregate">All selected sites</option><option value="site">Separate sites</option><option value="both">Combined + separate sites</option></select></label>
         <button id="viewer-reset-filters" class="quiet-button" data-ready disabled>Reset filters</button><p class="viewer-help">Ctrl/Cmd-click to select multiple heads or sites. Current attempts exclude superseded retests.</p>
       </div></details>
+      <label class="viewer-series-control">Chart series<select id="viewer-series" data-ready disabled><option value="aggregate">All selected sites</option><option value="site">Separate sites</option><option value="both">Combined + separate sites</option></select></label>
+      </div>
       <div class="viewer-layout">
         <aside class="viewer-catalog" aria-labelledby="catalog-heading">
           <details id="viewer-test-catalog" class="library-panel" open>
           <summary class="panel-heading"><div><h2 id="catalog-heading">Tests</h2><p id="viewer-test-count">Loading test catalog…</p></div><span id="viewer-selected-count" title="Selected tests (up to 12)">0 / 12</span></summary>
           <form id="viewer-test-search"><div class="search-line"><input id="viewer-test-query" aria-label="Test number or name" type="search" maxlength="128" placeholder="Find test…" data-ready disabled /><button class="button secondary" data-ready disabled>Find</button></div><details class="viewer-detail"><summary>Search options</summary><div class="catalog-options"><label><input id="viewer-wildcard" type="checkbox" data-ready disabled /> Wildcards * and ?</label><label>Order<select id="viewer-test-order" data-ready disabled><option value="original">Original</option><option value="number">Number</option><option value="name">Name</option></select></label></div></details></form>
           <div id="viewer-tests" class="viewer-test-list"></div><div class="viewer-pager"><button id="viewer-tests-prev" class="quiet-button" disabled>Previous tests</button><span id="viewer-test-page"></span><button id="viewer-tests-next" class="quiet-button" disabled>Next tests</button></div>
-          <details class="viewer-detail viewer-selection-details"><summary>Selected tests</summary><div id="viewer-selected" class="selected-tests"></div></details><button id="viewer-clear-tests" class="quiet-button" data-ready disabled>Clear selection</button>
+          <details class="viewer-detail viewer-selection-details" open><summary>Selected tests</summary><div id="viewer-selected" class="selected-tests"></div></details><button id="viewer-clear-tests" class="quiet-button" data-ready disabled>Clear selection</button>
           <details class="viewer-health viewer-detail"><summary>Find failing tests</summary><button id="viewer-scan-health" class="button secondary" data-ready disabled>Scan test health</button><p id="viewer-health-status" class="viewer-help">Check failures and low Cpk for all tests.</p></details>
           </details>
         </aside>
@@ -48,7 +58,7 @@
           <section id="viewer-panel" class="library-panel" role="tabpanel" aria-labelledby="tab-overview" tabindex="-1"><div class="viewer-empty"><h2>Opening data…</h2></div></section>
         </section>
       </div>
-      <footer class="viewer-footer"><a id="viewer-raw" href="./explore.html">Raw explorer ↗</a><div><button id="viewer-export" class="quiet-button" disabled>Export report</button><button id="viewer-save-session" class="quiet-button" disabled>Save workspace</button><button id="viewer-open-session" class="quiet-button" disabled>Open workspace</button><button id="viewer-manage-downloads" class="quiet-button" disabled>Downloads</button><input id="viewer-session-file" type="file" accept=".zip,.json" hidden /></div></footer>
+      <footer class="viewer-footer"><a id="viewer-raw" href="./explore.html">Raw explorer ↗</a><span>Saved in this browser · Use Workspace to download a copy</span></footer>
     </main>
   </div>
   <dialog id="viewer-device-dialog" class="viewer-dialog" aria-labelledby="viewer-device-title"><div class="dialog-heading"><div><h2 id="viewer-device-title">Device observations</h2></div><button type="button" class="icon-button" data-close="viewer-device-dialog" aria-label="Close device observations">×</button></div><div id="viewer-device-body"></div></dialog>

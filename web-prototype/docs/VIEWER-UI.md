@@ -25,7 +25,9 @@ A newly opened file starts on **Histogram** with its first numeric test selected
 (or its first recorded test if no numeric test exists). Choose another test in
 the left list. Check several tests to display them together, up to twelve. The
 filename stays above the plot; **Library** returns to the saved-file list.
-An empty library links to **Try example data**.
+An empty library links to **Try example data**. The Library footer also offers
+**Open workspace**, which opens the viewer's restore menu without requiring an
+import first. Choose **Open workspace** there to select a `.sdworkspace` file.
 
 The view tabs and **Tools** share a toolbar that wraps on narrower screens. The
 **Tests** catalog is a native disclosure: it starts open on desktop and collapsed
@@ -50,8 +52,8 @@ attempts**. Its summary always shows the active population, even when collapsed;
 **Reset filters** restores all heads/sites, current attempts and combined sites.
 Head/site controls support multiple native selections. Current
 attempts are determined by explicit scoped STDF superseding rules; repeated part
-names alone are insufficient evidence of replacement. The chart-series selector
-offers aggregate selected sites, each site, or both. Aggregate and per-site
+names alone are insufficient evidence of replacement. **Chart series** stays
+visible beside Filters and offers aggregate selected sites, each site, or both. Aggregate and per-site
 series overlap intentionally; they are not disjoint cohorts to sum.
 
 ## Investigate recorded data
@@ -93,9 +95,11 @@ attempt, beyond the current page and selected-test set.
 
 ## Chart interaction and settings
 
-Each chart provides a legend, reset button, hover information, and labeled
-keyboard alternatives under **Chart tools**. **About this chart** explains
-reduction, interval edges and overlays. Compact sample count, mean, sigma and
+Each chart provides a title with its unit, a labelled legend and hover details.
+**Pointer drag**, **Zoom in**, **Zoom out** and **Reset chart** remain directly
+available. Extra range controls, overlays and keyboard picking alternatives live
+under **Chart tools**. **About this chart** explains interval edges, gaps and
+overlays; actual population counts and reduction warnings stay visible. Compact sample count, mean, sigma and
 Cpk remain visible; **All statistics** expands the complete table. Numerical
 exclusions and interpretation warnings remain visible. Trend/histogram interval picks
 query full-population devices, including observations omitted by display
@@ -213,6 +217,33 @@ The October 2026 presentation cleanup used
 [UI UX Pro Max at revision 56ea9cf](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/tree/56ea9cf174ed86786187daa9de0e6247cb0747e4)
 as advisory guidance for a data-dense interface. Navigation decisions follow
 the existing engineering workflows and observed usability issues.
+
+The 2026-10-18 refinement also used
+[Taste Skill at revision a9c73c3](https://github.com/Leonxlnx/taste-skill/tree/a9c73c3d5dbf401e3e47f86e7b41f29ede1687df/skills/taste-skill).
+Its light framed-sheet direction was adapted to the existing top navigation,
+system font and blue selection colour. The Library has compact file rows;
+Viewer keeps scope above the results, exposes selected tests and aligns numeric
+statistics. Semiconductor conventions take priority over generic style rules:
+series colours, exact identities, extrema, scientific notation and interpretation
+warnings remain intact. No framework, chart library or font service was added.
+
+The native **Tools** selector groups all 15 existing tools under **Compare**,
+**Screening**, **Wafer**, **Studies** and **Utilities**. PAT and Gauge R&R use
+short setup sections and inline errors; changing their inputs invalidates old
+results and export actions. Their documented exercises are in [TOOLS.md](TOOLS.md).
+
+**Workspace**, beside Settings, contains **Open workspace**, **Save workspace**,
+**Export report** and **Downloads**. Escape closes this native popover and returns
+focus to its trigger. The menu scrolls in short viewports. A workspace contains
+source files and investigation state; a report contains selected results for
+sharing. **Downloads** retrieves or removes generated temporary files in this
+browser. See [transfer formats and limits](VIEWER-TRANSFER.md).
+
+The five example workflows and both study exercises were demonstrated in
+isolated Chrome/Edge profiles. Independent review corrected mobile filename
+truncation and repeated stale-result announcements. Engineer feedback on this
+revision has not yet been collected; local qualification and deployment are
+recorded separately in [VIEWER-VALIDATION.md](VIEWER-VALIDATION.md).
 
 The browser implements the investigation workflows with a new web layout; it
 does not reproduce every desktop presentation preference. Navigation and

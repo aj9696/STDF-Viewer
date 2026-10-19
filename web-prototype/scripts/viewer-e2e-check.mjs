@@ -73,8 +73,12 @@ async function selectTests() {
   for (const { index } of wanted) { await page.locator('#viewer-tests input').nth(index).check(); await ready(); }
   assert.equal(await page.locator('#viewer-selected-count').textContent(), '3 / 12');
 }
+async function workspaceAction(target, id) {
+  if (!(await target.locator('#viewer-workspace-menu').evaluate(el => el.matches(':popover-open')))) await target.locator('#viewer-workspace').click();
+  await target.locator('#' + id).click();
+}
 async function restoreUi(p, file) {
-  const chooserPromise = p.waitForEvent('filechooser'); await p.locator('#viewer-open-session').click();
+  const chooserPromise = p.waitForEvent('filechooser'); await workspaceAction(p, 'viewer-open-session');
   const chooser = await chooserPromise; await chooser.setFiles(file); await ready(p);
 }
 async function download(p, action, filename) {
@@ -191,10 +195,10 @@ try {
   await tab('overview'); await tab('histogram'); await screenshot('desktop-histogram.png');
   checks.push('All eight production tabs render; indexed datalog and complete original records expose exact source-byte detail');
 
-  await page.locator('#viewer-export').click(); await openDialog('viewer-export-dialog');
+  await workspaceAction(page, 'viewer-export'); await openDialog('viewer-export-dialog');
   assert.equal(await page.locator('#viewer-export-images').isChecked(), true);
   await download(page, () => page.getByRole('button', { name: 'Generate export', exact: true }).click(), 'semidata-report.xlsx');
-  const workspaceFile = await download(page, () => page.locator('#viewer-save-session').click(), 'workspace.sdworkspace');
+  const workspaceFile = await download(page, () => workspaceAction(page, 'viewer-save-session'), 'workspace.sdworkspace');
   const savedState = await page.evaluate(() => semidataViewer.getState()); traces.push({ savedState });
   await click('#viewer-clear-tests'); await tab('overview'); await restoreUi(page, workspaceFile);
   assert.deepEqual(await page.evaluate(() => semidataViewer.getState()), savedState);
@@ -210,7 +214,7 @@ try {
   checks.push('All tabs and populated group/device dialogs fit 360 px; wide tables scroll inside their own regions');
 
   await page.reload(); await ready();
-  await page.locator('#viewer-manage-downloads').click(); await openDialog('viewer-download-dialog'); await fits();
+  await workspaceAction(page, 'viewer-manage-downloads'); await openDialog('viewer-download-dialog'); await fits();
   const inventory = page.locator('#viewer-download-dialog');
   assert.equal(await inventory.getByRole('status').textContent(), '4 temporary files');
   const workspaceRow = inventory.locator('.viewer-toolbar').filter({ hasText: '.sdworkspace' });

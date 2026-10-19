@@ -317,3 +317,52 @@ qualification, not measured 10M throughput. Resource limits, unsupported R&R
 designs, ATDF record coverage and downstream format dependencies are documented
 in their feature guides. No claim is made of an undocumented proprietary
 algorithm or an untested vendor-format dialect.
+
+## UI refinement — 2026-10-18
+
+This presentation release refines Library, scope/test selection, chart controls,
+tool navigation, PAT, Gauge R&R and workspace actions. Retained source schemas,
+worker query formulas, histogram edges and transfer format version 1 are
+unchanged. Gauge result exports additionally record the explicit mapping and
+UI recipe. All runs below use disposable profiles and synthetic data; they do
+not read or reset an engineer's existing browser library.
+
+| Coverage | Chrome artifact under `results/` | Edge artifact under `results/` |
+| --- | --- | --- |
+| Five examples, import failures/retry/deduplication, empty-library restore entry, keyboard/reflow and long names (9 checks) | `examples-ui-chrome-1792370103109` | `examples-ui-msedge-1792370111875` |
+| Viewer routing, scope, state, errors/cancel/retry and bounded catalog (10 checks) | `viewer-ui-chrome-1792369782292` | `viewer-ui-msedge-1792370114910` |
+| Charts, legends, picks, extreme values, PNG and 50,000-coordinate bounded display | `viewer-charts-chrome-1792370034302` | `viewer-charts-msedge-1792370034288` |
+| Grouped tool navigation, PAT/Gauge forms, inline validation, stale-result invalidation and real JSON exports (17 checks) | `viewer-tools-ui-chrome-1792370091853` | `viewer-tools-ui-msedge-1792370091832` |
+| Independent numerical study fixtures (6 checks) | `viewer-studies-chrome-1792369648370` | `viewer-studies-msedge-1792370014873` |
+| PAT lot/rule recipes and source provenance (6 checks) | `viewer-pat-recipes-chrome-1792369891932` | `viewer-pat-recipes-msedge-1792370017862` |
+| Production worker UI, device drilldowns, actual report downloads and fresh-profile workspace restore (9 checks) | `viewer-e2e-chrome-1792369871776` | `viewer-e2e-msedge-1792370103108` |
+| Transfer provider, corruption/cancellation, source integrity and independent XLSX inspection (31 cases) | `viewer-transfer-chrome-1792370157239` | `viewer-transfer-msedge-1792370168130` |
+
+`viewer-localization-chrome-1792370103139` passes reversible English/Korean/Chinese
+control translation with literal source strings preserved. Settings persistence
+also passes in `viewer-preferences-msedge-1792370106953` (5 checks). New tool group
+labels and local validation messages use explicit translations; method prose,
+provider diagnostics and guides retain the existing English-only limitation.
+
+The PAT exercise verifies 36 scoped devices, 31 eligible reference results, five
+excluded and one flagged at the fixture's sigma settings. Sigma, MAD and manual
+limit exports retain the expected decisions. Gauge uses an explicit 3-part ×
+2-operator × 3-trial design: repeatability variance 1, reproducibility variance 2,
+gauge variance 3 and total variance 103. Missing mapping, malformed/unbalanced
+design, duplicate references and reversed manual limits have recoverable errors.
+Editing either form removes stale result/export controls once and asks for a
+rerun; repeated edits do not repeatedly announce the same status.
+
+Visual checks cover 1440/1280/768/390/360 px layouts, long file/test names, desktop
+and narrow study forms, and comparison charts. Wide tables scroll inside their
+regions. At a 720×450 effective viewport the Workspace menu scrolls, all four
+actions remain keyboard-reachable, and Escape restores trigger focus. This
+models the CSS reflow space of 200% zoom on a 1440px display; **actual browser
+zoom was not exercised**. Narrow desktop screenshots do not qualify mobile
+browser storage, touch devices, screen readers or Firefox/Safari.
+
+Independent review corrected filename clipping without ellipsis and repeated
+live announcements after study input changes. Final review found no remaining
+high-confidence functional defect. Screenshots and JSON artifacts are local,
+ignored build evidence, not new large-file performance measurements. Packaging
+and public deployment verification are recorded separately in [DEPLOYMENT.md](DEPLOYMENT.md).

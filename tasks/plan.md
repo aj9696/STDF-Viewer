@@ -289,3 +289,22 @@ A passing local screenshot check does not establish that the live site changed.
 No framework migration, new charting dependency, font CDN, analysis-method change,
 storage migration or AI feature is needed for this work. Browser-local storage
 and the current source-preserving architecture remain the foundation.
+
+### Implementation record — 2026-10-18
+
+UX-1 through UX-7 are implemented: compact Library, visible chart-series control,
+clearer chart hierarchy and numeric tables, five tool groups, PAT/Gauge setup and
+validation, and a top-level Workspace menu with an empty-library restore route.
+No parser, provider formula, retained schema or workspace format changed. Gauge
+result JSON now also records its explicit mapping, test, tolerance and scope.
+
+The five examples, both study exercises and transfer/export flows pass in
+isolated Chrome and Edge profiles. Independent review corrected mobile filename
+clipping and repeated stale-result announcements. See the dated evidence in
+`web-prototype/docs/VIEWER-VALIDATION.md` and the updated feature guides.
+
+Local qualification is complete with the documented zoom limitation: effective
+720×450 reflow was exercised, not actual 200% browser zoom. Engineer feedback is
+still to be collected. The connected Cloudflare browser is signed out, so the
+release package and production publication must be tracked separately; a local
+pass is not evidence that the public site changed.

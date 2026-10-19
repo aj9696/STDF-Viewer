@@ -4,6 +4,26 @@ Status: browser-local implementation, format version 1. These providers run in t
 library owner worker and use only same-origin, locally bundled dependencies.
 They never send source or report data to a server.
 
+## Where to find the actions
+
+In Viewer, open **Workspace** beside Settings:
+
+- **Open workspace** restores a `.sdworkspace` package, including its selected
+  sources, ordered groups, tests and supported settings.
+- **Save workspace** downloads a portable copy of the current investigation.
+- **Export report** chooses results and chart sections for an Excel report.
+- **Downloads** retrieves or removes generated temporary files retained locally.
+
+The Library footer's **Open workspace** link reaches the same menu, including
+when no data has been imported. It does not launch a file picker until the
+engineer chooses Open in that menu. Save and report actions require a populated
+selection. Escape dismisses the menu and restores focus to Workspace.
+
+This presentation change does not alter workspace format version 1, retained
+source bytes, restore validation or temporary-file ownership. Browser-local
+storage is not a downloaded backup; save the portable file to keep a copy outside
+the browser profile.
+
 ## Portable workspace (`.sdworkspace`)
 
 `site/viewer-transfer.js` exports `runViewerTransfer(store, message, context)`.

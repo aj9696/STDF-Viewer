@@ -6,7 +6,7 @@ import { editGroups } from './viewer-groups.js';
 import { renderTrend, renderHistogram, renderBins, renderWafer } from './viewer-charts.js';
 import { installViewerActions } from './viewer-actions.js';
 import { previewTestExclusions, orientationForDisplay } from './viewer-preferences.js';
-import { renderStudy, STUDY_TOOLS } from './viewer-study-ui.js';
+import { renderStudy, STUDY_TOOLS, STUDY_TOOL_GROUPS } from './viewer-study-ui.js';
 import { waferSummary, pinnedDieControl } from './viewer-wafer-detail.js';
 import { $, fmt, hex, button, empty, section, detail, disclosure, compactChart, renderStatSummary, warnings, table, pager, selectField, testTitle, renderCatalog, renderOverview, renderStats, renderDevices, renderObservations, renderRecord } from './viewer-view.js';
 
@@ -45,6 +45,7 @@ function controls() {
   $('viewer-tests-next').disabled = !state.ready || state.busy || state.catalog.nextOffset == null;
   $('viewer-cancel').disabled = !state.busy; $('viewer-cancel').hidden = !state.busy;
   $('viewer-retry').disabled = state.busy;
+  $('viewer-workspace').disabled = !state.opened || state.busy;
   for (const [id, key] of actionButtons) $(id).disabled = !(['openSession', 'manageDownloads'].includes(key) ? state.opened : state.ready) || state.busy || typeof actions[key] !== 'function';
   $('main').setAttribute('aria-busy', String(state.busy));
   for (const id of ['viewer-panel', 'viewer-tests', 'viewer-selected', 'viewer-device-body', 'viewer-record-body']) $(id).inert = state.busy;
@@ -110,7 +111,7 @@ function renderFilterOptions() {
 }
 function renderFilterSummary() {
   const { heads, sites, attempts } = state.selection;
-  $('viewer-filter-summary').textContent = [heads ? `Head ${heads.join(', ')}` : 'All heads', sites ? `Site ${sites.join(', ')}` : 'All sites', attempts === 'all' ? 'All attempts' : 'Current attempts', state.seriesBy === 'site' ? state.includeAggregate ? 'Combined + site series' : 'Separate sites' : ''].filter(Boolean).join(' · ');
+  $('viewer-filter-summary').textContent = [heads ? `Head ${heads.join(', ')}` : 'All heads', sites ? `Site ${sites.join(', ')}` : 'All sites', attempts === 'all' ? 'All attempts' : 'Current attempts'].join(' · ');
 }
 function drawCatalog() {
   const activeKey = document.activeElement?.dataset?.testKey;
@@ -392,7 +393,11 @@ $('viewer-test-order').addEventListener('change', () => { state.testOrder = $('v
 $('viewer-tests-prev').addEventListener('click', () => run(() => loadCatalog(Math.max(0, state.catalog.offset - PAGE))));
 $('viewer-tests-next').addEventListener('click', () => run(() => loadCatalog(state.catalog.nextOffset)));
 $('viewer-clear-tests').addEventListener('click', () => { state.selected.clear(); state.analyses.clear(); changed(); drawCatalog(); run(renderPanel); });
-for (const [key, name] of STUDY_TOOLS) { const option = element('option', name); option.value = key; option.dataset.uiLabel = name; $('viewer-tool').append(option); }
+for (const { label, tools } of STUDY_TOOL_GROUPS) {
+  const group = element('optgroup'); group.label = label; group.dataset.uiLabel = label;
+  for (const [key, name] of tools) { const option = element('option', name); option.value = key; option.dataset.uiLabel = name; group.append(option); }
+  $('viewer-tool').append(group);
+}
 $('viewer-tool').addEventListener('change', () => { if (!$('viewer-tool').value) return; state.tool = $('viewer-tool').value; state.tab = 'study'; changed(); run(renderPanel); });
 for (const tab of document.querySelectorAll('[data-tab]')) {
   tab.addEventListener('click', () => { state.tab = tab.dataset.tab; changed(); run(renderPanel); });
@@ -408,6 +413,7 @@ for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListene
   if (state.busy) returnFocus = target; else if (target) restoreFocus(target);
 });
 for (const [id, key] of actionButtons) $(id).addEventListener('click', () => {
+  $('viewer-workspace-menu').hidePopover(); $('viewer-workspace').focus();
   if (actions[key]) runAction(() => actions[key](snapshot()));
 });
 
@@ -441,4 +447,10 @@ window.semidataViewer = {
 installViewerActions(window.semidataViewer);
 window.addEventListener('pagehide', () => { disposed = true; compactCatalog.removeEventListener('change', arrangeCatalog); disposeCharts(); library?.terminate(); }, { once: true });
 window.addEventListener('pageshow', (event) => { if (event.persisted) location.reload(); });
-run(startup);
+run(startup).then(() => {
+  const url = new URL(location.href);
+  if (url.searchParams.get('workspace') === 'open' && state.opened) {
+    $('viewer-workspace').focus(); $('viewer-workspace').click(); $('viewer-open-session').focus();
+    url.searchParams.delete('workspace'); history.replaceState(history.state, '', url);
+  }
+});

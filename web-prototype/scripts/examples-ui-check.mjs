@@ -54,6 +54,19 @@ try {
   page = await context.newPage(); page.setDefaultTimeout(15000);
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(origin + '/app.html'); await libraryReady();
+  await page.locator('#open-workspace').click();
+  await page.waitForFunction(() => document.querySelector('#viewer-workspace-menu')?.matches(':popover-open'));
+  assert.equal(await page.locator('#viewer-open-session').isEnabled(), true);
+  assert.equal(await page.locator('#viewer-save-session').isEnabled(), false);
+  assert.equal(await page.locator('#viewer-open-session').evaluate(el => el === document.activeElement), true);
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#viewer-workspace').evaluate(el => el === document.activeElement), true);
+  await page.keyboard.press('Enter');
+  await page.setViewportSize({ width: 390, height: 844 }); await fits(); await screenshot('mobile-workspace.png');
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(origin + '/app.html'); await libraryReady();
+  checks.push('Empty Library opens workspace restore; native popover supports keyboard dismissal and restores trigger focus');
 
   // Closing the dialog during its manifest request must not resurrect it.
   let releaseManifest, manifestStarted, manifestFinished;
@@ -118,6 +131,29 @@ try {
       const navigation = await page.evaluate(() => ({ tabs: document.querySelector('.viewer-tabs').getBoundingClientRect().top, tools: document.querySelector('.viewer-tool-row').getBoundingClientRect().top }));
       assert.ok(Math.abs(navigation.tabs - navigation.tools) < 5, 'Desktop tools and tabs share one row');
       await screenshot('desktop-site-shift.png');
+      for (const width of [1280, 768, 390]) {
+        await page.setViewportSize({ width, height: 900 }); await fits();
+        await screenshot(`comparison-${width}.png`);
+        assert.equal(await page.locator('#viewer-series').isVisible(), true);
+      }
+      // Effective CSS viewport at 200% browser zoom on a 1440px display.
+      // This checks reflow, not browser-chrome zoom shortcuts.
+      await page.setViewportSize({ width: 720, height: 450 }); await fits();
+      await page.locator('#viewer-workspace').click(); await fits();
+      await screenshot('comparison-zoom-reflow.png');
+      await page.locator('#viewer-open-session').focus();
+      for (const id of ['viewer-save-session', 'viewer-export', 'viewer-manage-downloads']) {
+        await page.keyboard.press('Tab');
+        assert.equal(await page.locator(`#${id}`).evaluate(el => el === document.activeElement), true);
+      }
+      const menuBounds = await page.locator('#viewer-workspace-menu').evaluate(el => {
+        const menu = el.getBoundingClientRect(), active = document.activeElement.getBoundingClientRect();
+        return { top: menu.top, bottom: menu.bottom, activeTop: active.top, activeBottom: active.bottom, height: innerHeight };
+      });
+      assert.ok(menuBounds.top >= 0 && menuBounds.bottom <= menuBounds.height && menuBounds.activeTop >= menuBounds.top && menuBounds.activeBottom <= menuBounds.bottom);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('#viewer-workspace').evaluate(el => el === document.activeElement), true);
+      await page.setViewportSize({ width: 1440, height: 1000 });
     }
     if (example.id === 'wafer') assert.equal((await page.evaluate(() => semidataViewer.query('wafers', {}))).items.length, 1);
     if (example.id === 'mixed') {
@@ -146,6 +182,15 @@ try {
   await page.goto(origin + '/app.html'); await libraryReady();
   assert.equal(await page.locator('#total-datasets').textContent(), '5');
   await screenshot('desktop-library.png');
+  // A long filename is display-only test data; source identities remain intact.
+  assert.equal(await page.locator('.file-name').first().getAttribute('title'), await page.locator('.file-name').first().textContent());
+  await page.locator('.file-name').first().evaluate(el => { el.textContent = el.title = 'lot_' + 'long_'.repeat(45) + '.stdf'; });
+  for (const width of [1280, 768, 390, 360]) {
+    await page.setViewportSize({ width, height: 900 }); await fits();
+    assert.equal(await page.locator('.file-name').first().evaluate(el => getComputedStyle(el).textOverflow === 'ellipsis' && !getComputedStyle(el).display.includes('flex')), true);
+    await screenshot(`library-${width}.png`);
+  }
+  checks.push('Comparison/library reflow at 1280/768/390/360px, long filename, and 200%-equivalent effective viewport without page overflow');
   checks.push('Reopening an example reuses the existing source; the pack leaves exactly five saved files');
   assert.deepEqual(errors, []);
   await writeFile(resolve(output, 'results.json'), JSON.stringify({ channel, checks, errors, screenshots, snapshots }, null, 2));

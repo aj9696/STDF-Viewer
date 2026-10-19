@@ -10,6 +10,8 @@ Controls expand for touch screens, and the table scrolls within its own panel.
 The PTR count is deliberately labelled: it is not a count of every MPR/FTR
 observation available in Viewer. Source hashes, import outcomes and storage
 behaviour are unchanged by this visual update.
+Long names truncate with an ellipsis; their full text remains in the button's
+accessible name, hover title and dataset Details.
 
 ## Try it as a test engineer
 
@@ -45,6 +47,10 @@ cover app-module startup, not long-running imports or all worker/storage stalls.
 6. Open **Storage details** in the footer to inspect this origin, estimated
    usage/quota and the browser's persistence grant. A persistence request can be
    declined. Persistence is not a backup or a reservation of disk space.
+7. To resume a downloaded investigation, select **Open workspace** in the
+   footer, then **Open workspace** in the viewer menu and choose its
+   `.sdworkspace` file. This also works with an empty library. See
+   [workspace contents and restore behaviour](VIEWER-TRANSFER.md).
 
 File selection does not upload data or modify the original source. Imported
 snapshots and databases live in this browser profile's origin-private storage.
@@ -79,8 +85,9 @@ support keyboard navigation and Escape; Escape cannot dismiss an active import.
 
 Recorded PTR browsing is available through [Test Explorer](TEST-EXPLORER.md).
 Folder batches are available here; charts, scoped investigation, reports and
-save/open workspaces are available in [Data viewer](VIEWER-UI.md). PAT and
-dataset deletion remain separate product work. Existing
+save/open workspaces are available in [Data viewer](VIEWER-UI.md). PAT and other
+study workflows are under Viewer → Tools; dataset deletion remains separate
+product work. Existing
 console tools remain available for folder imports and individual `.sdlibrary`
 package export/restore. A package contains one dataset, not an entire workspace.
 There is no offline-startup guarantee, account, hosted data service or multi-tab

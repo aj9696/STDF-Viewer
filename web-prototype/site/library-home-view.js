@@ -46,7 +46,7 @@ export function renderRows(rows) {
     const row = element('tr'); row.dataset.id = dataset.id;
     const fileCell = element('td'), file = element('div', undefined, 'file-cell');
     const glyph = element('span', undefined, 'file-glyph'); glyph.append(icon('file'));
-    const copy = element('div'), name = element('button', dataset.name, 'file-name');
+    const copy = element('div'), name = element('button', dataset.name, 'file-name'); name.title = dataset.name;
     name.type = 'button'; name.dataset.datasetId = dataset.id;
     const caption = dataset.relative_path !== dataset.name ? dataset.relative_path : `${count(dataset.manifest.counts.devices)} device attempts`;
     copy.append(name, element('small', caption, 'file-meta')); file.append(glyph, copy); fileCell.append(file);
