@@ -133,3 +133,21 @@ after a full browser restart. A fresh profile restored the workspace with the
 same source hashes and device totals. The run observed no JavaScript errors,
 failed requests or off-origin application requests. This is a small-fixture
 deployment check, not a large-file performance qualification.
+
+## UI refinement release prepared — 2026-10-18
+
+The Library/viewer refinement is implemented and locally qualified in Chrome and
+Edge; see the dated [validation record](VIEWER-VALIDATION.md). The static Pages
+packager passes with 104 files and a clean source revision. Its generated
+`dist/pages/release.json` identifies the exact packaged commit; the upload ZIP
+is `dist/semidata-pages.zip`. Both are ignored build artifacts and contain app
+assets plus the existing synthetic examples, not an engineer's browser library.
+
+Production publication is pending authentication. The connected Cloudflare
+browser redirected the semidata project to Sign in. The public
+`https://semidata.pages.dev/release.json` still reports
+`3f703a9860df76faff5762daf83a6b40949f70fe` with `sourceDirty: false`, verified on
+2026-10-18. No new deployment or production smoke pass is claimed. Once the
+Cloudflare session is restored, upload the prepared package using the Publish
+steps above, then run the separate release verification checks. Existing local
+libraries remain tied to their original origin/profile.
