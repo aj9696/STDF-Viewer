@@ -1,0 +1,51 @@
+/* One reading column: 496px panel − 2 × 28px padding = 440px text at desktop width. */
+html:has(.viewer-help-drawer[open]) { scrollbar-gutter: auto; }
+dialog.viewer-help-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(496px, 100vw);
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.viewer-help-drawer::backdrop { background: rgb(23 43 45 / 20%); }
+.viewer-help-drawer[open] { animation: viewer-help-enter 180ms ease-out; }
+.viewer-help-frame { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.viewer-help-heading { display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; gap: 16px; padding: 16px 28px 12px; }
+.viewer-help-label { color: var(--muted); font-size: 14px; }
+.viewer-help-drawer .button { min-height: 40px; padding: 8px 12px; font-size: 14px; font-weight: 400; }
+.viewer-help-navigation { display: grid; gap: 8px; flex: 0 0 auto; padding: 0 28px 20px; border-bottom: 1px solid var(--rule); }
+.viewer-help-navigation label { color: var(--muted); font-size: 13px; }
+.viewer-help-navigation select { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--control); border-radius: 6px; background: var(--surface); }
+.viewer-help-content { min-height: 0; padding: 24px 28px 32px; overflow-y: auto; overscroll-behavior: contain; scroll-padding: 16px; font-size: 15px; line-height: 1.6; }
+.viewer-help-content h2 { margin: 0; font-size: 24px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+.viewer-help-content h2:focus { outline: none; }
+.viewer-help-purpose { margin: 12px 0 0; color: var(--muted); }
+.viewer-help-content section, .viewer-help-related { margin-top: 24px; }
+.viewer-help-content h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; line-height: 1.4; }
+.viewer-help-content ul, .viewer-help-content ol { margin: 0; padding-left: 22px; }
+.viewer-help-content li { padding-left: 2px; }
+.viewer-help-content li + li { margin-top: 8px; }
+.viewer-help-related { padding-top: 20px; border-top: 1px solid var(--rule); }
+.viewer-help-related > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.viewer-help-definitions { margin: 24px 0 0; }
+.viewer-help-definitions dt { margin-top: 20px; font-weight: 600; }
+.viewer-help-definitions dd { margin: 6px 0 0; color: var(--muted); }
+@keyframes viewer-help-enter { from { transform: translateX(32px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@media (max-width: 520px) {
+  .viewer-help-heading { padding: 12px 20px; }
+  .viewer-help-navigation { padding: 0 20px 16px; }
+  .viewer-help-content { padding: 24px 20px; }
+  .viewer-help-drawer .button, .viewer-help-navigation select { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .viewer-help-drawer[open] { animation: none; } }
