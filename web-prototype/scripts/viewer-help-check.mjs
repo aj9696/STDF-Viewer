@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { VIEWER_HELP_TOPICS, VIEWER_HELP_BY_ID } from '../site/viewer-help-content.js';
 
-const required = ['overview','histogram','trend','tests','devices','bins','wafers','records','study',
+const required = ['yield','overview','histogram','trend','tests','devices','bins','wafers','records','study',
   'dashboard','compare','distributions','scatter','pat','patLots','whatif','spatial','reclassify',
   'values','gallery','pvt','grr','authoring','documents','scope','workspace','terms'];
 assert.deepEqual([...VIEWER_HELP_BY_ID.keys()].sort(), required.sort());

@@ -1,6 +1,6 @@
 # Yield Manager
 
-Status: implementation and validation, 2026-10-19.
+Status: implemented and locally qualified, 2026-10-19.
 
 ## Purpose and scope
 
@@ -56,12 +56,13 @@ belong to more than one group, so there is no grand total across groups.
 ## Provider contract
 
 `viewer('advanced', selection, {kind: 'yieldManager'})` returns
-`{method: 'yield-manager-v1', files, warnings}`. Each file/group row includes
+`{method: 'yield-manager-v1', files, warnings, reviewGroups}`. Each file/group row includes
 its source identity, lot/program metadata, start/finish times, total, passed,
 failed, unknown, fractional yield, site counts and hardware/software bin counts.
 
 The provider streams indexed device rows. It does not scan test observations.
-The response has explicit site/bin bucket and byte bounds; exceeding a bound
+The response permits 4,096 site buckets, 32,768 bin buckets across both bin
+families, and 4 MiB of UTF-8 JSON. Exceeding a bound
 fails with an actionable error instead of silently truncating counts.
 Cancellation yields no partial result that could appear to be complete.
 
@@ -81,6 +82,17 @@ The summary is cleared when source groups, heads, sites or the attempt policy
 change. A failed or cancelled request is not cached. Returning from a device
 drill-down reuses the current summary. The active tab persists in the existing
 workspace; temporary lot/search controls are session-local.
+
+`reviewGroups` contains the group indexes with mixed or missing cohort metadata
+under Current attempts. These groups receive a visible warning; routine method
+notes remain in the Scope notes disclosure.
+
+Bin and site detail tables page through 50 rows at a time. The lot and source
+tables are bounded by the existing selection limit: at most 64 file/group
+entries. Scope notes are available in a disclosure. The SVG time plot supports
+mouse and keyboard selection, with the same records available in a source
+table. It is not part of the viewer's canvas PNG export API; that API returns
+only chart handles with an image exporter. Existing report exports are unchanged.
 
 ## Acceptance and validation
 

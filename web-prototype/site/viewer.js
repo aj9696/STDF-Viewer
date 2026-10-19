@@ -11,9 +11,10 @@ import { waferSummary, pinnedDieControl } from './viewer-wafer-detail.js';
 import { newTestSummary } from './viewer-summary-model.js';
 import { renderTestSummary } from './viewer-test-summary.js';
 import { installViewerHelp } from './viewer-help.js';
+import { createYieldViewState, renderYieldManager } from './viewer-yield-ui.js';
 import { $, fmt, hex, button, empty, section, detail, disclosure, compactChart, renderStatSummary, warnings, table, pager, selectField, testTitle, renderCatalog, renderOverview, renderStats, renderDevices, renderObservations, renderRecord } from './viewer-view.js';
 
-const PAGE = 50, WORKSPACE_KEY = 'semidata.viewer.workspace.v1', TABS = ['histogram', 'trend', 'tests', 'devices', 'bins', 'wafers', 'overview', 'records', 'study'];
+const PAGE = 50, WORKSPACE_KEY = 'semidata.viewer.workspace.v1', TABS = ['histogram', 'trend', 'tests', 'yield', 'devices', 'bins', 'wafers', 'overview', 'records', 'study'];
 const state = { ready: false, opened: false, busy: false, datasets: [], selection: null, settings: loadSettings(), selected: new Map(),
   tab: 'overview', overview: null, catalog: { items: [], total: 0, offset: 0, nextOffset: null }, testQuery: '', testOrder: 'original', wildcard: false,
   seriesBy: 'aggregate', includeAggregate: false, deviceOffset: 0, deviceQuery: '', deviceSort: 'index', deviceDirection: 'asc', pick: null,
@@ -21,6 +22,7 @@ const state = { ready: false, opened: false, busy: false, datasets: [], selectio
 let library, running = Promise.resolve(), retryWork = null, chartHandles = [], disposed = false, returnFocus = null, actionRunning = false;
 let cancelRequested = false;
 let testSummary = newTestSummary(), statisticsMode = 'all', summaryDrilldown = null;
+let yieldResult = null, yieldViewState = createYieldViewState();
 const help = installViewerHelp({ getTopic: () => state.tab === 'study' ? state.tool : state.tab });
 const dialogOpeners = new WeakMap();
 const actions = {};
@@ -101,6 +103,10 @@ async function query(action, options = {}) {
   return result;
 }
 function progress(value) {
+  if (value.phase === 'viewer-yield-manager' || state.tab === 'yield' && value.phase === 'viewer-query') {
+    $('viewer-progress-title').textContent = 'Reading device outcomes';
+    $('viewer-progress-text').textContent = value.rows == null ? '' : `${value.rows.toLocaleString()} device attempts`; return;
+  }
   if (value.phase === 'viewer-test-summaries') {
     $('viewer-progress-title').textContent = 'Reading test statistics';
     $('viewer-progress-text').textContent = `${(testSummary.done + value.completed).toLocaleString()} / ${testSummary.total?.toLocaleString() ?? '…'} tests`; return;
@@ -141,6 +147,7 @@ async function loadCatalog(offset = 0) {
   state.catalog = await query('tests', { query: state.testQuery, wildcard: state.wildcard, order: state.testOrder, offset, limit: PAGE }); drawCatalog();
 }
 async function reloadWorkspace({ selectFirst = false, testNumber = null } = {}) {
+  yieldResult = null; yieldViewState = createYieldViewState();
   clearHealth(); testSummary = newTestSummary(); summaryDrilldown = null; state.analyses.clear(); state.deviceOffset = 0; state.recordOffset = 0; state.pick = null; disposeCharts();
   await query('prepare'); state.overview = await query('overview'); state.ready = true; renderFilterOptions();
   await loadCatalog(0);
@@ -189,6 +196,12 @@ function pickDevices(pick, options = {}) {
   if (state.busy) return;
   state.pick = { pick, ...options }; state.deviceOffset = 0; state.tab = 'devices'; run(renderPanel);
 }
+function openYieldDevices(options, label) {
+  if (state.busy) return;
+  state.pick = { ...options, label }; state.deviceQuery = ''; state.deviceOffset = 0;
+  state.deviceSort = 'index'; state.deviceDirection = 'asc'; state.tab = 'devices';
+  changed(); run(renderPanel);
+}
 function addSearch(toolbar, label, value, change) {
   const form = element('form', undefined, 'viewer-toolbar'), field = element('label', label), input = element('input'); input.type = 'search'; input.maxLength = 128; input.value = value; field.append(input);
   const submit = element('button', 'Search', 'button secondary'); submit.type = 'submit'; form.append(field, submit);
@@ -199,14 +212,15 @@ function drawDeviceToolbar(container, matrix) {
   addSearch(toolbar, 'Part ID, part text or index', state.deviceQuery, (value) => { state.deviceQuery = value; state.deviceOffset = 0; run(renderPanel); });
   selectField(toolbar, 'Sort devices', [['index', 'Test order'], ['part', 'Part ID'], ['head', 'Head'], ['site', 'Site'], ['hard_bin', 'Hardware bin'], ['soft_bin', 'Software bin'], ['time', 'Test time'], ['tests', 'Test count'], ['status', 'Outcome'], ['x', 'X'], ['y', 'Y'], ...[...state.selected.values()].filter(t => t.family !== 20).map(t => [`test:${t.key}`, testTitle(t)])], state.deviceSort, (value) => { state.deviceSort = value; state.deviceOffset = 0; run(renderPanel); });
   selectField(toolbar, 'Direction', [['asc', 'Ascending'], ['desc', 'Descending']], state.deviceDirection, (value) => { state.deviceDirection = value; state.deviceOffset = 0; run(renderPanel); });
-  if (state.pick) { container.append(element('p', 'Plot selection', 'viewer-selection-note')); toolbar.append(button('Clear plot selection', () => { state.pick = null; state.deviceOffset = 0; run(renderPanel); })); }
+  if (state.pick) { container.append(element('p', state.pick.label ?? 'Plot selection', 'viewer-selection-note')); toolbar.append(button(state.pick.label ? 'Clear selection' : 'Clear plot selection', () => { state.pick = null; state.deviceOffset = 0; run(renderPanel); })); }
   if (matrix) disclosure(container, 'About this table').append(element('p', 'Values join by original device identity. Repeated executions remain separate; open a device to inspect every recorded result and flag.', 'viewer-help'));
 }
 async function drawDevices(container, matrix = false) {
   drawDeviceToolbar(container, matrix);
   const excluded = new Set(previewTestExclusions([...state.analyses.values()], state.settings).hiddenKeys);
   const matrixTests = matrix ? new Map([...state.selected].filter(([key]) => !excluded.has(key))) : new Map();
-  const result = await query('devices', { failureSummary: true, offset: state.deviceOffset, limit: PAGE, query: state.deviceQuery, sort: state.deviceSort.startsWith('test:') ? 'index' : state.deviceSort, ...(state.deviceSort.startsWith('test:') ? { sortTest: state.deviceSort.slice(5) } : {}), direction: state.deviceDirection, ...(state.pick ?? {}), tests: [...matrixTests.keys()] });
+  const deviceSelection = { ...state.pick }; delete deviceSelection.label;
+  const result = await query('devices', { failureSummary: true, offset: state.deviceOffset, limit: PAGE, query: state.deviceQuery, sort: state.deviceSort.startsWith('test:') ? 'index' : state.deviceSort, ...(state.deviceSort.startsWith('test:') ? { sortTest: state.deviceSort.slice(5) } : {}), direction: state.deviceDirection, ...deviceSelection, tests: [...matrixTests.keys()] });
   renderDevices(container, result, matrixTests, state.selection, openDevice, state.settings, matrix ? [...state.analyses.values()] : [], { sort: state.deviceSort, direction: state.deviceDirection, onSort: key => { state.deviceDirection = state.deviceSort === key && state.deviceDirection === 'asc' ? 'desc' : 'asc'; state.deviceSort = key; state.deviceOffset = 0; run(renderPanel); } });
   pager(container, result, () => { state.deviceOffset = Math.max(0, state.deviceOffset - PAGE); run(renderPanel); }, () => { state.deviceOffset = result.nextOffset; run(renderPanel); });
 }
@@ -304,6 +318,12 @@ async function renderPanel() {
     }); return;
   }
   if (state.tab === 'overview') { renderOverview(panel, state.overview); return; }
+  if (state.tab === 'yield') {
+    yieldResult ??= await query('advanced', { kind: 'yieldManager' });
+    renderYieldManager(panel, { result: yieldResult, viewState: yieldViewState, settings: state.settings,
+      onChange: () => run(renderPanel), onDevices: openYieldDevices, onHelp: topic => help.open(topic),
+      addChart: chart => chartHandles.push(chart) }); return;
+  }
   if (state.tab === 'devices') { await drawDevices(panel); return; }
   if (state.tab === 'tests') {
     const modes = element('div', undefined, 'statistics-modes'); modes.setAttribute('role', 'group'); modes.setAttribute('aria-label', 'Statistics scope');
@@ -459,7 +479,7 @@ window.semidataViewer = {
   query,
   checkCancelled,
   client: () => library,
-  exportChartPNGs: () => Promise.all(chartHandles.map((chart) => chart.exportPng())),
+  exportChartPNGs: () => Promise.all(chartHandles.filter((chart) => typeof chart.exportPng === 'function').map((chart) => chart.exportPng())),
   installActions(handlers) { Object.assign(actions, handlers); controls(); },
   async applyWorkspace(workspace) {
     if (state.busy && !actionRunning) throw new Error('Wait for the current operation before opening a workspace.');

@@ -4,6 +4,8 @@ The **Help** button opens a panel from the right. It opens the topic for the
 current view or engineering tool. **Column help** in Statistics opens the
 statistics definitions. The Topic list also gives access to every view, all
 fifteen engineering tools, selection rules, and workspace transfer.
+**Yield help** opens the Yield Manager topic, including its yield denominator,
+recorded-time axis, missing data and source-group replacement rules.
 
 The help is local. Opening it makes no network request and reads no source data.
 It does not start a calculation or change the viewer selection. Help remains in

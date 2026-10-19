@@ -41,12 +41,14 @@ export async function yieldManager(view) {
   ]);
   const files = view.sources.map((source) => sourceInformation(view, source, warnings));
   const bySource = new Map(view.sources.map((source, index) => [source.source, files[index]]));
+  const reviewGroups = [];
   if (view.selection.attempts === 'current') {
     warnings.add('Current attempts use recorded replacement flags and source order. This is not first-pass yield.');
     for (const [group] of view.selection.groups.entries()) {
       const members = files.filter((file) => file.group === group);
       const cohorts = new Set(members.map((file) => JSON.stringify([file.lotId, file.sublotId, file.product, file.program, file.revision, file.flow, file.stage])));
       if (members.length > 1 && (cohorts.size > 1 || members.some((file) => !file.lotId || !file.product || !file.program))) {
+        reviewGroups.push(group);
         warnings.add('A group has different or missing lot, sublot, product, or program labels. Cross-file replacements still use head, site, part ID, and source order. Check the group.');
       }
     }
@@ -78,7 +80,7 @@ export async function yieldManager(view) {
     ...finish(file), sites: [...sites.values()].map(finish).sort((a, b) => a.head - b.head || a.site - b.site),
     softBins: [...softBins.values()].sort((a, b) => a.number - b.number),
     hardBins: [...hardBins.values()].sort((a, b) => a.number - b.number),
-  })), warnings: [...warnings] };
+  })), warnings: [...warnings], reviewGroups };
   if (new TextEncoder().encode(JSON.stringify(result)).byteLength > MAX_RESPONSE_BYTES) invalid('Yield Manager results are too large. Select fewer sources, heads, or sites.');
   return result;
 }

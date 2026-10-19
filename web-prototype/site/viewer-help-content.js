@@ -2,6 +2,14 @@
 // Keep topic IDs equal to the viewer tab and tool IDs. Text is rendered as text.
 export const VIEWER_HELP_TOPICS = [
   {
+    id: 'yield', group: 'Views', title: 'Yield Manager',
+    purpose: 'Review lot yield, failing bins, and changes between source files.',
+    steps: ['Open Files & groups to select files and set their order.', 'Use Filters to select heads, sites, and attempts.', 'Select a lot to see its bins, sites, and source files.', 'Select a count to inspect the devices.'],
+    results: ['Yield equals the pass count divided by the sum of pass and fail counts.', 'Unknown outcomes are shown separately. They do not enter the yield calculation.', 'Each time point shows file yield at the recorded start time in UTC.', 'Failing bin percentages use all failed attempts in the selected lot.'],
+    limits: ['The view uses the selected files. It does not scan the full Library.', 'Groups can contain the same files. Do not add their counts together.', 'Different products, programs, revisions, flows, stages, and sublots stay separate.', 'A file without a lot ID stays separate from other files.', 'A file without a start time stays in the source table but has no time point.', 'Unrecorded bins remain in the failed count.', 'Current attempts use the existing replacement rules. They do not establish first-pass or final yield.', 'Use separate groups for independent lots. Cross-file replacement uses head, site, and part ID.', 'Changing the test selection or Chart series does not change these device counts.'],
+    related: ['scope', 'devices', 'bins', 'terms'],
+  },
+  {
     id: 'overview', group: 'Views', title: 'File info',
     purpose: 'See the device counts and the source file details for the current selection.',
     steps: ['Open Files & groups to select the source files.', 'Use Filters to select the heads, sites, and attempts.', 'Read the device counts before you compare results.'],

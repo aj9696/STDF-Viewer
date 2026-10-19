@@ -345,3 +345,13 @@ package; deployed verification is recorded separately. No storage migration.
 Published as clean source revision `da2b635` on 2026-10-18. Both public Chrome/Edge
 checks passed, including summary sorting, contextual help and full workspace
 restore. See `web-prototype/docs/DEPLOYMENT.md` for provenance and evidence.
+
+### Yield Manager — 2026-10-19
+
+The user chose lots, yield trends and failing bins as the leading workflow.
+The contract and acceptance criteria are in `web-prototype/docs/YIELD-MANAGER.md`.
+Implement a bounded device-only provider and scoped drill-down filters first;
+then integrate the lot table, source-time plot, bins/sites and controlled-English
+help. Verify counts against real SQLite fixtures, review independently, check
+Chrome/Edge layouts and regressions, then publish and verify the clean release.
+Preserve the existing local library and current-attempt semantics. No migration.

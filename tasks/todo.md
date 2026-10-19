@@ -356,3 +356,13 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 - [x] Controlled-English writing policy, API bounds and engineer guide documented.
 - [x] Independent review and local Chrome/Edge provider, UI, real E2E and help checks.
 - [x] Publish clean package and verify the public revision in Chrome and Edge.
+
+### Yield Manager — 2026-10-19
+
+- [x] Confirm lots, source-time yield trends and failing bins as the first scope.
+- [x] Document identity, denominator, time, retest and drill-down contracts.
+- [x] Implement and verify bounded device-only source summaries.
+- [x] Build lot review, failing bins, site results and source-time view.
+- [x] Integrate tab, cache lifecycle, workspace persistence and contextual help.
+- [x] Independent review; real-provider and Chrome/Edge UI regression checks.
+- [ ] Publish clean release and verify the public assets and workflows.

@@ -470,3 +470,57 @@ Evidence directories under `results/`:
 - `viewer-help-chrome-1792376593500/`, `viewer-help-msedge-1792376593492/`
 
 Public deployment is qualified separately in `DEPLOYMENT.md`.
+
+## Yield Manager — 2026-10-19
+
+The new tab is qualified with synthetic data in disposable browser profiles.
+No engineer's browser library is cleared or used as a test fixture.
+
+- `viewer-yield-check.mjs chrome` and `msedge` import independently generated
+  STDF through the real worker. Both byte orders, source metadata, null dates,
+  missing bins, unknown outcomes, group/head/site/current/all scope, invalid
+  filters, cancellation and retry pass. Traced SQL confirms one device scan and
+  no observation reads. Every source, site, outcome and failing-bin count agrees
+  with the corresponding Devices query. Virtual-cursor boundary checks accept
+  exactly 4,096 site buckets, 32,768 bin buckets and 4 MiB UTF-8; each next value
+  is rejected with an actionable error and finalized statements. No large fixture
+  is needed for these resource-limit checks. Later-source replacements remain active
+  when the drill-down restricts the displayed source rows.
+- `viewer-yield-model-check.mjs` checks weighted yield, exact cohort identities,
+  missing-lot isolation, independent groups, search, numeric sorting and UTC
+  chronology. Zero known outcomes remain null.
+- `viewer-yield-ui-check.mjs chrome` and `msedge` cover cached controls, exact
+  source/bin/site drill-down, head/attempt invalidation, chart-series independence,
+  cancellation/retry, keyboard help, plot-point activation and resize focus,
+  360px layout, reload and workspace-state restoration. Both breakdown tables
+  page through 53 bins/sites as 50 then 3, retaining the full failure denominator.
+  The current-attempt scope warning names only groups that require review.
+  A second context uses
+  production Rust/WASM and SQLite: 8 current attempts = 3 pass + 3 fail + 2
+  unknown, giving 50% yield. The failed unrecorded-bin drill-down returns F and
+  excludes unknown-outcome D.
+- Existing `viewer-ui-check.mjs`, `viewer-e2e-check.mjs` and
+  `viewer-help-check.mjs` pass in Chrome and Edge. The real E2E now opens all
+  nine tabs; selected tests, numerical statistics, reports with eleven PNGs,
+  portable workspace restore and original source hashes remain correct. Help
+  now covers 28 topics under the existing controlled-English policy.
+- Existing `viewer-population-check.mjs chrome` passes after the additive
+  device-filter change.
+
+Independent code review corrected the progress label during long device scans
+and an image-export API assumption about chart cleanup handles. Screenshot
+review found that a global SVG icon rule collapsed the new chart to 20px;
+the scoped 190px chart height is now asserted in both browser suites. Desktop
+and phone screenshots were inspected after this correction. Tables scroll
+within their own regions; plot axes and date labels remain readable.
+
+Evidence under `results/`: `viewer-yield-chrome-1792410993292/`,
+`viewer-yield-msedge-1792410993292/`,
+`viewer-yield-ui-chrome-1792411023391/`,
+`viewer-yield-ui-msedge-1792411031505/`,
+`viewer-ui-chrome-1792410738468/`, `viewer-ui-msedge-1792410757876/`,
+`viewer-e2e-chrome-1792410738452/`, `viewer-e2e-msedge-1792410757879/`,
+`viewer-help-chrome-1792410642010/`, `viewer-help-msedge-1792410738461/`.
+
+No new large-file throughput or actual browser-zoom qualification is claimed.
+Public deployment is recorded separately in `DEPLOYMENT.md`.

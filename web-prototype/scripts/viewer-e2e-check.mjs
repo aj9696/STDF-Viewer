@@ -218,8 +218,8 @@ try {
   await choose('Record collection', 'raw'); assert.equal(await page.getByRole('region', { name: 'Original source records', exact: true }).locator('tbody tr').count(), 31);
   await page.getByRole('region', { name: 'Original source records', exact: true }).getByRole('button', { name: '20', exact: true }).click(); await ready(); await openDialog('viewer-record-dialog');
   assert.match(await page.locator('#viewer-record-body').textContent(), /MPR/); await page.getByRole('button', { name: 'Close record detail', exact: true }).click(); await closedDialog('viewer-record-dialog');
-  await tab('overview'); await tab('histogram'); await screenshot('desktop-histogram.png');
-  checks.push('All eight production tabs render; indexed datalog and complete original records expose exact source-byte detail');
+  await tab('overview'); await tab('yield'); assert.equal(await page.getByRole('region', { name: 'Lot yields', exact: true }).count(), 1); await tab('histogram'); await screenshot('desktop-histogram.png');
+  checks.push('All nine production tabs render; indexed datalog and complete original records expose exact source-byte detail');
 
   await workspaceAction(page, 'viewer-export'); await openDialog('viewer-export-dialog');
   assert.equal(await page.locator('#viewer-export-images').isChecked(), true);

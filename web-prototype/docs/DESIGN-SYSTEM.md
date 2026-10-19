@@ -101,3 +101,27 @@ content 9 (weighted 7.9). This is an internal design judgment, not a user-study
 result. The main remaining compromise is the vertical space required by explicit
 multi-source legends and touch controls on phones; desktop investigation remains
 the primary workflow. No label is shortened at the expense of source identity.
+
+## Yield Manager — 2026-10-19
+
+The existing framed-sheet direction continues. The first question is which lot
+needs investigation; the lot table leads, with the lowest defined yield first.
+Selecting a row shows its failing bins beside yield points at recorded source
+times. The product-specific elements are source/lot/program identity, known and
+unknown device outcomes, bin 65535 and head/site drill-down. No summary cards,
+decorative graphics, new chart palette or artificial yield target are added.
+
+Desktop uses two equal detail columns with a 24px gutter. The lot table is
+height-limited so the first failure details can remain visible. Narrow layouts
+stack the sections; wide tables scroll in named regions. SVG height is explicitly
+190px to avoid inheriting the application's icon dimensions. Keyboard users can
+select time points and retain focus after a resize; source tables expose the
+same records without requiring a pointer.
+
+Taste static lint reports zero failures and zero warnings. The populated
+renderer inspector at 1440, 768 and 390px reports zero failures and one small-text
+warning: this view retains the existing 12px dense table text and 11px metadata
+and axes. IBM Plex Sans loaded correctly. All three screenshots were inspected;
+the main lot/bin/time workflow reads first and there is no page overflow.
+Evidence: `results/yield-style-inspect/report.json` and its fold screenshots.
+The integrated browser suite also checks the real shell at 360px.

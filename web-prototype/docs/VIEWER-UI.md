@@ -63,6 +63,7 @@ series overlap intentionally; they are not disjoint cohorts to sum.
 | File info | Outcome metrics for the selected current/all policy, attempt history counts, source hash, warnings and recorded headers. Unknown outcomes are separate; displayed yield excludes unknowns. |
 | Devices | Searchable/sortable attempt table, 50 rows per page. Open a device for all its recorded observations. Plot selections retain their original population and can be cleared explicitly. |
 | Statistics | **All tests** shows a searchable, sortable table for every test identity, with separate population rows. Select a test name to open its histogram. **Selected tests** retains statistics and the device matrix for up to twelve selected identities. |
+| Yield Manager | Review lot yield, failing bins, sites and yield at recorded file start times. Select counts to inspect the matching devices. See [Yield Manager](YIELD-MANAGER.md) for population and time rules. |
 | Trend | Reduced display points with full recorded/eligible counts and extrema retained by the provider. Statistics are computed from the full population. |
 | Histogram | Common, equal-width provider bins across compared series. Intervals are half-open except the final upper endpoint. |
 | Bins | Recomputed hardware/software counts, percentages and outcome counts. Expand **Bin table** for the table, paged at 50 rows. |

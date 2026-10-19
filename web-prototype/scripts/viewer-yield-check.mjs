@@ -7,6 +7,7 @@ import { resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import { verifyYieldBounds } from './viewer-yield-bounds-check.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url)), repo = resolve(root, '..'), site = resolve(root, 'site');
 const channel = process.argv[2] ?? 'chrome';
@@ -47,6 +48,7 @@ let browser;
 const selection = (ids, attempts = 'current') => ({ groups: [{ name: 'Production', datasetIds: ids }], attempts });
 const total = ({ total, passed, failed, unknown, yield: yieldValue }) => ({ total, passed, failed, unknown, yield: yieldValue });
 try {
+  checks.push(...await verifyYieldBounds());
   browser = await chromium.launch({ channel, headless: true });
   const page = await browser.newPage(); page.on('pageerror', (error) => errors.push(error.message)); await page.goto(origin);
   await page.evaluate(() => {
@@ -82,6 +84,7 @@ try {
   const base = ids['original-little'], retest = ids.retest;
   const grouped = { groups: [{ name: 'Original', datasetIds: [base] }, { name: 'Retest', datasetIds: [base, retest] }], attempts: 'current' };
   const result = await call('summary', grouped);
+  assert.deepEqual(result.reviewGroups, []);
   assert.equal(result.files.length, 3); assert.equal(result.files[0].total, 7);
   assert.deepEqual(total(result.files[1]), { total: 6, passed: 2, failed: 2, unknown: 2, yield: 0.5 });
   assert.deepEqual(total(result.files[2]), { total: 2, passed: 1, failed: 1, unknown: 0, yield: 0.5 });
@@ -107,10 +110,15 @@ try {
   assert.deepEqual(metadata.files.slice(0, 2).map((file) => [file.lotId, file.product, file.program, file.revision, file.sublotId]), [['LOT-7', 'PRODUCT-A', 'FINAL', 'R1', 'S1'], ['LOT-7', 'PRODUCT-B', 'PROBE', 'R2', 'S2']]);
   assert.equal(metadata.files[2].lotId, null); assert.equal(metadata.files[2].startTime, null); assert.equal(metadata.files[2].finishTime, null); assert.equal(metadata.files[2].yield, null);
   assert.ok(metadata.warnings.some((text) => /different or missing/.test(text)));
+  assert.deepEqual(metadata.reviewGroups, [0]);
+  const mixedGroups = { groups: [{ name: 'Original', datasetIds: [base] }, { name: 'Mixed', datasetIds: [base, ids['other-product']] }], attempts: 'current' };
+  assert.deepEqual((await call('summary', mixedGroups)).reviewGroups, [1]);
+  assert.deepEqual((await call('summary', { ...mixedGroups, attempts: 'all' })).reviewGroups, []);
   const sublots = await call('summary', selection([base, ids['other-sublot']]));
   assert.deepEqual(sublots.files.map((file) => file.sublotId), ['S1', 'S2']);
   assert.equal(sublots.files[0].total, 6);
   assert.ok(sublots.warnings.some((text) => /different or missing lot, sublot/.test(text)));
+  assert.deepEqual(sublots.reviewGroups, [0]);
   checks.push('same lot names retain product/program/revision/sublot distinctions; missing dates remain null; importer rejects multiple headers; mixed-cohort replacement policy is explicit');
   for (const options of [{ datasetIds: [] }, { datasetIds: [base, base] }, { datasetIds: ['bad'] }, { datasetIds: [ids.undated] }, { group: 0, datasetIds: [retest] }, { outcome: 'invalid' }, { outcome: '__proto__' }]) assert.equal(await rejection('devices', grouped, options), 'INVALID_REQUEST');
   const many = selection([ids['many-devices']]);

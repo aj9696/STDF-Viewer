@@ -111,6 +111,7 @@ const LABELS = {
   'catalog-heading': ['Tests', '테스트', '测试'], 'viewer-clear-tests': ['Clear selection', '선택 해제', '清除选择'],
   'viewer-reset-filters': ['Reset filters', '필터 초기화', '重置筛选'], 'viewer-scan-health': ['Scan test health', '테스트 상태 검사', '检查测试状态'],
   'tab-histogram': ['Histogram', '히스토그램', '直方图'], 'tab-trend': ['Trend', '추세', '趋势'], 'tab-tests': ['Statistics', '통계', '统计'],
+  'tab-yield': ['Yield Manager', '수율 관리', '良率管理'],
   'tab-devices': ['Devices', '디바이스', '器件'], 'tab-bins': ['Bins', '빈', '分档'], 'tab-wafers': ['Wafers', '웨이퍼', '晶圆'],
   'tab-overview': ['File info', '파일 정보', '文件信息'], 'tab-records': ['Records', '레코드', '记录'], 'tab-dashboard': ['Overview', '개요', '概览'],
   'viewer-export': ['Export report', '보고서 내보내기', '导出报告'], 'viewer-save-session': ['Save workspace', '작업 공간 저장', '保存工作区'],

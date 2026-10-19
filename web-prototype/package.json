@@ -30,7 +30,10 @@
     "test:wafer-studies:browser": "node scripts/wafer-studies-browser-check.mjs",
     "test:viewer:summaries": "node scripts/viewer-summaries-check.mjs",
     "test:viewer:summary-model": "node scripts/viewer-summary-model-check.mjs",
-    "test:viewer:help": "node scripts/viewer-help-check.mjs"
+    "test:viewer:help": "node scripts/viewer-help-check.mjs",
+    "test:viewer:yield": "node scripts/viewer-yield-check.mjs",
+    "test:viewer:yield-model": "node scripts/viewer-yield-model-check.mjs",
+    "test:viewer:yield-ui": "node scripts/viewer-yield-ui-check.mjs"
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.53.4-build1",
