@@ -25,6 +25,36 @@ function projection(view, source, test, order = 'seq') {
 
 /** Statistics and bins read every eligible value; only the trend is reduced. */
 export async function analyzeTest(view, options) {
+  return calculateTest(view, options, false);
+}
+
+/**
+ * Return compact statistics for 1–25 exact test identities in request order.
+ * The caller owns the shared view and its selection. Results use the same
+ * complete populations and exact medians as analyzeTest, without chart data.
+ */
+export async function summarizeTests(view, options) {
+  if (!Array.isArray(options.tests) || !options.tests.length || options.tests.length > 25) invalid('Choose one to 25 tests for a statistics batch.');
+  for (const key of options.tests) parseTestKey(key);
+  if (new Set(options.tests).size !== options.tests.length) invalid('Each test may appear only once in a statistics batch.');
+  if (options.includeAggregate !== undefined && typeof options.includeAggregate !== 'boolean') invalid('Include aggregate must be true or false.');
+  const items = []; let bytes = 24;
+  for (const testKey of options.tests) {
+    view.context.checkCancelled();
+    const item = await calculateTest(view, { testKey, seriesBy: options.seriesBy, includeAggregate: options.includeAggregate }, true);
+    bytes += JSON.stringify(item).length * 2 + 2;
+    if (bytes > 2 * 1024 * 1024) invalid('This statistics batch is too large. Use fewer tests or a narrower selection.');
+    items.push(item);
+    view.context.progress({ phase: 'viewer-test-summaries', completed: items.length, total: options.tests.length });
+    // Small tests may never reach eachRow's yield interval. Allow cancellation
+    // messages to run between them, including before returning the final batch.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    view.context.checkCancelled();
+  }
+  return { items };
+}
+
+async function calculateTest(view, options, summaryOnly) {
   const test = parseTestKey(options.testKey), binCount = boundedInteger(options.bins ?? 30, 1, 1000, 'Histogram bins');
   const bySite = options.seriesBy === 'site', aggregate = !bySite || options.includeAggregate === true;
   if (options.seriesBy !== undefined && !['site', 'aggregate'].includes(options.seriesBy)) invalid('Series must be aggregate or site.');
@@ -38,7 +68,7 @@ export async function analyzeTest(view, options) {
       if (series.size >= 64) invalid('This selection produces more than 64 series. Select fewer heads/sites or use aggregate series.');
       const [group, head, site] = JSON.parse(key);
       series.set(key, { key, group, head, site, label: `${view.selection.groups[group].name} · Head ${head} · ${site === null ? 'All selected sites' : `Site ${site}`}`,
-        moments: new PopulationStats(test.family), sampler: new TrendSampler(128), medianValues: [], seen: 0, trendSegment: 0, pendingGap: false, lastSource: null, gapRuns: 0 });
+        moments: new PopulationStats(test.family), sampler: summaryOnly ? null : new TrendSampler(128), medianValues: [], seen: 0, trendSegment: 0, pendingGap: false, lastSource: null, gapRuns: 0 });
     }
     return series.get(key);
   };
@@ -60,6 +90,7 @@ export async function analyzeTest(view, options) {
       physicalRows++;
       for (const key of keysFor(source, row)) {
         const item = getSeries(key);
+        if (summaryOnly) { item.moments.add(row); continue; }
         if (item.lastSource !== source.source) { if (item.lastSource !== null) item.trendSegment++; item.lastSource = source.source; }
         if (item.moments.add(row)) {
           if (item.pendingGap) { item.trendSegment++; item.pendingGap = false; }
@@ -72,7 +103,7 @@ export async function analyzeTest(view, options) {
   }
   let low = Infinity, high = -Infinity;
   for (const item of series.values()) if (item.moments.count) { low = Math.min(low, item.moments.min); high = Math.max(high, item.moments.max); }
-  for (const item of series.values()) item.bins = histogramEdges(low, high, binCount);
+  if (!summaryOnly) for (const item of series.values()) item.bins = histogramEdges(low, high, binCount);
 
   // Each source's value index supplies a sorted cursor. Merge at most 64
   // cursors to calculate exact medians without a population array or SQL sort.
@@ -93,7 +124,7 @@ export async function analyzeTest(view, options) {
       const row = cursor.row;
       for (const key of keysFor(cursor.source, row)) {
         const item = series.get(key); item.seen++;
-        addToHistogram(item.bins, row.value);
+        if (!summaryOnly) addToHistogram(item.bins, row.value);
         const n = item.moments.count;
         if (item.seen === Math.floor((n + 1) / 2) || item.seen === Math.floor(n / 2) + 1) item.medianValues.push(row.value);
       }
@@ -106,8 +137,13 @@ export async function analyzeTest(view, options) {
   } finally { for (const cursor of cursors) cursor.statement.finalize(); }
   const output = [...series.values()].map(({ moments, sampler, medianValues, seen, trendSegment, pendingGap, lastSource, ...item }) => {
     const median = medianValues.length ? medianValues.reduce((sum, value) => sum + value / medianValues.length, 0) : null;
+    if (summaryOnly) {
+      const { key, group, head, site, label } = item;
+      return { key, group, head, site, label, stats: moments.finish(median) };
+    }
     return { ...item, count: moments.total, stats: moments.finish(median), points: sampler.finish(), reduced: sampler.total > sampler.finish().length };
   });
+  if (summaryOnly) return { test: { ...test, key: options.testKey }, population: { observations: physicalRows, attempts: view.selection.attempts }, series: output };
   return { test: { ...test, key: options.testKey }, population: { observations: physicalRows, attempts: view.selection.attempts }, series: output,
     histogramRange: output[0]?.bins.length ? [output[0].bins[0].low, output[0].bins.at(-1).high] : null,
     warnings: [

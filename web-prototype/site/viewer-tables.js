@@ -26,6 +26,7 @@ export async function overview(view) {
 }
 
 export function listViewerTests(view, options) {
+  if (options.includePins !== undefined && typeof options.includePins !== 'boolean') invalid('Include pins must be true or false.');
   const { offset, limit } = pageOptions(options, 200), query = textOption(options.query ?? '');
   const orders = { number: 'number,name,unit,channel,family', name: 'name,number,unit,channel,family', original: 'MIN(source),MIN(first_seq),number,name,unit,channel,family' };
   const order = options.order ?? 'number'; if (!Object.hasOwn(orders, order)) invalid('Invalid test ordering.');
@@ -39,7 +40,8 @@ export function listViewerTests(view, options) {
   const group = 'family,number,name,unit,channel,identity';
   const total = view.db.selectValue(`SELECT COUNT(*) FROM(SELECT 1 FROM v_tests WHERE ${condition} GROUP BY ${group})`, bind.length ? bind : undefined);
   const items = rowsBounded(view.db, `SELECT ${group},SUM(observations) observations,SUM(failures) failures,COUNT(DISTINCT group_id) groups FROM v_tests WHERE ${condition} GROUP BY ${group} ORDER BY ${orders[order]} LIMIT ? OFFSET ?`, [...bind, limit, offset]);
-  const requestedPins = [...new Set(items.filter((row) => row.family === 15 && row.channel.startsWith('pmr:')).map((row) => Number(row.channel.slice(4))))];
+  // Statistics scans need exact identities only, not repeated PMR metadata.
+  const requestedPins = options.includePins === false ? [] : [...new Set(items.filter((row) => row.family === 15 && row.channel.startsWith('pmr:')).map((row) => Number(row.channel.slice(4))))];
   if (requestedPins.length) {
     const pinRows = [];
     for (const [id] of view.caches) {

@@ -1,6 +1,6 @@
 import { openViewerContext, rowsBounded } from './viewer-context.js';
 import { overview, listViewerTests, listDevices, readDevice, readMetadata } from './viewer-tables.js';
-import { analyzeTest } from './viewer-analysis.js';
+import { analyzeTest, summarizeTests } from './viewer-analysis.js';
 import { binChart, listWafers, waferMap } from './viewer-maps.js';
 import { boundedInteger, datasetId, invalid } from './viewer-model.js';
 import { loadParser } from './import-source.js';
@@ -8,7 +8,7 @@ import { loadParser } from './import-source.js';
 export async function runViewerQuery(store, message, context) {
   const options = message.options ?? {};
   if (!options || typeof options !== 'object' || Array.isArray(options)) invalid('Viewer options must be an object.');
-  const actions = ['prepare', 'overview', 'tests', 'devices', 'device', 'analyze', 'bins', 'wafers', 'wafer', 'records', 'record', 'rawRecords', 'advanced'];
+  const actions = ['prepare', 'overview', 'tests', 'devices', 'device', 'analyze', 'testSummaries', 'bins', 'wafers', 'wafer', 'records', 'record', 'rawRecords', 'advanced'];
   if (!actions.includes(message.action)) invalid('Unknown viewer operation.');
   const view = await openViewerContext(store, message.selection, context);
   try {
@@ -23,6 +23,7 @@ export async function runViewerQuery(store, message, context) {
       case 'devices': return await listDevices(view, options);
       case 'device': return readDevice(view, options);
       case 'analyze': return await analyzeTest(view, options);
+      case 'testSummaries': return await summarizeTests(view, options);
       case 'bins': return await binChart(view, options);
       case 'wafers': return listWafers(view);
       case 'wafer': return await waferMap(view, options);
