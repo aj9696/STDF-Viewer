@@ -208,3 +208,33 @@ Evidence: `results/release-smoke-chrome-1792375150298/` and
 profiles. Existing user font preferences are retained; the release does not
 migrate or upload an engineer's local library. Documentation-only commits after
 `7fecc60` record this deployment without changing its asset revision.
+
+## All-test statistics and help release — 2026-10-18
+
+Cloudflare deployment `4f3bba77-0890-4820-a988-233e783961b3` published source
+revision [`da2b635`](https://github.com/aj9696/STDF-Viewer/commit/da2b6355834ac0dbb0ebfcaef960c74210645fd1)
+to [SemiData](https://semidata.pages.dev/). The package has `sourceDirty: false`,
+118 files and 4,139,327 bytes before compression. The rebuilt ZIP contains the
+same 118 entries, verified byte-for-byte before upload. ZIP size: 1,531,079 bytes.
+SHA-256: `b5ff4c8b7e1391b8306159aa4eae0ddf6c7aaab04ba0d7e03415ca34f26542df`.
+Cloudflare confirmed 118/118 files uploaded and deployment success.
+
+Separate Chrome and Edge checks passed against the stable public origin. All
+116 public manifest assets matched their packaged hashes and sizes; release.json
+matched separately and `_headers` was consumed as configuration. Cache/no-sniff
+headers, WASM/font/SVG MIME types and a missing route returning 404 passed.
+
+Both browsers imported the 48-device example, compared two sources containing
+96 devices, opened and sorted All tests, and opened contextual and column help.
+Escape restored focus. All 15 tools remained available. Workspace download,
+full browser restart, fresh-profile restoration, source hash equality and reload
+persistence passed. No JavaScript errors, failed app requests or third-party app
+requests were recorded. Public screenshots were inspected.
+
+Evidence is under `results/release-smoke-chrome-1792376767866/` and
+`results/release-smoke-msedge-1792376767869/`; each contains `results.json`,
+`all-test-statistics.png`, `statistics-help.png`, comparison/restoration images,
+and the test workspace. Cloudflare confirmation is
+`results/statistics-help-deployment-success.jpg`. These public checks use
+synthetic data in disposable profiles. Documentation-only commits after
+`da2b635` record this deployment without changing its asset revision.

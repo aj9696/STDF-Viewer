@@ -355,4 +355,4 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 - [x] Contextual right help panel covers every view, all 15 tools and definitions.
 - [x] Controlled-English writing policy, API bounds and engineer guide documented.
 - [x] Independent review and local Chrome/Edge provider, UI, real E2E and help checks.
-- [ ] Publish clean package and verify the public revision in Chrome and Edge.
+- [x] Publish clean package and verify the public revision in Chrome and Edge.

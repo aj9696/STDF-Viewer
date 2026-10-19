@@ -341,3 +341,7 @@ provider contract, cache/cancellation behavior and acceptance checks. Implement
 and verify compact provider summaries, then the table, then contextual help.
 Independent review and Chrome/Edge regression checks precede a clean production
 package; deployed verification is recorded separately. No storage migration.
+
+Published as clean source revision `da2b635` on 2026-10-18. Both public Chrome/Edge
+checks passed, including summary sorting, contextual help and full workspace
+restore. See `web-prototype/docs/DEPLOYMENT.md` for provenance and evidence.
