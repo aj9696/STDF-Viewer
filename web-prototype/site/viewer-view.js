@@ -13,9 +13,13 @@ export function disclosure(container, title) { const d = element('details', unde
 export function compactChart(container) {
   const chart = container.querySelector('.viewer-chart'); if (!chart) return;
   const note = chart.querySelector('.chart-note'), controls = chart.querySelector('.chart-controls'), navigation = chart.querySelector('.chart-navigation'), status = chart.querySelector('.chart-status');
+  const common = element('div', undefined, 'chart-navigation chart-common-controls');
+  common.setAttribute('role', 'group'); common.setAttribute('aria-label', 'Chart view');
+  for (const control of navigation.querySelectorAll('[data-chart-common]')) common.append(control);
+  chart.insertBefore(common, note);
   const tools = disclosure(chart, 'Chart tools'); tools.classList.add('chart-tools'); tools.append(navigation, controls);
-  disclosure(chart, 'About this chart').append(note);
-  // Status remains outside collapsed tools so selection/validation feedback is visible.
+  disclosure(chart, 'About this chart').append(chart.querySelector('.chart-help'));
+  // Population/reduction notes and validation stay visible when tools are collapsed.
   chart.append(status);
 }
 export function renderStatSummary(container, analysis, settings) {
@@ -25,7 +29,7 @@ export function renderStatSummary(container, analysis, settings) {
     const row = element('div', undefined, 'viewer-stat-row');
     if (analysis.series.length > 1) row.append(element('span', series.label, 'viewer-stat-label'));
     for (const [label, value] of [['n', series.stats.count], ['Mean', fmt(series.stats.mean, settings.precision, settings.notation)], ['σ', fmt(series.stats.stdev, settings.precision, settings.notation)], ['Cpk', series.stats.cpk == null ? '—' : fmt(series.stats.cpk, settings.precision, settings.notation)]]) {
-      const item = element('span'); item.append(document.createTextNode(`${label} `), element('strong', String(value))); if (label === 'Cpk' && series.stats.cpk == null) item.title = series.stats.cpkReason ?? 'Cpk unavailable'; row.append(item);
+      const item = element('span', undefined, 'viewer-stat-value'); item.append(document.createTextNode(`${label} `), element('strong', String(value))); if (label === 'Cpk' && series.stats.cpk == null) item.title = series.stats.cpkReason ?? 'Cpk unavailable'; row.append(item);
     }
     if (series.stats.excluded) row.append(element('span', `${series.stats.excluded} excluded`, 'viewer-stat-excluded'));
     summary.append(row);
@@ -38,19 +42,21 @@ export function table(container, columns, rows, { label = 'Data table', rowClass
   const t = element('table', undefined, 'viewer-table'), head = element('thead'), tr = element('tr'), body = element('tbody');
   for (const column of columns) {
     const th = element('th', onSort && column.sortKey ? undefined : column.label); th.scope = 'col';
+    if (column.numeric) th.classList.add('numeric');
     if (onSort && column.sortKey) { th.append(button(column.label, () => onSort(column.sortKey), '')); th.setAttribute('aria-sort', sort === column.sortKey ? direction === 'desc' ? 'descending' : 'ascending' : 'none'); }
     tr.append(th);
   }
   head.append(tr); t.append(head, body);
   for (const row of headerRows) {
     const r = element('tr', undefined, 'viewer-spec-row');
-    for (const [index, column] of columns.entries()) { const cell = element('th', index === 0 ? row.label : row.value(column), column.wrap ? 'text-wrap' : undefined); cell.scope = index === 0 ? 'row' : 'col'; r.append(cell); }
+    for (const [index, column] of columns.entries()) { const cell = element('th', index === 0 ? row.label : row.value(column), column.wrap ? 'text-wrap' : undefined); if (column.numeric) cell.classList.add('numeric'); cell.scope = index === 0 ? 'row' : 'col'; r.append(cell); }
     head.append(r);
   }
   for (const row of rows) {
     const r = element('tr'); if (rowClass) r.className = rowClass(row);
     for (const column of columns) {
       const cell = element('td', undefined, column.wrap ? 'text-wrap' : undefined), value = column.value(row);
+      if (column.numeric) cell.classList.add('numeric');
       if (value instanceof Node) cell.append(value); else cell.textContent = value == null ? 'Not recorded' : String(value);
       if (column.className) cell.classList.add(column.className(row)); r.append(cell);
     }
@@ -120,14 +126,15 @@ export function renderOverview(container, data) {
   }
 }
 export function renderStats(container, analyses, settings) {
-  const rows = analyses.flatMap((analysis) => analysis.series.map((series) => ({ ...series.stats, cp: capabilityCp(series.stats, analysis.test.family), label: series.label, test: testTitle(analysis.test) })));
+  const rows = analyses.flatMap((analysis) => analysis.series.map((series) => ({ ...series.stats, cp: capabilityCp(series.stats, analysis.test.family), label: series.label, test: testTitle(analysis.test), unit: analysis.test.unit })));
   table(container, [
     { label: 'Test / population', value: (r) => `${r.test}\n${r.label}`, wrap: true },
-    ...[['total', 'Recorded'], ['count', 'Valid'], ['excluded', 'Excluded'], ['pass', 'Pass'], ['fail', 'Fail'], ['unknown', 'Unknown']].map(([key, label]) => ({ label, value: (r) => r[key] })),
-    ...[['mean', 'Mean'], ['median', 'Median'], ['stdev', 'Population σ'], ['min', 'Min'], ['max', 'Max'], ['lsl', 'Low limit'], ['usl', 'High limit']].map(([key, label]) => ({ label, value: (r) => fmt(r[key], settings.precision, settings.notation) })),
-    { label: 'Cp', value: (r) => fmt(r.cp, settings.precision, settings.notation) },
-    { label: 'Cpk', value: (r) => r.cpk == null ? r.cpkReason ?? 'Not available' : fmt(r.cpk, settings.precision, settings.notation), wrap: true, className: (r) => r.cpk != null && r.cpk < settings.cpkThreshold ? 'value-warning' : 'value-neutral' },
-    { label: 'Test yield', value: (r) => r.pass + r.fail ? `${fmt(100 * r.pass / (r.pass + r.fail), settings.precision, settings.notation)}%` : 'Not available' },
+    { label: 'Unit', value: (r) => r.unit || '—' },
+    ...[['total', 'Recorded'], ['count', 'Valid'], ['excluded', 'Excluded'], ['pass', 'Pass'], ['fail', 'Fail'], ['unknown', 'Unknown']].map(([key, label]) => ({ label, numeric: true, value: (r) => r[key] })),
+    ...[['mean', 'Mean'], ['median', 'Median'], ['stdev', 'Population σ'], ['min', 'Min'], ['max', 'Max'], ['lsl', 'Low limit'], ['usl', 'High limit']].map(([key, label]) => ({ label, numeric: true, value: (r) => fmt(r[key], settings.precision, settings.notation) })),
+    { label: 'Cp', numeric: true, value: (r) => fmt(r.cp, settings.precision, settings.notation) },
+    { label: 'Cpk', numeric: true, value: (r) => r.cpk == null ? r.cpkReason ?? 'Not available' : fmt(r.cpk, settings.precision, settings.notation), wrap: true, className: (r) => r.cpk != null && r.cpk < settings.cpkThreshold ? 'value-warning' : 'value-neutral' },
+    { label: 'Test yield', numeric: true, value: (r) => r.pass + r.fail ? `${fmt(100 * r.pass / (r.pass + r.fail), settings.precision, settings.notation)}%` : 'Not available' },
   ], rows, { label: 'Full-population test statistics' });
 }
 export function renderDevices(container, result, tests, selection, openDevice, settings, analyses = [], sortOptions = {}) {

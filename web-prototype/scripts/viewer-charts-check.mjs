@@ -15,7 +15,7 @@ const server = createServer(async (request, response) => {
   if (path === "/") {
     response.setHeader("Content-Type", "text/html");
     response.end('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chart qualification</title><link rel="stylesheet" href="/viewer-charts.css"><style>body{margin:20px;background:#f4f6fa}main{padding:20px;background:white;max-width:1100px;margin:auto;min-width:0}h1{font:24px Segoe UI}section+section{margin-top:36px}</style><main><h1>Viewer chart qualification</h1><div id="chart"></div></main></html>');
-  } else if (["/viewer-charts.js", "/viewer-charts.css", "/viewer-number.js"].includes(path)) {
+  } else if (["/viewer-charts.js", "/viewer-charts.css", "/viewer-number.js", "/viewer-view.js", "/viewer.css", "/viewer-model.js", "/viewer-preferences.js", "/viewer-i18n.js", "/dataset-schema.js", "/library-home-view.js"].includes(path)) {
     response.setHeader("Content-Type", path.endsWith(".js") ? "text/javascript" : "text/css");
     response.end(await readFile(resolve(base, "site", path.slice(1))));
   } else { response.writeHead(404); response.end(); }
@@ -42,7 +42,9 @@ try {
   assert.equal(await page.locator("#chart img").count(), 0);
   assert.match(await page.locator(".chart-note").textContent(), /19,000 observations/);
   await page.getByRole('button', { name: 'None', exact: true }).click(); assert.equal(await page.evaluate(() => handle.items.length), 0);
+  assert.equal(await page.evaluate(() => document.activeElement?.textContent), 'None');
   await page.getByRole('button', { name: 'All', exact: true }).click(); assert.equal(await page.evaluate(() => handle.items.length), 6);
+  assert.equal(await page.evaluate(() => document.activeElement?.textContent), 'All');
   await page.getByText('Opacity', { exact: true }).first().click(); await page.getByLabel('Plot opacity', { exact: true }).press('Home'); assert.equal(await page.evaluate(() => handle.opacity), .1);
   await page.getByLabel('Plot opacity', { exact: true }).press('End'); assert.equal(await page.evaluate(() => handle.opacity), 1);
   await page.getByLabel("First device index").fill("0");
@@ -191,9 +193,56 @@ try {
   await page.getByRole('button', { name: 'Auto', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.fullDomain.y), [1, 3]);
   await page.getByRole('button', { name: 'Full', exact: true }).click(); assert.deepEqual(await page.evaluate(() => handle.fullDomain.y), [-5, 8]);
   await page.getByLabel('Visible Y minimum', { exact: true }).fill('0'); await page.getByLabel('Visible Y maximum', { exact: true }).fill('4'); await page.getByLabel('Visible Y maximum', { exact: true }).press('Enter'); assert.deepEqual(await page.evaluate(() => handle.viewport.y), [0, 4]);
-  assert.match(await page.locator('.chart-note').textContent(), /untested device gaps are not inferred/); assert.match(await page.locator('.chart-note').textContent(), /reduced trends may omit other failures/);
+  assert.match(await page.locator('.chart-help').textContent(), /untested device gaps are not inferred/);
+  assert.doesNotMatch(await page.locator('.chart-note').textContent(), /Reduced trend/);
   await page.screenshot({ path: resolve(output, 'trend-controls.png'), fullPage: true });
   checks.push('Trend separates known gaps, toggles retained fail markers, shades sigma band, and exposes Y range with reduction disclosure');
+  await page.addStyleTag({ url: '/viewer.css' });
+  await page.evaluate(async () => {
+    window.view = await import('/viewer-view.js');
+    handle = renderer.renderTrend(document.querySelector('#chart'), { title: '1001 · Active current — startup sweep at hot temperature', yLabel: 'Test value (mA)',
+      series: [{ key: 'A', label: 'Head 1 / Site 0', color: '#245cce', points: [{ x: 0, value: 3.4e38 }, { x: 10, value: -3.4e38 }], stats: { count: 10000 } },
+        { key: 'B', label: 'Head 1 / Site 1', color: '#b55416', points: [{ x: 0, value: 2 }, { x: 10, value: 6 }], stats: { count: 9000 } }], onPick: (value) => picks.push(value) });
+    view.compactChart(document.querySelector('#chart'));
+  });
+  assert.match(await page.locator('.chart-axis-caption').textContent(), /mA/);
+  assert.equal(await page.getByRole('button', { name: 'Zoom in', exact: true }).isVisible(), true);
+  assert.equal(await page.getByLabel('Pointer drag', { exact: true }).isVisible(), true);
+  assert.equal(await page.getByLabel('First device index', { exact: true }).isVisible(), false);
+  assert.equal(await page.locator('.chart-note').isVisible(), true);
+  assert.match(await page.locator('.chart-note').textContent(), /19,000 observations.*Reduced trend/);
+  assert.equal(await page.locator('.chart-help').isVisible(), false);
+  await page.locator('.chart-tools > summary').focus(); await page.keyboard.press('Enter');
+  await page.getByLabel('First device index', { exact: true }).fill('0'); await page.getByLabel('Last device index', { exact: true }).fill('10');
+  await page.getByRole('button', { name: 'Inspect range', exact: true }).click();
+  assert.deepEqual(await page.evaluate(() => picks.at(-1)), { type: 'trend', xlo: 0, xhi: 10, seriesKeys: ['A', 'B'] });
+  await page.locator('.chart-tools > summary').focus(); await page.keyboard.press('Enter');
+  assert.equal(await page.locator('.chart-status').isVisible(), true);
+  for (const width of [1440, 1280, 768, 390, 360]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.evaluate(() => handle.redraw());
+    assert.ok(await page.evaluate(() => document.body.scrollWidth <= innerWidth));
+    // The full float32 domain remains plotted; wider labels receive their own margin.
+    assert.deepEqual(await page.evaluate(() => handle.fullDomain.y), [-3.4e38, 3.4e38]);
+    assert.ok(await page.evaluate(() => handle.scale.left - 8 - handle.ctx.measureText('-3.4e+38').width > 14));
+    if (width <= 390) assert.ok((await page.getByRole('button', { name: 'Zoom in', exact: true }).boundingBox()).height >= 44);
+    await page.screenshot({ path: resolve(output, `compact-trend-${width}.png`), fullPage: true });
+  }
+  checks.push('Compact chart exposes common controls and unit; keyboard inspection, visible reduction/status, full extreme domain and 1440/1280/768/390/360px layouts');
+  await page.evaluate(() => {
+    handle = renderer.renderHistogram(document.querySelector('#chart'), { title: '1001 · Active current', xLabel: 'Test value (mA)', series: [{ key: 'H', label: 'Head 1 / Site 0', bins: [{ low: 0, high: 1, count: 8 }, { low: 1, high: 2, count: 4, last: true }], stats: { mean: 1, stdev: .25 } }], settings: { showGaussian: true } });
+    view.compactChart(document.querySelector('#chart'));
+  });
+  assert.equal(await page.locator('.chart-note').isVisible(), false);
+  assert.equal(await page.locator('.chart-help').isVisible(), false);
+  const about = page.locator('summary').filter({ hasText: /^About this chart$/ });
+  await about.focus(); await page.keyboard.press('Enter');
+  assert.equal(await page.locator('.chart-help').isVisible(), true);
+  assert.match(await page.locator('.chart-help').textContent(), /final interval includes its upper endpoint.*Gaussian overlays/);
+  await about.focus(); await page.keyboard.press('Enter');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.screenshot({ path: resolve(output, 'compact-histogram.png'), fullPage: true });
+  checks.push('Chart scope/reduction notices stay visible; generic plot instructions are keyboard-accessible under About this chart');
   assert.deepEqual(errors, []);
   await writeFile(resolve(output, "results.json"), JSON.stringify({ channel, checks, errors }, null, 2));
   console.log(JSON.stringify({ output, checks, errors }, null, 2));

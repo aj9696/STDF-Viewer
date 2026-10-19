@@ -45,20 +45,20 @@ function createChart(container, title, series, settings, onPick) {
   charts.get(container)?.destroy();
   const root = node("section", "viewer-chart");
   root.setAttribute("aria-label", title);
-  const header = node("div", "chart-heading"), heading = node("h3", "", title), reset = node("button", "", "Reset chart");
-  reset.type = "button"; header.append(heading, reset);
+  const header = node("div", "chart-heading"), heading = node("h3", "", title), caption = node('p', 'chart-axis-caption'), identity = node('div', 'chart-identity'), reset = node("button", "", "Reset chart");
+  identity.append(heading, caption); reset.type = "button"; header.append(identity, reset);
   const legend = node("div", "chart-legend"); legend.setAttribute("aria-label", "Visible series");
   const stage = node("div", "chart-stage"), canvas = node("canvas"), tip = node("div", "chart-tooltip");
   canvas.setAttribute("role", "img"); canvas.setAttribute("aria-label", `${title}. Use the labeled controls below to select data without a pointer.`);
   const selection = node("div", "chart-selection"), empty = node("div", "chart-empty", "No data in the selected population.");
   tip.hidden = selection.hidden = true;
   stage.append(canvas, empty, selection, tip);
-  const note = node("p", "chart-note"), controls = node("form", "chart-controls"), status = node("p", "chart-status");
+  const note = node("p", "chart-note"), help = node('p', 'chart-help'), controls = node("form", "chart-controls"), status = node("p", "chart-status");
   status.setAttribute("role", "status"); controls.append(status);
-  root.append(header, legend, stage, note, controls); container.replaceChildren(root);
+  root.append(header, legend, stage, note, help, controls); container.replaceChildren(root);
   const ctx = canvas.getContext("2d"), hidden = new Set(), listeners = new AbortController();
   let frame = 0, disposed = false, start = null;
-  const chart = { root, ctx, canvas, stage, controls, note, status, series, settings, hidden, items: [],
+  const chart = { root, ctx, canvas, stage, controls, note, help, status, caption, series, settings, hidden, items: [],
     area: null, rangePick: null, paint: null, keyboardReset: null, hasData: false, viewport: null, fullDomain: null, scale: null, dragMode: 'inspect', afterPaint: null, opacity: 1,
     visible: () => series.filter((s) => !hidden.has(s.key)),
     pick(payload) {
@@ -95,7 +95,7 @@ function createChart(container, title, series, settings, onPick) {
     legend.replaceChildren();
     for (const item of series.slice(legendPage * 24, (legendPage + 1) * 24)) {
       const b = node("button"), swatch = node("span", "chart-swatch"), label = node("span", "", item.label);
-      b.type = "button"; b.setAttribute("aria-pressed", String(!hidden.has(item.key))); swatch.style.setProperty("--series-color", item.color);
+      b.type = "button"; b.setAttribute("aria-pressed", String(!hidden.has(item.key))); b.title = 'Toggle this series in the chart'; swatch.setAttribute('aria-hidden', 'true'); swatch.style.setProperty("--series-color", item.color);
       b.append(swatch, label); b.addEventListener("click", () => {
         hidden.has(item.key) ? hidden.delete(item.key) : hidden.add(item.key);
         b.setAttribute("aria-pressed", String(!hidden.has(item.key))); chart.viewport = null; chart.redraw();
@@ -111,11 +111,12 @@ function createChart(container, title, series, settings, onPick) {
       navigation.append(node("span", "", ` ${legendPage + 1} / ${Math.ceil(series.length / 24)}`)); legend.append(navigation);
     }
     if (series.length > 1) for (const [name, hide] of [['All', false], ['None', true]]) {
-      const control = node('button', '', name); control.type = 'button'; control.addEventListener('click', () => { hidden.clear(); if (hide) series.forEach(s => hidden.add(s.key)); renderLegend(); chart.redraw(); }); legend.append(control);
+      const control = node('button', 'chart-legend-action', name); control.type = 'button'; control.title = hide ? 'Hide all series' : 'Show all series'; control.addEventListener('click', () => { hidden.clear(); if (hide) series.forEach(s => hidden.add(s.key)); renderLegend(); chart.redraw(); legend.querySelectorAll('.chart-legend-action')[hide ? 1 : 0]?.focus(); }); legend.append(control);
     }
   };
   renderLegend();
   const navigation = node('div', 'chart-navigation'), modeLabel = node('label', '', 'Pointer drag'), mode = node('select'); mode.setAttribute('aria-label', 'Pointer drag');
+  modeLabel.dataset.chartCommon = '';
   for (const [value, text] of [['inspect', 'Inspect data'], ['zoom', 'Zoom rectangle'], ['pan', 'Pan view']]) { const option = node('option', '', text); option.value = value; mode.append(option); }
   mode.addEventListener('change', () => { chart.dragMode = mode.value; canvas.style.touchAction = mode.value === 'inspect' ? 'pan-y' : 'none'; }); modeLabel.append(mode); navigation.append(modeLabel);
   const setViewport = (next) => {
@@ -136,7 +137,7 @@ function createChart(container, title, series, settings, onPick) {
     setViewport(next);
   };
   for (const [text, action] of [['Zoom in', () => transform(.5)], ['Zoom out', () => transform(2)], ['Pan left', () => transform(1, chart.flipX ? .25 : -.25)], ['Pan right', () => transform(1, chart.flipX ? -.25 : .25)], ['Pan up', () => transform(1, 0, chart.flipY ? -.25 : .25)], ['Pan down', () => transform(1, 0, chart.flipY ? .25 : -.25)]]) {
-    const b = node('button', '', text); b.type = 'button'; b.addEventListener('click', action); navigation.append(b);
+    const b = node('button', '', text); b.type = 'button'; if (text.startsWith('Zoom')) b.dataset.chartCommon = ''; b.addEventListener('click', action); navigation.append(b);
   }
   root.insertBefore(navigation, stage); chart.navigation = navigation;
   const plotOptions = node('details'), opacityLabel = node('label', '', 'Opacity'), opacity = node('input');
@@ -200,9 +201,14 @@ function axisTicks(domain, integer) {
 }
 function axes(chart, xDomain, yDomain, xLabel, yLabel, flipX = false, flipY = false, equal = false, integer = {}) {
   const { ctx, area: a, settings } = chart;
+  chart.caption.textContent = `${yLabel} · ${xLabel}`;
   chart.fullDomain = { x: [...xDomain], y: [...yDomain] }; chart.flipX = flipX; chart.flipY = flipY;
   if (chart.viewport) { xDomain = chart.viewport.x; yDomain = chart.viewport.y; }
-  let left = a.left, right = a.right, top = a.top, bottom = a.bottom;
+  const font = ["Segoe UI", "Arial", "Consolas", "SemiDataLocalFont"].includes(settings.font) ? settings.font : "Segoe UI";
+  ctx.font = `12px "${font}", sans-serif`; ctx.lineWidth = 1;
+  const yTicks = axisTicks(yDomain, integer.y);
+  const labelWidth = Math.max(0, ...yTicks.map((value) => ctx.measureText(format(value, settings.precision, settings.notation)).width));
+  let left = Math.max(a.left, Math.min(a.width - 118, labelWidth + 28)), right = a.right, top = a.top, bottom = a.bottom;
   if (equal) {
     const aspect = typeof equal === "number" ? equal : 1;
     const scale = Math.min((right - left) / ((xDomain[1] - xDomain[0]) * aspect), (bottom - top) / (yDomain[1] - yDomain[0]));
@@ -211,14 +217,13 @@ function axes(chart, xDomain, yDomain, xLabel, yLabel, flipX = false, flipY = fa
   }
   const x = (v) => mix(flipX ? right : left, flipX ? left : right, fraction(v, ...xDomain));
   const y = (v) => mix(flipY ? top : bottom, flipY ? bottom : top, fraction(v, ...yDomain));
-  const font = ["Segoe UI", "Arial", "Consolas", "SemiDataLocalFont"].includes(settings.font) ? settings.font : "Segoe UI";
-  ctx.font = `11px "${font}", sans-serif`; ctx.lineWidth = 1;
   for (const xv of axisTicks(xDomain, integer.x)) {
     const px = x(xv);
     ctx.strokeStyle = "#e4e9f1"; ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
-    ctx.fillStyle = "#58687f"; ctx.textAlign = "center"; ctx.fillText(format(xv, settings.precision, settings.notation), px, bottom + 18);
+    const text = format(xv, settings.precision, settings.notation), halfWidth = ctx.measureText(text).width / 2;
+    ctx.fillStyle = "#58687f"; ctx.textAlign = "center"; ctx.fillText(text, clamp(px, halfWidth + 2, a.width - halfWidth - 2), bottom + 18);
   }
-  for (const yv of axisTicks(yDomain, integer.y)) {
+  for (const yv of yTicks) {
     const py = y(yv);
     ctx.strokeStyle = "#e4e9f1"; ctx.beginPath(); ctx.moveTo(left, py); ctx.lineTo(right, py); ctx.stroke();
     ctx.fillStyle = "#58687f";
@@ -328,8 +333,8 @@ export function renderTrend(container, { series = [], settings = {}, onPick, tit
     }
     const total = visible.reduce((sum, s) => sum + (finite(s.stats?.count) ? s.stats.count : (s.points?.length ?? 0)), 0);
     const recorded = visible.reduce((sum, s) => sum + (finite(s.stats?.total) ? s.stats.total : (s.stats?.count ?? s.points?.length ?? 0)), 0);
-    chart.note.textContent = `${points.length.toLocaleString()} displayed points · ${recorded.toLocaleString()} observations · ${total.toLocaleString()} numerically eligible. Picks query full intervals. Gaps use invalid runs and source boundaries; untested device gaps are not inferred. Fails marks retained samples; reduced trends may omit other failures.`;
-    chart.note.title = `Dashed overlays: ${[config.showLimits && 'test limits', config.showSpecs && 'specifications (amber)', config.showMean && 'mean (series color)', config.showMedian && 'median (green)', config.showSigma && '±3 sigma shaded band'].filter(Boolean).join(', ') || 'none'}. Missing or changing specifications are not drawn.`;
+    chart.note.textContent = `${points.length.toLocaleString()} displayed points · ${recorded.toLocaleString()} observations · ${total.toLocaleString()} numerically eligible.${total > points.length ? ' Reduced trend: failure markers cover retained samples only; other failures may be omitted.' : ''}`;
+    chart.help.textContent = `Picks query full intervals. Gaps use invalid runs and source boundaries; untested device gaps are not inferred. Dashed overlays: ${[config.showLimits && 'test limits', config.showSpecs && 'specifications (amber)', config.showMean && 'mean (series color)', config.showMedian && 'median (green)', config.showSigma && '±3 sigma shaded band'].filter(Boolean).join(', ') || 'none'}. Missing or changing specifications are not drawn.`;
     return true;
   };
   chart.redraw(); chart.keyboardReset(); return chart;
@@ -389,7 +394,8 @@ export function renderHistogram(container, { series = [], settings = {}, onPick,
         }
       }
     });
-    chart.note.textContent = `Equal-width intervals supplied by the query; the final interval includes its upper endpoint. Inspect drag selects whole intervals.${config.showGaussian ? " Gaussian overlays are scaled to each series' peak count." : ""}${config.showMedian ? ' Median: green.' : ''}${config.showSpecs ? ' Constant specification limits: amber; absent/changing specs are not drawn.' : ''}`;
+    chart.note.textContent = '';
+    chart.help.textContent = `Equal-width intervals supplied by the query; the final interval includes its upper endpoint. Inspect drag selects whole intervals.${config.showGaussian ? " Gaussian overlays are scaled to each series' peak count." : ""}${config.showMedian ? ' Median: green.' : ''}${config.showSpecs ? ' Constant specification limits: amber; absent/changing specs are not drawn.' : ''}`;
     return true;
   };
   chart.redraw(); chart.keyboardReset(); return chart;
@@ -433,7 +439,8 @@ export function renderBins(container, { series = [], settings = {}, onPick, titl
           payload: { type: "bin", number: b.number, seriesKeys: [s.key] } });
       }
     });
-    chart.note.textContent = `Bins are ordered by number. Click a bar or use the bin selector to inspect its devices. Counts use the population shown by the workspace.${Object.keys(chart.settings.binColors ?? {}).length ? ' Custom bin colors override series colors where assigned.' : ''}`;
+    chart.note.textContent = Object.keys(chart.settings.binColors ?? {}).length ? 'Custom bin colors override series colors where assigned.' : '';
+    chart.help.textContent = 'Bins are ordered by number. Click a bar or use the bin selector to inspect its devices. Counts use the population shown by the workspace.';
     return true;
   };
   chart.redraw(); return chart;
@@ -472,7 +479,8 @@ export function renderWafer(container, { dies = [], orientation = {}, settings =
       chart.items.push({ x, y, width, height, tip: `STDF XY: (${d.x}, ${d.y})\n${stacked ? `Failed count: ${d.count ?? "Unknown"}` : `Soft bin: ${d.bin ?? "Not recorded"}`}\n${d.failed === undefined ? "" : `Failed: ${d.failed}`}`,
         payload: { type: "wafer", x: d.x, y: d.y } });
     }
-    chart.note.textContent = `${visible.length.toLocaleString()} mapped coordinates. Positive X: ${orientation.posX === "L" ? "left" : orientation.posX === "R" ? "right" : "right (default)"}; positive Y: ${orientation.posY === "D" ? "down" : orientation.posY === "U" ? "up" : "up (default)"}. Flat: ${orientation.flat || "not recorded"}. Die aspect: ${format(aspect, 3)}${orientation.dieAspectRatio ? "" : " (default)"}. Select a die to inspect its devices.`;
+    chart.note.textContent = `${visible.length.toLocaleString()} mapped coordinates. Positive X: ${orientation.posX === "L" ? "left" : orientation.posX === "R" ? "right" : "right (default)"}; positive Y: ${orientation.posY === "D" ? "down" : orientation.posY === "U" ? "up" : "up (default)"}. Flat: ${orientation.flat || "not recorded"}. Die aspect: ${format(aspect, 3)}${orientation.dieAspectRatio ? "" : " (default)"}.`;
+    chart.help.textContent = 'Select a die or use its original STDF coordinates to inspect its devices.';
     return true;
   };
   chart.redraw(); chart.keyboardReset(); return chart;
