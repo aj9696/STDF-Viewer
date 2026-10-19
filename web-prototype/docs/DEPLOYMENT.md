@@ -174,3 +174,37 @@ synthetic data in disposable profiles; they do not establish new large-file
 performance or inspect an engineer's private library. Existing local libraries
 remain tied to their original origin/profile. Documentation commits after
 `69d4e51` record this release and do not imply another asset deployment.
+
+## Taste visual release — 2026-10-18
+
+Cloudflare production deployment `765efdcb-224c-4f57-8bb4-fb512de7ef97` published
+the visual update to [SemiData](https://semidata.pages.dev/). The stable origin
+was verified at 20:59 America/Chicago, serving source revision
+[`7fecc60`](https://github.com/aj9696/STDF-Viewer/commit/7fecc60bdf1db2fca29c109cbb397373be574d49)
+with `sourceDirty: false`.
+
+The prepared directory contains 113 files and 4,089,973 bytes. After running
+`package:pages`, `Compress-Archive` rebuilt `dist/semidata-pages.zip`; its 113
+entries were compared byte-for-byte with `dist/pages` before upload. ZIP size:
+1,515,365 bytes. SHA-256:
+`c593f358cd26e250d6bcdf387ae39c3389625e7b877056b5d10f4d303eb87e3f`.
+The dashboard confirmed 113/113 files uploaded and deployment success.
+
+Separate Chrome and Edge checks against the public origin verified all 111 public
+manifest assets by hash/size and `release.json` separately. `_headers` is consumed
+as deployment configuration. WOFF2, SVG and WASM MIME types, cache/no-sniff headers
+and missing-route 404 behavior pass. All five bundled IBM Plex faces load from
+this origin; computed Library and Viewer typography uses the intended families.
+No application request goes to a third-party font service.
+
+Both browsers passed the 48-device import, 96-device site comparison, all 15 tool
+entries, workspace download, full browser restart, fresh-profile restoration and
+reload persistence. Original source hashes match. No JavaScript errors or failed
+application requests were recorded. Desktop/mobile screenshots were inspected.
+
+Evidence: `results/release-smoke-chrome-1792375150298/` and
+`results/release-smoke-msedge-1792375150299/`. Cloudflare confirmation is saved in
+`results/taste-deployment-success.jpg`. These use synthetic data in disposable
+profiles. Existing user font preferences are retained; the release does not
+migrate or upload an engineer's local library. Documentation-only commits after
+`7fecc60` record this deployment without changing its asset revision.

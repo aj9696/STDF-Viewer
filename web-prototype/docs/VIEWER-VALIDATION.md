@@ -416,3 +416,8 @@ The example screenshot helper now waits two animation frames after viewport
 changes, allowing responsive catalog collapse and canvas resize to settle. This
 corrects an Edge full-page capture artifact; the settled page did not have a scroll
 gap. The final Edge example run above passed after this harness correction.
+
+The published `7fecc60` release also passed independent Chrome/Edge checks against
+the stable public origin, including exact asset hashes, all five local font faces,
+MIME headers, source-preserving example import and fresh-profile workspace restore.
+See the deployment record for the immutable revision and final screenshot paths.

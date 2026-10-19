@@ -325,3 +325,8 @@ production E2E workflows, plus Taste inspection of real synthetic STDF compariso
 The release is packaged only after independent review. Public verification is
 recorded separately after publication; actual browser-zoom qualification remains
 the previously documented limitation.
+
+Published as clean asset revision `7fecc60` on 2026-10-18. Independent Chrome/Edge
+public checks confirmed exact asset hashes, local font loading, import/comparison
+and workspace persistence/restoration. The source and deployment records are
+pushed to the user's GitHub fork. The visual implementation is complete.
