@@ -1,8 +1,19 @@
 # Engineering tools
 
-Open a saved file in the browser viewer, then choose a tool from **Tools** above
+Open a saved file in the browser viewer, then choose a tool from **Tools** beside
 the chart tabs. Processing and generated files remain in this browser profile.
 Use the app through its local HTTP address, not `file://`.
+
+The native Tools selector groups the existing tools without changing their saved
+IDs. Use the arrow keys while the selector has focus, or choose with a pointer.
+
+| Group | Tools |
+| --- | --- |
+| Compare | Dashboard; Compare files / lots; Compare distributions; Scatter 2D / 3D |
+| Screening | PAT; PAT by lot; What-If limits; GDBN / cluster detection; Combined screening |
+| Wafer | Wafer values / 3D; Wafer gallery |
+| Studies | PVT corners; Gauge R&R |
+| Utilities | Edit / convert; Reports |
 
 ## Investigate
 
@@ -59,6 +70,25 @@ median/scaled MAD, or enter explicit limits. A per-test failure bin can override
 the default: the first violated recipe with an explicit bin wins. Blank overrides
 do not take precedence over later explicit overrides.
 
+In **PAT**, the checked **Reference population** groups supply the fitted limits;
+all groups in the current head/site/attempt scope remain candidates for screening.
+The default checks every group. Choose non-overlapping reference groups when the
+same source appears in more than one comparison group. The preview lists each
+test's reference count, limits, eligibility, exclusions and fit status.
+
+**Limit and bin overrides** holds optional per-test settings. Leave both limits
+blank for a fitted interval. Entering either limit selects a manual interval;
+the other blank side is unbounded. Endpoints are inclusive. The minimum reference
+count applies to fitted intervals, not explicit manual limits.
+
+The primary result counts distinguish devices with at least one eligible selected
+test from those with none. Per-test exclusions also account for unavailable fits,
+missing/invalid results and nonpassing/unknown outcomes. **Outcome counts** retains
+the full selected and projected breakdown. **Save result & recipe** downloads JSON;
+**Export screened copy** opens a separate derived-STDF workflow. Changing PAT or
+Gauge R&R inputs removes the previous result's actions until the study is rerun.
+Changing the viewer scope also clears the displayed study.
+
 **PAT by lot** assigns files explicitly to recipe lots, with separate limits and
 bins for each test. Save/load recipes checks source hashes and the complete
 selection. The default fits each comparison group independently. Unassigned
@@ -89,6 +119,47 @@ attempt identities from the selected population. Fill `part`, `operator`, and
 `trial`, retain the identity columns, then choose the CSV and a numeric test.
 `recordedPartId` is a reference label only. A tester site is not automatically an
 operator. Tolerance, when supplied, is the complete USL−LSL width.
+
+The form groups the template and CSV input under **Study mapping**. Optional
+tolerance is separate and names the selected test's unit. Validation appears at
+the relevant input and focuses that input after a failed submission; an invalid
+field inside a closed disclosure is revealed. The worker remains authoritative
+for the complete crossed design, independent trial identities, and measurement
+eligibility. Unbalanced, duplicate, missing, invalid or out-of-scope observations
+reject the study rather than silently dropping rows. CSV files are limited to
+4 MiB and studies to 8–20,000 measurements.
+
+The result names the retained-interaction ANOVA method and reports the complete
+design, variance components and warnings. Missing tolerance appears as an
+unavailable percentage, not zero. **Save result & recipe** includes the explicit
+CSV mapping, selected test, tolerance, scope and source provenance, as well as
+the calculation; **ANOVA** and **Method & provenance** keep supporting detail
+available without expanding the initial form.
+
+### Small reproducible studies
+
+From the repository root, generate the same independent fixtures used by the
+numerical and browser checks:
+
+```powershell
+.\.venv\Scripts\python.exe web-prototype/scripts/make-study-fixtures.py web-prototype/results/study-demo
+```
+
+- Import `study-pat.stdf`, select test **101 · MAIN**, and run PAT with the default
+  mean/sample-sigma fit and multiplier 3. Expect 36 devices, 31 eligible, 5 excluded
+  and 1 flagged (`PAT-30`). Median/scaled MAD also flags that device. Manual limits
+  −1 and 1 retain endpoint values and flag the value 20.
+- Import `study-gauge.stdf`, select **101 · MAIN**, and download its mapping
+  template. This fixture deliberately encodes 3 parts × 2 operators × 3 trials.
+  For each `recordedPartId` of `GRR-p-o-t`, fill `part=p`, `operator=o`, `trial=t`;
+  for example `GRR-0-1-2` maps to `0,1,2`. Preserve the downloaded dataset and
+  device identity columns. This interpretation is specific to this generated
+  exercise; do not infer a real study from arbitrary STDF part IDs.
+- Run Gauge R&R with tolerance width 30. Expect repeatability variance 1,
+  reproducibility 2, combined gauge variance 3 and total variance 103. The
+  negative interaction estimate is clamped to zero with a visible warning.
+  Remove one mapped row to exercise the unbalanced-design error, then restore
+  it and rerun. The generated `expected.json` records the independent oracle.
 
 ## Edit and export
 

@@ -3,6 +3,20 @@
 let locale = 'en';
 const rows = `
 Tools|도구|工具
+Screening|스크리닝|筛选
+Wafer|웨이퍼|晶圆
+Studies|분석 연구|研究
+Utilities|유틸리티|实用工具
+Screening preview|스크리닝 미리보기|筛选预览
+Manual limits|수동 한계값|手动限值
+Fitted|추정값|拟合值
+PAT limits and eligibility|PAT 한계값 및 적격성|PAT 限值与适用性
+Outcome counts|판정별 개수|结果计数
+Limit and bin overrides|한계값 및 빈 재정의|限值与分档覆盖
+Gauge R&R result|게이지 R&R 결과|量具 R&R 结果
+Gauge variance components|게이지 분산 성분|量具方差分量
+Study mapping|연구 매핑|研究映射
+Tolerance (optional)|공차 (선택 사항)|公差（可选）
 Choose a tool…|도구 선택…|选择工具…
 Overview|개요|概览
 Files / lots|파일 / 로트|文件 / 批次
@@ -394,6 +408,12 @@ Study variation|연구 변동|研究变差
 Percent contribution|기여율|贡献率
 Percent study variation|연구 변동 비율|研究变差百分比
 Percent tolerance|공차 비율|公差百分比
+Inputs changed. Run the study again to update the result.|입력이 변경되었습니다. 결과를 업데이트하려면 분석을 다시 실행하세요.|输入已更改。请重新运行分析以更新结果。
+Choose at least one reference group.|참조 그룹을 하나 이상 선택하세요.|请至少选择一个参考组。
+The lower limit must not exceed the upper limit.|하한은 상한보다 클 수 없습니다.|下限不能大于上限。
+Reference groups contain the same source more than once. Choose non-overlapping groups.|참조 그룹에 동일한 소스가 중복됩니다. 겹치지 않는 그룹을 선택하세요.|参考组包含重复源文件。请选择互不重叠的组。
+Choose a mapping CSV up to 4 MiB.|4 MiB 이하의 매핑 CSV를 선택하세요.|请选择不超过 4 MiB 的映射 CSV 文件。
+Enter a positive full specification width, or leave it blank.|전체 규격 폭을 양수로 입력하거나 비워 두세요.|请输入正的完整规格宽度，或留空。
 `;
 export const UI_MESSAGES = Object.freeze(Object.fromEntries(rows.trim().split('\n').map(row => {
   const [key, ko, zh] = row.split('|'); return [key, Object.freeze({ ko, zh })];

@@ -13,6 +13,13 @@ export const STUDY_TOOLS = [
   ['pat', 'PAT'], ['patLots', 'PAT by lot'], ['spatial', 'GDBN / cluster detection'], ['reclassify', 'Combined screening'], ['whatif', 'What-If limits'],
   ['pvt', 'PVT corners'], ['grr', 'Gauge R&R'], ['authoring', 'Edit / convert'], ['documents', 'Reports'],
 ];
+export const STUDY_TOOL_GROUPS = [
+  { label: 'Compare', ids: ['dashboard', 'compare', 'distributions', 'scatter'] },
+  { label: 'Screening', ids: ['pat', 'patLots', 'whatif', 'spatial', 'reclassify'] },
+  { label: 'Wafer', ids: ['values', 'gallery'] },
+  { label: 'Studies', ids: ['pvt', 'grr'] },
+  { label: 'Utilities', ids: ['authoring', 'documents'] },
+].map(({ label, ids }) => ({ label, tools: ids.map(id => STUDY_TOOLS.find(([key]) => key === id)) }));
 const number = v => Number.isFinite(v) ? fmt(v, 4) : '—';
 const percent = v => v == null ? '—' : `${(v * 100).toFixed(2)}%`;
 const labels={count:'N',mean:'Mean',stdev:'Sigma',cp:'Cp',cpk:'Cpk',testYield:'Test yield',q1:'Q1',median:'Median',q3:'Q3',whiskerLow:'Lower whisker',whiskerHigh:'Upper whisker',outlierCount:'Outliers',referenceCount:'Reference N',low:'Lower limit',high:'Upper limit',r2:'r²',r:'r',ss:'SS',df:'df',ms:'MS'};
@@ -27,11 +34,52 @@ export function inputField(container, label, value = '', type = 'text', options 
   for (const [key, setting] of Object.entries(options)) input[key] = setting;
   wrapper.append(input); container.append(wrapper); return input;
 }
-export function submitForm(container, title, api, work) {
+export function submitForm(container, title, api, work, validation = {}) {
   const form = element('form', undefined, 'study-form'), fields = element('div', undefined, 'viewer-toolbar'), submit = element('button', title, 'button primary'), output = element('div', undefined, 'study-result');
   submit.type = 'submit'; form.append(fields, submit); container.append(form, output);
-  form.addEventListener('submit', event => { event.preventDefault(); api.run(async () => { api.clearCharts?.(); output.replaceChildren(); await work(output); }); });
+  let invalidated = false;
+  const invalidate = () => {
+    if (!validation.check || invalidated || !output.childElementCount) return;
+    invalidated = true;
+    api.clearCharts?.();
+    const notice = element('p', tr('Inputs changed. Run the study again to update the result.'), 'viewer-help'); notice.setAttribute('role', 'status'); output.replaceChildren(notice);
+  };
+  form.addEventListener('input', invalidate); form.addEventListener('change', invalidate);
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (validation.check && !validation.check()) return;
+    let errorField;
+    Promise.resolve(api.run(async () => {
+      invalidated = false;
+      api.clearCharts?.(); output.replaceChildren();
+      try { await work(output); }
+      catch (error) { errorField = validation.onError?.(error); if (!errorField) throw error; }
+    })).then(() => errorField?.focus());
+  });
   return { fields, output, form };
+}
+function fieldset(container, title) {
+  const group = element('fieldset', undefined, 'study-fieldset'); group.append(element('legend', title)); container.append(group); return group;
+}
+function formErrors(form) {
+  form.noValidate = true;
+  const errors = new Map();
+  const clear = input => { const message = errors.get(input); if (!message) return; input.removeAttribute('aria-invalid'); input.removeAttribute('aria-errormessage'); message.remove(); errors.delete(input); };
+  const set = (input, text) => {
+    clear(input); const message = element('span', text, 'study-field-error'); message.id = `study-error-${crypto.randomUUID()}`;
+    message.setAttribute('role', 'alert'); input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-errormessage', message.id);
+    input.closest('label').append(message); errors.set(input, message); return input;
+  };
+  const focus = input => { for (let box = input.closest('details'); box; box = box.parentElement.closest('details')) box.open = true; input.focus(); };
+  form.addEventListener('input', event => clear(event.target));
+  form.addEventListener('change', event => clear(event.target));
+  return { set, focus, check() {
+    for (const input of [...errors.keys()]) clear(input);
+    const inputs = [...form.querySelectorAll('input, select')].filter(input => !input.disabled && !input.checkValidity());
+    for (const input of inputs) set(input, input.validationMessage);
+    if (inputs.length) focus(inputs[0]);
+    return !inputs.length;
+  } };
 }
 function jsonDownload(value, filename) { showDownload(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }), filename); }
 function resultActions(container, result, filename, api, { screening = false } = {}) {
@@ -74,6 +122,62 @@ function stackedFailureBars(container,items,settings){
     for(const bin of (item.softBins??[]).filter(b=>b.failed)){const segment=element('span');segment.style.width=`${bin.failed/max*100}%`;segment.style.background=settings.binColors[bin.number]??`hsl(${(bin.number*67)%360} 55% 43%)`;segment.title=`Bin ${bin.number}: ${bin.failed} failed attempts`;segment.setAttribute('role','img');segment.setAttribute('aria-label',segment.title);bar.append(segment);}box.append(row);}
 }
 
+function renderPat(container, api, tests) {
+  const references = [], recipes = [], validation = {};
+  const form = submitForm(container, tr('Preview screening'), api, async output => {
+    const result = await api.query('advanced', { kind: 'screening', method: 'pat', fit: fit.value, k: k.valueAsNumber,
+      referenceGroups: references.filter(row => row.input.checked).map(row => row.index),
+      recipes: recipes.map(row => ({ testKey: row.key, ...(row.low.value !== '' ? { low: row.low.valueAsNumber } : {}),
+        ...(row.high.value !== '' ? { high: row.high.valueAsNumber } : {}), ...(row.bin.value !== '' ? { failBin: row.bin.valueAsNumber } : {}) })) });
+    result.exportFailBin = bin.valueAsNumber;
+    output.append(element('h3', tr('Screening preview')));
+    metrics(output, ['devices', 'eligible', 'excluded', 'flagged'].map(key => [key, result.summary[key]]));
+    output.append(element('p', 'Excluded devices have no eligible selected test. Per-test exclusions include missing or invalid results, unknown/failing outcomes, and unavailable reference fits.', 'viewer-help'));
+    warnings(output, result.warnings);
+    table(output, [{ label: tr('Test'), value: row => tests.find(test => test.key === row.testKey)?.name ?? row.testKey, wrap: true },
+      ...['referenceCount','center','spread','low','high','eligible','excluded','flagged'].map(key => ({ label: labelFor(key), numeric: true, value: row => number(row[key]) })),
+      { label: tr('Status'), value: row => row.reason ?? (row.manual ? tr('Manual limits') : tr('Fitted')), wrap: true }], result.tests, { label: tr('PAT limits and eligibility') });
+    drawDecisionTable(output, result, api);
+    detail(output, tr('Outcome counts'), result.summary);
+    resultActions(output, result, 'pat-preview.json', api, { screening: true });
+    output.append(element('p', 'Save result & recipe downloads the calculation and its provenance. Export screened copy creates a separate STDF; the saved source stays unchanged.', 'viewer-help'));
+  }, validation);
+  const errors = formErrors(form.form);
+  form.fields.classList.add('study-method-fields');
+  const fit = selectField(form.fields, tr('Fit'), [['sigma', tr('Mean / sample sigma')], ['mad', tr('Median / 1.4826 MAD')]], 'sigma', () => {});
+  const k = inputField(form.fields, tr('Multiplier'), 3, 'number', { min: .5, max: 10, step: .1, required: true });
+  const bin = inputField(form.fields, tr('Failure bin'), 8, 'number', { min: 0, max: 65534, step: 1, required: true });
+  const populations = fieldset(form.form, tr('Reference population'));
+  const checks = element('div', undefined, 'study-checks'); populations.append(checks);
+  for (const [index, group] of api.state.selection.groups.entries()) {
+    const label = element('label'), input = element('input'); input.type = 'checkbox'; input.checked = true; input.setAttribute('aria-label', group.name);
+    label.append(input, document.createTextNode(group.name)); checks.append(label); references.push({ index, input });
+  }
+  populations.append(element('p', 'Fit from the checked groups; screen all groups in the current scope. Each fitted test needs at least 30 known-passing devices with a valid, known-passing final result.', 'viewer-help'));
+  const selected = element('p', undefined, 'study-selected-tests'); selected.append(element('strong', `${tr('Tests')}: `), document.createTextNode(tests.map(testTitle).join(' · '))); form.form.append(selected);
+  const overrides = disclosure(form.form, tr('Limit and bin overrides'));
+  overrides.append(element('p', 'Leave both limits blank to fit. Entering either limit uses manual limits; the other blank side is unbounded. Limits include their endpoints.', 'viewer-help'));
+  const limits = element('div', undefined, 'study-limit-grid'); overrides.append(limits);
+  for (const test of tests) {
+    const row = fieldset(limits, `${testTitle(test)}${test.unit ? ` (${test.unit})` : ''}`), fields = element('div', undefined, 'viewer-toolbar'); row.append(fields);
+    recipes.push({ key: test.key, low: inputField(fields, tr('Low limit'), '', 'number', { step: 'any' }),
+      high: inputField(fields, tr('High limit'), '', 'number', { step: 'any' }), bin: inputField(fields, tr('Test fail bin (optional)'), '', 'number', { min: 0, max: 65534, step: 1 }) });
+  }
+  const submit = form.form.querySelector('button[type="submit"]'); form.form.append(submit);
+  validation.check = () => {
+    if (!errors.check()) return false;
+    const fail = (input, text) => { errors.set(input, tr(text)); errors.focus(input); return false; };
+    if (!references.some(row => row.input.checked)) return fail(references[0].input, 'Choose at least one reference group.');
+    for (const row of recipes) if (row.low.value !== '' && row.high.value !== '' && row.low.valueAsNumber > row.high.valueAsNumber) return fail(row.low, 'The lower limit must not exceed the upper limit.');
+    if (recipes.some(row => row.low.value === '' && row.high.value === '')) {
+      const sources = references.filter(row => row.input.checked).flatMap(row => api.state.selection.groups[row.index].datasetIds);
+      if (new Set(sources).size !== sources.length) return fail(references.find(row => row.input.checked).input, 'Reference groups contain the same source more than once. Choose non-overlapping groups.');
+    }
+    return true;
+  };
+  detail(container, tr('Screening method'), { reference: 'Known-passing devices and valid known-passing final test results.', fit: 'Mean ± k × sample sigma, or median ± k × 1.4826 MAD.', limits: 'Inclusive; invalid or missing values are excluded. Preview does not change the library.' });
+}
+
 export async function renderStudy(container, tool, api) {
   const state = api.state, tests = pickedTests(state), query = options => api.query('advanced', options);
   container.append(element('h2', tr(STUDY_TOOLS.find(([key]) => key === tool)?.[1] ?? 'Study')));
@@ -87,12 +191,12 @@ export async function renderStudy(container, tool, api) {
     const draw = kind => {
       grid.replaceChildren(); chart?.destroy(); const items = kind === 'lot' ? data.lots : data.files;
       chart = asChart(api, grid, { title: tr('Yield by population'), axes: [tr('Population rank (lowest yield first)'), tr('Yield (%)')], series: [{ kind: 'bar', label: tr('Yield'), points: items.map((r, i) => ({ x: i + 1, y: r.yield == null ? null : 100 * r.yield, label: r.sourceName ?? r.lotId ?? 'Unspecified lot' })) },{kind:'line',label:tr('Weighted aggregate yield'),points:items.map((r,i)=>({x:i+1,y:data.totals.yield==null?null:data.totals.yield*100}))}] });
-      table(grid, [{ label: tr(kind === 'lot' ? 'Lot' : 'File'), value: r => r.sourceName ?? r.lotId ?? 'Unspecified', wrap: true }, ...[['total','Devices'],['passed','Pass'],['failed','Fail'],['unknown','Unknown']].map(([key,label]) => ({label:tr(label),value:r=>r[key]})), {label:tr('Yield'),value:r=>percent(r.yield)}, {label:tr('Mean time (ms)'),value:r=>number(r.timeMeanMs)}, {label:tr('Fail bins'),value:r=>(r.softBins??[]).filter(b=>b.failed).map(b=>`${b.number}: ${b.failed}`).join(' · '),wrap:true}], items, {label:tr('File and lot comparison')});
+      table(grid, [{ label: tr(kind === 'lot' ? 'Lot' : 'File'), value: r => r.sourceName ?? r.lotId ?? 'Unspecified', wrap: true }, ...[['total','Devices'],['passed','Pass'],['failed','Fail'],['unknown','Unknown']].map(([key,label]) => ({label:tr(label),numeric:true,value:r=>r[key]})), {label:tr('Yield'),numeric:true,value:r=>percent(r.yield)}, {label:tr('Mean time (ms)'),numeric:true,value:r=>number(r.timeMeanMs)}, {label:tr('Fail bins'),value:r=>(r.softBins??[]).filter(b=>b.failed).map(b=>`${b.number}: ${b.failed}`).join(' · '),wrap:true}], items, {label:tr('File and lot comparison')});
       stackedFailureBars(grid,items,state.settings);
     };
     selectField(switcher, tr('Group by'), [['file',tr('File')],['lot',tr('Lot')]], 'file', draw); draw('file');
-    table(section(container, tr('Sites')), [{label:tr('Group'),value:r=>state.selection.groups[r.group].name},{label:tr('Head / site'),value:r=>`${r.head} / ${r.site}`},{label:tr('Devices'),value:r=>r.total},{label:tr('Pass'),value:r=>r.passed},{label:tr('Fail'),value:r=>r.failed},{label:tr('Yield'),value:r=>percent(r.yield)},{label:tr('Mean time (ms)'),value:r=>number(r.timeMeanMs)}],data.sites);
-    table(section(container, tr('Top failing tests')), [{label:tr('Test'),value:r=>`${r.number} · ${r.name??''}`,wrap:true},{label:tr('Failing devices'),value:r=>r.failureDevices},{label:tr('Failed executions'),value:r=>r.failedExecutions}],data.topFailTests?.items??[]);
+    table(section(container, tr('Sites')), [{label:tr('Group'),value:r=>state.selection.groups[r.group].name},{label:tr('Head / site'),value:r=>`${r.head} / ${r.site}`},{label:tr('Devices'),numeric:true,value:r=>r.total},{label:tr('Pass'),numeric:true,value:r=>r.passed},{label:tr('Fail'),numeric:true,value:r=>r.failed},{label:tr('Yield'),numeric:true,value:r=>percent(r.yield)},{label:tr('Mean time (ms)'),numeric:true,value:r=>number(r.timeMeanMs)}],data.sites);
+    table(section(container, tr('Top failing tests')), [{label:tr('Test'),value:r=>`${r.number} · ${r.name??''}`,wrap:true},{label:tr('Failing devices'),numeric:true,value:r=>r.failureDevices},{label:tr('Failed executions'),numeric:true,value:r=>r.failedExecutions}],data.topFailTests?.items??[]);
     const metadata=disclosure(container,tr('Source details & timing'));
     for(const file of data.files){const box=disclosure(metadata,file.sourceName);table(box,[{label:tr('Field'),value:r=>r[0]},{label:tr('Value'),value:r=>r[1]??'Not recorded',wrap:true}],['lotId','sublotId','device','testProgram','programRevision','tester','operator','dateCode','flow','specName','specVersion','elapsedSeconds','timeMinMs','timeMeanMs','timeMaxMs'].map(key=>[key,file[key]]).concat(['setupTime','startTime','finishTime'].map(key=>[`${key} (UTC)`,file[key]?new Date(file[key]*1000).toISOString():null])));}
     const binBox=section(container,tr('Bins')),binControls=element('div',undefined,'viewer-toolbar'),binCanvas=element('div');binBox.append(binControls,binCanvas);let binChartHandle;
@@ -101,7 +205,8 @@ export async function renderStudy(container, tool, api) {
     resultActions(container,data,'dashboard.json',api); return;
   }
   if(tool==='patLots'||tool==='reclassify'){const methods=await import('./viewer-pat-recipes.js');return methods[tool==='patLots'?'renderPatLotRecipes':'renderCombinedScreening'](container,api,{resultActions,drawDecisionTable,metrics});}
-  if (!tests.length && !['gallery','spatial','grr'].includes(tool)) { container.append(element('p',tr('Select a numeric test from the catalog.'))); return; }
+  if (!tests.length && !['gallery','spatial'].includes(tool)) { container.append(element('p',tr('Select a numeric test from the catalog.'))); return; }
+  if (tool === 'pat') return renderPat(container, api, tests);
   if (tool === 'scatter') {
     const choices = tests.length > 1 ? tests : state.catalog.items.filter(t=>t.family!==20);
     let x,y,z,dimension;
@@ -111,7 +216,7 @@ export async function renderStudy(container, tool, api) {
       const specLimits=result.tests.map((_,i)=>{const limits=result.series.map(s=>s.limits[i]);return limits.length&&limits.every(v=>!v.varying&&v.low===limits[0].low&&v.high===limits[0].high)?{low:limits[0].low,high:limits[0].high}:{};});
       const plotSeries=result.tests.length===3?['pass','fail','unknown'].map(outcome=>({label:outcome,color:outcome==='pass'?state.settings.passColor:outcome==='fail'?state.settings.failColor:'#949ca6',points:result.series.flatMap(s=>s.points.filter(p=>p.outcome===outcome).map(p=>({...p,label:s.label})))})):result.series;
       asChart(api,output,{title:tr('Device correlation'),threeD:result.tests.length===3,specLimits,axes:result.tests.map(t=>`${testTitle(t)} (${t.unit||'unitless'})`),series:plotSeries});
-      table(output,[{label:tr('Population'),value:r=>r.label,wrap:true},{label:tr('Paired devices'),value:r=>r.count},...['r','r2','slope','intercept'].map(key=>({label:labelFor(key),value:r=>number(r.regression[key])})),{label:tr('Note'),value:r=>r.regression.reason??'',wrap:true}],result.series);
+      table(output,[{label:tr('Population'),value:r=>r.label,wrap:true},{label:tr('Paired devices'),numeric:true,value:r=>r.count},...['r','r2','slope','intercept'].map(key=>({label:labelFor(key),numeric:true,value:r=>number(r.regression[key])})),{label:tr('Note'),value:r=>r.regression.reason??'',wrap:true}],result.series);
       resultActions(output,result,'correlation.json',api);
     });
     dimension=selectField(form.fields,tr('Dimensions'),[['2',tr('2D')],['3',tr('3D')]],'2',v=>{z.closest('label').hidden=v!=='3';});
@@ -133,7 +238,7 @@ export async function renderStudy(container, tool, api) {
         const rows=result.series.map((s,i)=>({...s,index:i+1}));
         asChart(api,output,{title:tr('Quartiles and Tukey whiskers'),axes:[tr('Population'),tr('Test value')],series:rows.map(s=>({label:s.label,kind:'line',points:[{x:s.index,y:s.distribution.median,box:s.distribution}]}))});
       } else asChart(api,output,{title:mode.selectedOptions[0].textContent,axes:[tr('Population'),tr(mode.value)],series:result.series.map((s,i)=>({label:s.label,kind:'bar',points:[{x:i+1,y:s.stats[mode.value]}]}))});
-      table(output,[{label:tr('Population'),value:r=>r.label,wrap:true},...['count','mean','stdev','cp','cpk','testYield'].map(key=>({label:labelFor(key),value:r=>key==='testYield'?percent(r.stats[key]):number(r.stats[key])})),...['q1','median','q3','whiskerLow','whiskerHigh','outlierCount'].map(key=>({label:labelFor(key),value:r=>number(r.distribution[key])}))],result.series);
+      table(output,[{label:tr('Population'),value:r=>r.label,wrap:true},...['count','mean','stdev','cp','cpk','testYield'].map(key=>({label:labelFor(key),numeric:true,value:r=>key==='testYield'?percent(r.stats[key]):number(r.stats[key])})),...['q1','median','q3','whiskerLow','whiskerHigh','outlierCount'].map(key=>({label:labelFor(key),numeric:true,value:r=>number(r.distribution[key])}))],result.series);
       resultActions(output,result,'distributions.json',api);
     });
     selected=testSelector(form.fields,tr('Test'),tests); mode=selectField(form.fields,tr('Plot'),[['histogram',tr('Histogram')],['cdf',tr('CDF')],['box',tr('Box / whiskers')],['mean',tr('Mean')],['stdev',tr('Sigma')],['cpk',tr('Cpk')],['cp',tr('Cp')],['testYield',tr('Test yield')]],'cdf',()=>{});
@@ -164,7 +269,7 @@ export async function renderStudy(container, tool, api) {
         drawValueMap(output,result,{low:result.summary.min,high:result.summary.max},mode.value,api);
         const histogram=disclosure(output,tr('Value distribution')),chart=element('div');histogram.append(chart);
         api.addChart(renderHistogram(chart,{title:tr('Latest coordinate values'),series:[{key:'wafer-values',label:result.wafer.name,bins:result.histogram,stats:{count:result.summary.valid,mean:result.summary.mean,median:result.summary.median,stdev:result.summary.stdev,lsl:result.limits?.low,usl:result.limits?.high}}],settings:state.settings,xLabel:result.test.unit||'Value',onPick:()=>{}}));compactChart(chart);
-        table(disclosure(output,tr('Die values')),[{label:tr('Device / contributors'),value:r=>r.members?`${r.count} valid / ${r.members.length}`:button(r.partId||`Attempt ${r.deviceId}`,()=>api.openPoint(r),'')},{label:tr('X'),value:r=>r.x},{label:tr('Y'),value:r=>r.y},{label:tr('Value'),value:r=>number(r.value)},{label:tr('In limits'),value:r=>r.inRange==null?'—':r.inRange?'Yes':'No'},{label:tr('Bin'),value:r=>r.softBin??'—'}],result.cells.slice(0,1000));
+        table(disclosure(output,tr('Die values')),[{label:tr('Device / contributors'),value:r=>r.members?`${r.count} valid / ${r.members.length}`:button(r.partId||`Attempt ${r.deviceId}`,()=>api.openPoint(r),'')},{label:tr('X'),numeric:true,value:r=>r.x},{label:tr('Y'),numeric:true,value:r=>r.y},{label:tr('Value'),numeric:true,value:r=>number(r.value)},{label:tr('In limits'),value:r=>r.inRange==null?'—':r.inRange?'Yes':'No'},{label:tr('Bin'),numeric:true,value:r=>r.softBin??'—'}],result.cells.slice(0,1000));
         if(result.cells.length>1000)warnings(output,[`The die table shows the first 1,000 of ${result.cells.length} coordinates; the map and saved result include all coordinates.`]);
         resultActions(output,result,'wafer-values.json',api);
       }
@@ -176,15 +281,14 @@ export async function renderStudy(container, tool, api) {
     if(tool==='gallery')sort=selectField(form.fields,tr('Sort'),[['file',tr('File')],['yield',tr('Yield')]],'file',()=>{});
     else{low=inputField(form.fields,tr('Lower limit'),'','number',{step:'any'});high=inputField(form.fields,tr('Upper limit'),'','number',{step:'any'});}return;
   }
-  if(['pat','whatif','spatial'].includes(tool)) {
-    let fit,k,radius,neighbors,cluster,fraction,method,connectivity,exempt,bin,calcMode,referenceGroups;
+  if(['whatif','spatial'].includes(tool)) {
+    let radius,neighbors,cluster,fraction,method,connectivity,exempt,bin,calcMode;
     const recipes=[];
     const form=submitForm(container,tr('Preview screening'),api,async output=>{
-      const options=tool==='spatial'?{kind:'spatial',method:method.value,radius:radius.valueAsNumber,minFailNeighbors:neighbors.valueAsNumber,minCluster:cluster.valueAsNumber,failFraction:fraction.valueAsNumber,connectivity:Number(connectivity.value),calcMode:calcMode.value,exemptBins:exempt.value.trim()?exempt.value.split(',').map(v=>Number(v.trim())):[],failBin:bin.valueAsNumber}:{kind:'screening',method:tool,fit:fit?.value,k:k?.valueAsNumber,recipes:recipes.map(r=>({testKey:r.key,...(r.low.value!==''?{low:r.low.valueAsNumber}:{}),...(r.high.value!==''?{high:r.high.valueAsNumber}:{}),...(r.bin.value!==''?{failBin:r.bin.valueAsNumber}:{})}))};
-      if(referenceGroups?.value.trim())options.referenceGroups=referenceGroups.value.split(',').map(value=>Number(value.trim())-1);
+      const options=tool==='spatial'?{kind:'spatial',method:method.value,radius:radius.valueAsNumber,minFailNeighbors:neighbors.valueAsNumber,minCluster:cluster.valueAsNumber,failFraction:fraction.valueAsNumber,connectivity:Number(connectivity.value),calcMode:calcMode.value,exemptBins:exempt.value.trim()?exempt.value.split(',').map(v=>Number(v.trim())):[],failBin:bin.valueAsNumber}:{kind:'screening',method:tool,recipes:recipes.map(r=>({testKey:r.key,...(r.low.value!==''?{low:r.low.valueAsNumber}:{}),...(r.high.value!==''?{high:r.high.valueAsNumber}:{}),...(r.bin.value!==''?{failBin:r.bin.valueAsNumber}:{})}))};
       const result=await query(options);result.exportFailBin=bin.valueAsNumber;
       metrics(output,Object.entries(result.summary??result.counts));warnings(output,result.warnings);
-      if(result.tests)table(output,[{label:tr('Test'),value:r=>tests.find(t=>t.key===r.testKey)?.name??r.testKey,wrap:true},...['referenceCount','center','spread','low','high','eligible','excluded','flagged'].map(key=>({label:labelFor(key),value:r=>number(r[key])})),{label:tr('Status'),value:r=>r.reason??'Ready',wrap:true}],result.tests);
+      if(result.tests)table(output,[{label:tr('Test'),value:r=>tests.find(t=>t.key===r.testKey)?.name??r.testKey,wrap:true},...['referenceCount','center','spread','low','high','eligible','excluded','flagged'].map(key=>({label:labelFor(key),numeric:true,value:r=>number(r[key])})),{label:tr('Status'),value:r=>r.reason??'Ready',wrap:true}],result.tests);
       drawDecisionTable(output,result,api);resultActions(output,result,`${tool}-preview.json`,api,{screening:true});
     });
     bin=inputField(form.fields,tr('Failure bin'),tool==='spatial'?7:8,'number',{min:0,max:65534,step:1,required:true});
@@ -192,10 +296,9 @@ export async function renderStudy(container, tool, api) {
       method=selectField(form.fields,tr('Rule'),[['gdbn',tr('Good die / bad neighborhood')],['cd',tr('Cluster detection')]],'gdbn',()=>{});
       radius=inputField(form.fields,tr('Radius'),1,'number',{min:1,max:10,required:true});neighbors=inputField(form.fields,tr('Failing neighbors'),3,'number',{min:1,max:440,required:true});cluster=inputField(form.fields,tr('Minimum cluster'),3,'number',{min:1,max:50000,required:true});fraction=inputField(form.fields,tr('Fail fraction'),.5,'number',{min:0,max:1,step:.01,required:true});connectivity=selectField(form.fields,tr('Connectivity'),[['4',tr('4 neighbors')],['8',tr('8 neighbors')]],'8',()=>{});calcMode=selectField(form.fields,tr('Density weights'),[['uniform',tr('Uniform')],['weighted',tr('Distance weighted')]],'uniform',()=>{});exempt=inputField(form.fields,tr('Exempt bins (comma separated)'));
     } else {
-      if(tool==='pat'){fit=selectField(form.fields,tr('Fit'),[['sigma',tr('Mean / sample sigma')],['mad',tr('Median / 1.4826 MAD')]],'sigma',()=>{});k=inputField(form.fields,tr('Multiplier'),3,'number',{min:.5,max:10,step:.1,required:true});const references=disclosure(form.form,tr('Reference population'));referenceGroups=inputField(references,tr('Reference groups (comma separated)'));references.append(element('p',state.selection.groups.map((group,index)=>`${index+1}: ${group.name}`).join(' · '),'viewer-help'));}
       const limits=element('div',undefined,'study-limit-grid');form.form.insertBefore(limits,form.form.lastChild);
       for(const test of tests){const row=element('div',undefined,'viewer-toolbar');row.append(element('strong',testTitle(test)));limits.append(row);recipes.push({key:test.key,low:inputField(row,tr('Low limit'),'','number',{step:'any'}),high:inputField(row,tr('High limit'),'','number',{step:'any'}),bin:inputField(row,tr('Test fail bin (optional)'),'','number',{min:0,max:65534,step:1})});}
-      form.form.append(element('p',tool==='pat'?'Blank limits use the fitted reference. At least 30 known-passing devices are required.':'Limits apply to selected tests. Existing device failures are never promoted to passing by this preview.','viewer-help'));
+      form.form.append(element('p','Limits apply to selected tests. Existing device failures are never promoted to passing by this preview.','viewer-help'));
     }
     detail(container,tr('Screening method'),tool==='spatial'?{GDBN:'Count known failing neighbors within the radius.',CD:'Find connected failed components, then screen their observed neighborhood by fail density.',population:'Latest selected PRR per source / wafer / head / XY. Missing, unknown and exempt neighbors are excluded.'}:{reference:'Known-passing devices and valid known-passing final test results.',fit:'Mean ± k × sample sigma, or median ± k × 1.4826 MAD.',limits:'Inclusive; invalid or missing values are excluded. Preview does not change the library.'});return;
   }
@@ -204,23 +307,29 @@ export async function renderStudy(container, tool, api) {
     const form=submitForm(container,tr('Compare corners'),api,async output=>{
       const result=await query({kind:'pvt',testKey:test.value,corners:corners.map(c=>({datasetId:c.id,process:c.process.value,voltage:c.voltage.valueAsNumber,temperature:c.temperature.valueAsNumber}))});warnings(output,result.warnings);
       asChart(api,output,{title:tr('PVT response'),axes:[tr('Voltage (V)'),tr('Temperature (°C)'),tr('Mean test value')],threeD:true,series:result.corners.map(c=>({label:c.process,points:[{x:c.voltage,y:c.temperature,z:c.stats.mean,label:c.process}]}))});
-      table(output,[...['process','voltage','temperature','devices','missing','invalid'].map(key=>({label:labelFor(key),value:r=>r[key]})),...['mean','stdev','min','max','cpk'].map(key=>({label:labelFor(key),value:r=>number(r.stats[key])}))],result.corners);resultActions(output,result,'pvt.json',api);
+      table(output,[...['process','voltage','temperature','devices','missing','invalid'].map(key=>({label:labelFor(key),numeric:key!=='process',value:r=>r[key]})),...['mean','stdev','min','max','cpk'].map(key=>({label:labelFor(key),numeric:true,value:r=>number(r.stats[key])}))],result.corners);resultActions(output,result,'pvt.json',api);
     });test=testSelector(form.fields,tr('Test'),tests);
     for(const source of sourceChoices(state)){const row=element('div',undefined,'viewer-toolbar');row.append(element('strong',source.name));form.form.insertBefore(row,form.form.lastChild);corners.push({id:source.id,process:inputField(row,tr('Process corner'),'','text',{required:true,maxLength:80}),voltage:inputField(row,tr('Voltage (V)'),'','number',{required:true,step:'any'}),temperature:inputField(row,tr('Temperature (°C)'),'','number',{required:true,step:'any'})});}return;
   }
   if(tool==='grr') {
-    let test,file,tolerance;
+    let test,file,tolerance;const validation={};
+    container.append(element('p','Balanced crossed study: at least 2 parts × 2 operators × 2 trials per part/operator pair. Assign each physical part, operator and trial explicitly; a tester site is not an operator.','viewer-help'));
     const form=submitForm(container,tr('Calculate Gauge R&R'),api,async output=>{
-      const selected=file.files[0];if(!selected||selected.size>4*1024*1024)throw new Error('Choose a mapping CSV up to 4 MiB.');
-      const rows=parseMappingCsv(await selected.text());
+      let rows;try{rows=parseMappingCsv(await file.files[0].text());}catch(error){throw Object.assign(error,{studyInput:file});}
       const result=await query({kind:'grr',testKey:test.value,rows,tolerance:tolerance.value===''?null:tolerance.valueAsNumber});
+      result.recipe={kind:'grr',testKey:test.value,rows,tolerance:result.tolerance,selection:structuredClone(state.selection)};
+      output.append(element('h3',tr('Gauge R&R result')));
+      output.append(element('p',`${result.method}. Study variation = 6 × standard deviation.`, 'viewer-help'));
       metrics(output,Object.entries(result.design));warnings(output,result.warnings);
-      table(output,[{label:tr('Component'),value:r=>r.name},...['variance','standardDeviation','studyVariation','percentContribution','percentStudyVariation','percentTolerance'].map(key=>({label:labelFor(key),value:r=>number(r[key])}))],result.components);
-      table(disclosure(output,tr('ANOVA')),['source','ss','df','ms'].map(key=>({label:labelFor(key),value:r=>typeof r[key]==='number'?number(r[key]):r[key]})),result.anova);
+      table(output,[{label:tr('Component'),value:r=>r.name},...['variance','standardDeviation','studyVariation','percentContribution','percentStudyVariation','percentTolerance'].map(key=>({label:labelFor(key),numeric:true,value:r=>number(r[key])}))],result.components,{label:tr('Gauge variance components')});
+      if(result.tolerance===null)output.append(element('p','% tolerance is unavailable because no tolerance width was supplied.','viewer-help'));
+      table(disclosure(output,tr('ANOVA')),['source','ss','df','ms'].map(key=>({label:labelFor(key),numeric:key!=='source',value:r=>typeof r[key]==='number'?number(r[key]):r[key]})),result.anova);
       resultActions(output,result,'gauge-rr.json',api);
-    });test=testSelector(form.fields,tr('Test'),tests);file=inputField(form.fields,tr('Design CSV'),'','file',{accept:'.csv',required:true});tolerance=inputField(form.fields,tr('Tolerance width (optional)'),'','number',{min:0,step:'any'});
-    container.append(element('p',tr('Map each source attempt to a part, operator and trial. Use a balanced crossed design with at least 2 parts × 2 operators × 2 trials.'),'viewer-help'));
-    container.append(button(tr('Download mapping template'),()=>api.run(async()=>{
+    },validation);
+    const errors=formErrors(form.form);
+    test=testSelector(form.fields,tr('Test'),tests);test.required=true;
+    const mapping=fieldset(form.form,tr('Study mapping'));
+    mapping.append(button(tr('Download mapping template'),()=>api.run(async()=>{
       const quote=value=>'"'+String(value??'').replaceAll('"','""')+'"';
       const rows=['datasetId,deviceId,recordedPartId,part,operator,trial'];let offset=0;
       do{const page=await api.query('devices',{offset,limit:200});if(page.total>20000)throw new Error('Narrow the selection to at most 20,000 attempts for a Gauge design.');
@@ -228,13 +337,30 @@ export async function renderStudy(container, tool, api) {
       }while(offset!=null);
       showDownload(new Blob([rows.join('\r\n')+'\r\n'],{type:'text/csv'}),'gauge-design.csv');
     })));
+    mapping.append(element('p','Fill part, operator and trial in the template; keep datasetId and deviceId unchanged. Only mapped attempts are analyzed. Missing, invalid, duplicate or out-of-scope measurements reject the study.','viewer-help'));
+    const mappingFields=element('div',undefined,'viewer-toolbar');mapping.append(mappingFields);
+    file=inputField(mappingFields,tr('Design CSV'),'','file',{accept:'.csv',required:true});
+    const optional=disclosure(form.form,tr('Tolerance (optional)'));
+    const toleranceFields=element('div',undefined,'viewer-toolbar');optional.append(toleranceFields);
+    tolerance=inputField(toleranceFields,tr('Tolerance width (optional)'),'','number',{min:0,step:'any'});
+    const unitNote=element('p',undefined,'viewer-help');optional.append(unitNote);
+    const describeTolerance=()=>{const selected=tests.find(row=>row.key===test.value);unitNote.textContent=`Enter the full USL − LSL width${selected?.unit?` in ${selected.unit}`:''} to calculate % tolerance. Leave blank to omit it.`;};describeTolerance();test.addEventListener('change',describeTolerance);
+    form.form.append(form.form.querySelector('button[type="submit"]'));
+    validation.check=()=>{
+      if(!errors.check())return false;
+      let invalid;
+      if(file.files[0].size>4*1024*1024)invalid=errors.set(file,tr('Choose a mapping CSV up to 4 MiB.'));
+      else if(tolerance.value!==''&&tolerance.valueAsNumber<=0)invalid=errors.set(tolerance,tr('Enter a positive full specification width, or leave it blank.'));
+      if(invalid){errors.focus(invalid);return false;}return true;
+    };
+    validation.onError=error=>(error.studyInput||error.code==='INVALID_REQUEST')?errors.set(file,error.message):null;
     return;
   }
 }
 function drawValueMap(container,result,range,mode,api){
   const lo=range?.low??0,hi=range?.high??1;
   const contributors=element('div');
-  asChart(api,container,{title:`${result.wafer?.sourceName??''} · ${result.wafer?.name??'Wafer'}`,wafer:true,threeD:mode==='3d',orientation:orientationForDisplay(result.orientation,api.state.settings),axes:[tr('Die X'),tr('Die Y'),tr('Test value')],onPick:row=>{if(!row.members){api.openPoint(row);return;}contributors.replaceChildren();table(contributors,[{label:tr('Device'),value:r=>button(r.partId||`Attempt ${r.deviceId}`,()=>api.openPoint(r),'')},{label:tr('Value'),value:r=>number(r.value)},{label:tr('Source'),value:r=>api.state.datasets.find(d=>d.id===r.datasetId)?.name??r.datasetId,wrap:true}],row.members.slice(0,1000));if(row.members.length>1000)warnings(contributors,[`Showing 1,000 of ${row.members.length} contributors.`]);},valueRange:['value','3d'].includes(mode)?[lo,hi]:null,series:[{label:'',points:result.cells.map(c=>({...c,z:c.value,color:c.screened?'#bd701d':mode==='passFail'?(c.outcome==='pass'?api.state.settings.passColor:c.outcome==='fail'?api.state.settings.failColor:'#aeb7c2'):mode==='bin'?api.state.settings.binColors[c.softBin]??`hsl(${(c.softBin*67)%360} 55% 48%)`:heatColor(c.value,lo,hi)}))}]});container.append(contributors);
+  asChart(api,container,{title:`${result.wafer?.sourceName??''} · ${result.wafer?.name??'Wafer'}`,wafer:true,threeD:mode==='3d',orientation:orientationForDisplay(result.orientation,api.state.settings),axes:[tr('Die X'),tr('Die Y'),tr('Test value')],onPick:row=>{if(!row.members){api.openPoint(row);return;}contributors.replaceChildren();table(contributors,[{label:tr('Device'),value:r=>button(r.partId||`Attempt ${r.deviceId}`,()=>api.openPoint(r),'')},{label:tr('Value'),numeric:true,value:r=>number(r.value)},{label:tr('Source'),value:r=>api.state.datasets.find(d=>d.id===r.datasetId)?.name??r.datasetId,wrap:true}],row.members.slice(0,1000));if(row.members.length>1000)warnings(contributors,[`Showing 1,000 of ${row.members.length} contributors.`]);},valueRange:['value','3d'].includes(mode)?[lo,hi]:null,series:[{label:'',points:result.cells.map(c=>({...c,z:c.value,color:c.screened?'#bd701d':mode==='passFail'?(c.outcome==='pass'?api.state.settings.passColor:c.outcome==='fail'?api.state.settings.failColor:'#aeb7c2'):mode==='bin'?api.state.settings.binColors[c.softBin]??`hsl(${(c.softBin*67)%360} 55% 48%)`:heatColor(c.value,lo,hi)}))}]});container.append(contributors);
 }
 /** RFC4180 subset with strict headers; no expression evaluation or type inference. */
 export function parseMappingCsv(text){
