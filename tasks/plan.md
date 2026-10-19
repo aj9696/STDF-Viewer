@@ -305,6 +305,8 @@ clipping and repeated stale-result announcements. See the dated evidence in
 
 Local qualification is complete with the documented zoom limitation: effective
 720×450 reflow was exercised, not actual 200% browser zoom. Engineer feedback is
-still to be collected. The connected Cloudflare browser is signed out, so the
-release package and production publication must be tracked separately; a local
-pass is not evidence that the public site changed.
+still to be collected. Production release `69d4e51` was published to
+`https://semidata.pages.dev/` on 2026-10-18 after the user restored the Cloudflare
+session. Separate Chrome/Edge deployment checks verified asset hashes, example
+imports, persistence and fresh-profile workspace restore. The deployed revision
+and evidence are recorded in `web-prototype/docs/DEPLOYMENT.md`.

@@ -366,3 +366,9 @@ live announcements after study input changes. Final review found no remaining
 high-confidence functional defect. Screenshots and JSON artifacts are local,
 ignored build evidence, not new large-file performance measurements. Packaging
 and public deployment verification are recorded separately in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Production release `69d4e51` was subsequently verified at
+`https://semidata.pages.dev/` in Chrome and Edge. The separate live runs confirm
+packaged asset hashes, example imports, the new controls, full-browser restart
+persistence and fresh-profile workspace restore; they do not broaden the
+numerical or performance qualification above.

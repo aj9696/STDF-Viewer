@@ -221,9 +221,10 @@ engineer feedback; retain the feedback checkpoints for later evaluation.
 Implementation and local qualification completed on 2026-10-18. UX-1 through
 UX-7 are delivered; Chrome/Edge workflow, numerical fixture, export and restore
 evidence is recorded in `web-prototype/docs/VIEWER-VALIDATION.md`. UX-8's local
-review is complete; production publication and actual 200% browser zoom remain
-pending. The connected Cloudflare browser requires sign-in. Narrow/reflow checks
-are passed, but are not recorded as an actual browser zoom test.
+review and production publication are complete. Release `69d4e51` is live at
+`https://semidata.pages.dev/`; separate Chrome/Edge smoke checks passed against
+that origin. Actual 200% browser zoom remains a qualification follow-up.
+Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 
 - [x] **UX-1 — Scan and open files in Library.** Dependencies: none. Scope: medium.
   - Delivered: compact file rows, neutral surfaces, readable filenames and
@@ -327,6 +328,11 @@ are passed, but are not recorded as an actual browser zoom test.
 
 - [ ] **UX-8 — Qualify and hand off the refined UI.** Depends UX-1 through UX-7.
   Scope: small documentation/release slice.
+  - Delivered: guides, independent review, clean package, production deployment
+    and isolated Chrome/Edge live checks. See `docs/DEPLOYMENT.md` under
+    `web-prototype/` for revision, hashes and smoke evidence.
+  - Remaining qualification: actual browser 200% zoom; effective viewport
+    reflow is covered. Engineer feedback checkpoints remain separate.
   - Acceptance: all five example workflows and the two study exercises work on
     desktop Chrome/Edge; screenshots and guides describe the delivered revision;
     production verification is recorded separately from local validation.

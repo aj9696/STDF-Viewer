@@ -134,7 +134,7 @@ same source hashes and device totals. The run observed no JavaScript errors,
 failed requests or off-origin application requests. This is a small-fixture
 deployment check, not a large-file performance qualification.
 
-## UI refinement release prepared — 2026-10-18
+## UI refinement production release — 2026-10-18
 
 The Library/viewer refinement is implemented and locally qualified in Chrome and
 Edge; see the dated [validation record](VIEWER-VALIDATION.md). The static Pages
@@ -143,11 +143,34 @@ packager passes with 104 files and a clean source revision. Its generated
 is `dist/semidata-pages.zip`. Both are ignored build artifacts and contain app
 assets plus the existing synthetic examples, not an engineer's browser library.
 
-Production publication is pending authentication. The connected Cloudflare
-browser redirected the semidata project to Sign in. The public
-`https://semidata.pages.dev/release.json` still reports
-`3f703a9860df76faff5762daf83a6b40949f70fe` with `sourceDirty: false`, verified on
-2026-10-18. No new deployment or production smoke pass is claimed. Once the
-Cloudflare session is restored, upload the prepared package using the Publish
-steps above, then run the separate release verification checks. Existing local
-libraries remain tied to their original origin/profile.
+After the user restored the Cloudflare session, production deployment
+`bda111ab-334d-437e-ba0d-ba62dedc9fd2` succeeded at 20:03 America/Chicago on
+2026-10-18. The stable [public app](https://semidata.pages.dev/) serves revision
+[`69d4e51`](https://github.com/aj9696/STDF-Viewer/commit/69d4e51042a8447f29a9f296381476f2e716f923)
+with `sourceDirty: false`. The uploaded package contains 104 files and
+3,779,080 bytes before ZIP compression. ZIP SHA-256:
+`95df4879927eb0800a917399c163b283dd60b3cfdf432d81f659fc67c3372ed9`.
+
+Independent Chrome and Edge smoke checks passed against the stable public
+origin. All 102 public manifest assets matched their packaged SHA-256 and byte
+length; `release.json` separately matched the prepared manifest. `_headers` is
+deployment configuration, not a public asset. Its `Cache-Control: no-cache` and
+`X-Content-Type-Options: nosniff` effects were verified, along with both WASM MIME
+types and a missing route returning HTTP 404.
+
+Both browser runs imported the 48-device clean example, compared two sources
+with 96 devices, found all 15 tools in five groups, and exercised the new
+Workspace controls and Escape focus restoration. Downloaded workspaces retained
+the exact source hashes and comparison state after a full browser restart,
+restore into a fresh profile through Library, and a subsequent page reload.
+There were no JavaScript errors, failed application requests or off-origin
+application requests during these checks.
+
+Local evidence is in `results/release-smoke-chrome-1792371862187/` and
+`results/release-smoke-msedge-1792371890402/`, each containing `results.json`,
+`comparison.png`, `restored.png` and the test workspace. Cloudflare confirmation
+is saved as `results/ui-refinement-deployment-success.jpg`. These checks use
+synthetic data in disposable profiles; they do not establish new large-file
+performance or inspect an engineer's private library. Existing local libraries
+remain tied to their original origin/profile. Documentation commits after
+`69d4e51` record this release and do not imply another asset deployment.
