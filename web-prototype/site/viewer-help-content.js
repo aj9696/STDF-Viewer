@@ -196,9 +196,9 @@ export const VIEWER_HELP_TOPICS = [
   {
     id: 'documents', group: 'Utilities', title: 'Reports',
     purpose: 'Create a report from the current selection, individual files, or lots.',
-    steps: ['Select the report format and scope.', 'Set Page layout when necessary.', 'Generate the report.', 'Download the report.'],
-    results: ['Reports include the selection and source information.', 'Word text and tables remain editable.', 'Downloads lets you download a generated file again.'],
-    limits: ['PDF pages contain rendered images.', 'A report is a result snapshot. It does not contain a complete restorable workspace.', 'Use Save workspace to keep source data with the viewer state.'],
+    steps: ['Select the report format and scope.', 'Use Report devices to include or exclude device outcomes.', 'Set Page layout when necessary.', 'Generate the report.', 'Download the report.'],
+    results: ['Reports include the selection and source information.', 'Exclude failed devices keeps passing devices and devices with unknown outcomes.', 'Passing devices only removes failed devices and devices with unknown outcomes.', 'Word text and tables remain editable.', 'Downloads lets you download a generated file again.'],
+    limits: ['The report device filter does not change the viewer selection.', 'A passing device can contain a failed test result.', 'Filtered yield does not show yield for the original population.', 'Source counts and notes can describe excluded devices.', 'PDF pages contain rendered images.', 'A report is a result snapshot. It does not contain a complete restorable workspace.', 'Use Save workspace to keep source data with the viewer state.'],
     related: ['workspace', 'scope', 'terms'],
   },
   {

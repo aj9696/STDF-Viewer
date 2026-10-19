@@ -47,6 +47,26 @@ all values are bound SQL parameters. Source strings render as text. A device is
 identified by dataset ID and PIR record sequence; group and source position
 remain part of comparison provenance. Repeated test executions remain separate.
 
+## Report device outcomes
+
+The optional query field `deviceOutcomes` accepts `all` (default), `non-failed`,
+or `pass`. It is supported by overview, tests, devices, analyze, testSummaries,
+bins, wafers, wafer, records, and advanced dashboard/screening queries.
+Other actions reject a non-default value instead of ignoring it. The test
+catalog remains a source inventory; its counts are not filtered analysis counts.
+
+This report-only option is separate from the saved selection. `non-failed`
+removes known failed PRR outcomes and retains unknowns; `pass` also removes
+unknowns. Both apply after current-attempt retirement. Passing devices can
+contain failed test executions. Null/unreliable PRR outcomes remain unknown.
+Original source metadata and unowned datalog context are not recomputed.
+
+`viewerReport(selection,{kind:'report',deviceOutcomes,...})` uses the same
+population. Filtered workbooks always include scope provenance, either in File
+Info or a separate Report scope sheet. The image assembler must pass the same
+option when querying charts. Raw-record and individual-device exports reject
+non-default values. See [report filter specification](LIBRARY-AND-REPORT-FILTERS.md).
+
 ## Analytical response
 
 `analyze` returns `{test, population, series, histogramRange, warnings}`.

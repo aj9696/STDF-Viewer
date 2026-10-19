@@ -360,3 +360,13 @@ Published as clean asset revision `16fee86` on 2026-10-19. Chrome and Edge publi
 checks verified exact asset hashes, lot/time/bin workflows, source-scoped device
 drill-down and portable workspace restoration. Release provenance and test
 evidence are in `web-prototype/docs/DEPLOYMENT.md`.
+
+### Library organization and report filters — 2026-10-19
+
+The user requested failure exclusion in reports and Library organization by test
+date, part number and related metadata, with multiple-file opening. The contract
+is `web-prototype/docs/LIBRARY-AND-REPORT-FILTERS.md`. Implement metadata and
+Library UI in parallel with report population scope, then integrate report
+controls and chart capture. Preserve independent source groups and existing
+replacement rules. Validate generated contents and real browser workflows before
+publishing; existing local data must survive without a schema migration.

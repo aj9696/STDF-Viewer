@@ -1,6 +1,7 @@
 import { iterateReportDevices } from './viewer-tables.js';
 import { parseTestKey, numericEligible, testOutcome, invalid } from './viewer-model.js';
 import { retiredExpression } from './viewer-context.js';
+import { deviceOutcomeWhere } from './viewer-report-scope.js';
 
 export const STUDY_METHOD_VERSION = 'open-studies-v1';
 export const populationPolicy = 'Final recorded execution per test and device attempt; validity assessed after selection; current/all attempts and head/site scope preserved.';
@@ -71,6 +72,7 @@ export async function scanStudyObservations(view, key, callback, { order = 'valu
       if (sourceFilter && !sourceFilter(source)) continue;
       const id = sourceTest(view, source, test); if (!id) continue;
       const where = ['o.test_id=?', 'o.unit=?', 'o.channel=?', 'o.value IS NOT NULL', '(o.test_flags&63)=0', '(o.parm_flags&7)=0'], bind = [id, test.unit, test.channel];
+      if (view.selection.deviceOutcomes) where.push(deviceOutcomeWhere(view.selection.deviceOutcomes));
       if (view.selection.attempts === 'current') where.push(`NOT ${retiredExpression(view, source)}`);
       for (const [key, column] of [['heads', 'head'], ['sites', 'site']]) if (view.selection[key]) {
         where.push(`d.${column} IN(${view.selection[key].map(() => '?').join(',')})`); bind.push(...view.selection[key]);

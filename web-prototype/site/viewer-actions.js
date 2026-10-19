@@ -14,7 +14,7 @@ function reportChoice(state, datasets) {
     const dialog = element('dialog', undefined, 'modal'), title = element('h2', 'Export your data');
     dialog.id = 'viewer-export-dialog'; title.id = 'viewer-export-title'; dialog.setAttribute('aria-labelledby', title.id);
     const form = element('form'), mode = element('select'), label = element('label', 'Export format'); label.append(mode);
-    mode.id = 'viewer-export-mode';
+    mode.id = 'viewer-export-mode'; mode.setAttribute('aria-label', 'Export format');
     for (const [value, text] of [['report', 'Excel investigation report'], ['records', 'Complete STDF record workbook'], ['diagnostics', 'Workspace diagnostic JSON']]) { const option = element('option', text); option.value = value; mode.append(option); }
     const sections = element('fieldset'), legend = element('legend', 'Report sections'); sections.append(legend);
     for (const name of SECTIONS) {
@@ -23,20 +23,28 @@ function reportChoice(state, datasets) {
     }
     const images = element('input'); images.type = 'checkbox'; images.checked = true; images.id = 'viewer-export-images';
     const imageLabel = element('label', undefined, 'export-option'); imageLabel.append(images, document.createTextNode('Include chart images (up to 32 wafer maps)'));
+    const outcomeLabel = element('label', 'Report devices'), outcomes = element('select'); outcomes.id = 'viewer-export-outcomes';
+    outcomes.setAttribute('aria-label', 'Report devices'); outcomes.setAttribute('aria-describedby', 'viewer-export-outcomes-note');
+    for (const [value, text] of [['all', 'All devices'], ['non-failed', 'Exclude failed devices'], ['pass', 'Passing devices only']]) {
+      const option = element('option', text); option.value = value; outcomes.append(option);
+    }
+    outcomeLabel.append(outcomes);
+    const outcomeNote = element('p', 'Exclude failed devices keeps unknown outcomes. Passing devices only excludes unknown outcomes too.', 'muted');
+    outcomeNote.id = 'viewer-export-outcomes-note';
     const source = element('select'); source.id = 'viewer-export-source';
     for (const id of new Set(state.selection.groups.flatMap((g) => g.datasetIds))) { const option = element('option', datasets.find((d) => d.id === id)?.name ?? id); option.value = id; source.append(option); }
     const sourceLabel = element('label', 'Record source'); sourceLabel.append(source); sourceLabel.hidden = true;
     const note = element('p', `${state.tests.length} selected tests. Reports retain the current groups, heads, sites and attempt policy. File information includes source hashes and methods.`, 'muted');
     const actions = element('div', undefined, 'dialog-actions'), cancel = element('button', 'Cancel', 'button secondary'), submit = element('button', 'Generate export', 'button primary');
     cancel.type = 'button'; submit.type = 'submit'; actions.append(cancel, submit);
-    form.append(label, note, sections, imageLabel, sourceLabel, actions); dialog.append(title, form); document.body.append(dialog);
-    mode.addEventListener('change', () => { sections.hidden = imageLabel.hidden = mode.value !== 'report'; sourceLabel.hidden = mode.value !== 'records'; });
+    form.append(label, note, outcomeLabel, outcomeNote, sections, imageLabel, sourceLabel, actions); dialog.append(title, form); document.body.append(dialog);
+    mode.addEventListener('change', () => { sections.hidden = imageLabel.hidden = outcomeLabel.hidden = outcomeNote.hidden = mode.value !== 'report'; sourceLabel.hidden = mode.value !== 'records'; });
     cancel.addEventListener('click', () => dialog.close());
     let result = null;
     form.addEventListener('submit', (event) => {
       event.preventDefault(); const selected = [...sections.querySelectorAll('input:checked')].map((el) => el.value);
       if (mode.value === 'report' && !selected.length) { note.textContent = 'Select at least one report section.'; return; }
-      result = { kind: mode.value, sections: selected, includeImages: images.checked, datasetId: source.value }; dialog.close();
+      result = { kind: mode.value, sections: selected, includeImages: images.checked, datasetId: source.value, deviceOutcomes: mode.value === 'report' ? outcomes.value : 'all' }; dialog.close();
     });
     dialog.addEventListener('close', () => { dialog.remove(); resolve(result); }, { once: true }); dialog.showModal();
   });
@@ -116,6 +124,7 @@ async function manageDownloads(api) {
 
 async function chartImages(api, state, choice) {
   const output = [], offsets = new Map(), host = element('div');
+  const query = (action, options = {}) => api.query(action, { ...options, deviceOutcomes: choice.deviceOutcomes ?? 'all' });
   Object.assign(host.style, { position: 'fixed', left: '-12000px', top: '0', width: '1000px', background: '#fff' }); document.body.append(host);
   const capture = async (sheet, render, data) => {
     api.checkCancelled?.();
@@ -130,23 +139,23 @@ async function chartImages(api, state, choice) {
   try {
     if (choice.sections.some((s) => ['Trend Chart', 'Histogram'].includes(s))) for (const key of state.tests) {
       api.checkCancelled?.();
-      const data = await api.query('analyze', { testKey: key, bins: state.settings.bins, seriesBy: state.seriesBy, includeAggregate: state.includeAggregate });
+      const data = await query('analyze', { testKey: key, bins: state.settings.bins, seriesBy: state.seriesBy, includeAggregate: state.includeAggregate });
       api.checkCancelled?.();
       const title = `${data.test.number}: ${data.test.name} ${data.test.channel}`, label = data.test.family === 20 ? 'Test flag (status byte)' : `Value (${data.test.unit || 'base units'})`;
       if (choice.sections.includes('Trend Chart')) await capture('Trend Chart', renderTrend, { series: data.series, title, yLabel: label });
       if (choice.sections.includes('Histogram')) await capture('Histogram', renderHistogram, { series: data.series, title, xLabel: label });
     }
     if (choice.sections.includes('Bin Chart')) for (const kind of ['hard', 'soft']) {
-      api.checkCancelled?.(); const data = await api.query('bins', { kind, seriesBy: state.seriesBy }); api.checkCancelled?.();
+      api.checkCancelled?.(); const data = await query('bins', { kind, seriesBy: state.seriesBy }); api.checkCancelled?.();
       await capture('Bin Chart', renderBins, { ...data, title: `${kind === 'hard' ? 'Hardware' : 'Software'} bin counts` });
     }
     if (choice.sections.includes('Wafer Map')) {
       api.checkCancelled?.();
-      const maps = await api.query('wafers');
+      const maps = await query('wafers');
       api.checkCancelled?.();
       if (maps.items.length > 32) throw new Error('This report has more than 32 wafer chart images. Disable images to export the complete wafer data, or select fewer sources.');
       for (const wafer of maps.items) {
-        api.checkCancelled?.(); const data = await api.query('wafer', { waferKey: wafer.key }); api.checkCancelled?.();
+        api.checkCancelled?.(); const data = await query('wafer', { waferKey: wafer.key }); api.checkCancelled?.();
         await capture('Wafer Map', renderWafer, { ...data, title: `${wafer.name} · ${wafer.sourceName}` });
       }
     }

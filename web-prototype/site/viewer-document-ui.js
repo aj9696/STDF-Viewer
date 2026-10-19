@@ -4,6 +4,7 @@ import { selectField, testTitle, fmt, table } from './viewer-view.js';
 import { renderTrend, renderHistogram, renderBins, renderWafer } from './viewer-charts.js';
 import { showDownload } from './viewer-actions.js';
 import { createDocumentBatch, normalizeReportLayout } from './viewer-document-formats.js';
+import { reportDeviceOutcomes, reportPopulationText } from './viewer-report-scope.js';
 
 const SECTION_CHOICES = [['summary','Summary and source information'],['statistics','Selected test statistics and Cpk ranking'],['histogram','Histograms'],['trend','Test order trends'],['bins','Hardware and software bins'],['wafer','Wafer maps'],['sites','Site yield and test time'],['deviceTrends','Device yield and test time trends'],['retest','Retest counts'],['pcr','Recorded part count summaries'],['datalog','Datalog notes'],['pat','PAT screening'],['worstCpk','Full catalogue worst Cpk histograms (scan all tests)']];
 const number = value => Number.isFinite(value) ? fmt(value, 5) : 'Unavailable';
@@ -13,10 +14,11 @@ const checkbox = (parent, label, value, checked = false) => { const wrapper = el
 
 export async function collectDocumentReport(api, choice, { checkCancelled = () => {}, onProgress = () => {} } = {}) {
   const state = api.state, selectedTests = [...state.selected.values()], selected = structuredClone(choice.selection), sections = [];
-  const query = async (action, options = {}) => { checkCancelled(); const value = await api.client().viewer(action, selected, options); checkCancelled(); return value; };
+  const deviceOutcomes = reportDeviceOutcomes(choice.deviceOutcomes), populationText = reportPopulationText(deviceOutcomes);
+  const query = async (action, options = {}) => { checkCancelled(); const value = await api.client().viewer(action, selected, { ...options, deviceOutcomes }); checkCancelled(); return value; };
   const overview = await query('overview'), numeric = selectedTests.filter(test => test.family !== 20);
-  const selectedScope = { attempts: selected.attempts ?? 'current', heads: selected.heads ?? 'all', sites: selected.sites ?? 'all', groups: selected.groups };
-  const report = { title: choice.title || 'Semiconductor test data report', createdAt: new Date().toISOString(), scope: choice.scopeLabel, filenameStem: choice.filenameStem,
+  const selectedScope = { attempts: selected.attempts ?? 'current', heads: selected.heads ?? 'all', sites: selected.sites ?? 'all', groups: selected.groups, deviceOutcomes };
+  const report = { title: choice.title || 'Semiconductor test data report', createdAt: new Date().toISOString(), scope: deviceOutcomes === 'all' ? choice.scopeLabel : `${choice.scopeLabel || 'Current selection'} · ${populationText}`, filenameStem: choice.filenameStem,
     layout: normalizeReportLayout(choice.layout),
     provenance: { selection: selectedScope, sources: overview.sources.map(source => ({ datasetId: source.datasetId, name: source.name, sha256: source.sha256 })),
       tests: selectedTests.map(test => ({ key: test.key, name: test.name, number: test.number, unit: test.unit })), methods: 'Base STDF units; exact full-population descriptive statistics; population standard deviation. Trends display bounded extrema; PAT uses final executions and known-passing devices.' }, sections };
@@ -33,7 +35,7 @@ export async function collectDocumentReport(api, choice, { checkCancelled = () =
       for (const source of overview.sources) {
         const mir = source.metadata.find(record => record.type === 1 && record.subtype === 10)?.fields ?? {};
         sections.push({ title: source.name, paragraphs: [`Source ID ${source.datasetId}`, `SHA256 ${source.sha256}`],
-          table: { headers: ['Field','Value'], rows: [['Lot',mir.LOT_ID ?? ''],['Part type',mir.PART_TYP ?? ''],['Test program',mir.JOB_NAM ?? ''],['Tester',mir.NODE_NAM ?? ''],['Source bytes',source.sourceBytes],['Recorded devices',source.counts.devices]] } });
+        table: { headers: ['Field','Value'], rows: [['Lot',mir.LOT_ID ?? ''],['Part type',mir.PART_TYP ?? ''],['Test program',mir.JOB_NAM ?? ''],['Tester',mir.NODE_NAM ?? ''],['Source bytes',source.sourceBytes],['Recorded devices (original source)',source.counts.devices]] } });
       }
     }
     if (choice.sections.some(section => ['statistics','histogram','trend'].includes(section))) {
@@ -100,7 +102,8 @@ export async function collectDocumentReport(api, choice, { checkCancelled = () =
       table: { headers: ['Group','All attempts','Explicitly superseded','Selected policy'], rows: overview.groups.map(group => [group.name,group.total,group.superseded,selectedScope.attempts]) } });
     if (choice.sections.includes('datalog')) {
       const records = await query('records', { family: 'datalog', limit: 100 });
-      sections.push({ title: 'Datalog notes', paragraphs: [`${records.items.length} of ${records.total} records shown. Use the record workbook for complete record data.`],
+      sections.push({ title: 'Datalog notes', paragraphs: [`${records.items.length} of ${records.total} records shown. Use the record workbook for complete record data.`,
+        'Notes without an explicit device link remain source context. They can describe devices excluded from this report.'],
         table: { headers: ['Source','Sequence','Record','Content'], rows: records.items.map(record => [record.sourceName,record.seq,`${record.type}/${record.subtype}`,JSON.stringify(record.fields)]) } });
     }
     if (choice.sections.includes('pcr')) {
@@ -114,7 +117,7 @@ export async function collectDocumentReport(api, choice, { checkCancelled = () =
         if (rows.length > 3000) throw Error('The report contains more than 3,000 PCR records. Select fewer sources.');
         if (records.nextOffset == null) break; offset = records.nextOffset;
       }
-      sections.push({ title: 'Recorded part count summaries', paragraphs: ['PCR values describe original source summaries, independently of current head, site and retest filters. Head/site 255 denotes a summary scope. Missing or sentinel counts remain unknown.'],
+      sections.push({ title: 'Recorded part count summaries', paragraphs: ['PCR values describe original source summaries, independently of current head, site, retest and report device filters. Head/site 255 denotes a summary scope. Missing or sentinel counts remain unknown.'],
         table: { headers: ['Source','Head','Site','Parts','Retests','Aborts','Good','Functional'], rows } });
     }
     if (choice.sections.includes('pat')) {
@@ -126,7 +129,7 @@ export async function collectDocumentReport(api, choice, { checkCancelled = () =
       if (result.decisions.length) sections.push({ title: 'PAT flagged devices', paragraphs: [`Showing ${result.decisions.length} of ${result.summary.flagged} decisions. This report does not change device disposition.`],
         table: { headers: ['Source','Device','Head','Site','Values'], rows: result.decisions.map(decision => [decision.datasetId,decision.partId || decision.deviceId,decision.head,decision.site,decision.reasons.map(reason => number(reason.value)).join('; ')]) } });
     }
-    sections.push({ title: 'Methods and provenance', paragraphs: [report.provenance.methods, `Created ${report.createdAt}. Documents contain selected summary sections and chart images; original STDF remains in the local library.`,
+    sections.push({ title: 'Methods and provenance', paragraphs: [populationText, ...(deviceOutcomes === 'all' ? [] : ['Yield describes this filtered population. It is not the yield of the original production population.', 'Device outcome comes from PRR flags. Retained devices can contain failed test executions.']), report.provenance.methods, `Created ${report.createdAt}. Documents contain selected summary sections and chart images; original STDF remains in the local library.`,
       ...report.provenance.sources.map(source => `${source.name} | ${source.datasetId} | SHA256 ${source.sha256}`)] });
     return report;
   } finally { host.remove(); }
@@ -144,6 +147,8 @@ export async function renderDocumentTools(container, api) {
     if (!lots.has(name)) lots.set(name, []); lots.get(name).push(item.datasetId);
   }
   const lot = selectField(controls,tr('Lot'),[...lots.keys()].map(name => [name,name || 'Unspecified lot']),lots.keys().next().value,()=>{}); lot.closest('label').hidden = true;
+  const outcomes = selectField(controls, tr('Report devices'), [['all', tr('All devices')], ['non-failed', tr('Exclude failed devices')], ['pass', tr('Passing devices only')]], 'all', () => {});
+  const outcomeNote = element('p', 'Exclude failed devices keeps unknown outcomes. Passing devices only excludes unknown outcomes too.', 'muted');
   const formats = element('fieldset'), formatLegend = element('legend',tr('Formats')); formats.append(formatLegend);
   const formatChecks = [['pdf','PDF'],['docx','Word'],['png','PNG pages'],['jpg','JPEG pages'],['xlsx','Excel summary']].map(([value,label]) => checkbox(formats,tr(label),value,value==='pdf'));
   const sections = element('fieldset'); sections.append(element('legend',tr('Sections')));
@@ -157,7 +162,7 @@ export async function renderDocumentTools(container, api) {
   const fit = selectField(patFields,tr('Fit'),[['sigma',tr('Mean / sample SD')],['mad',tr('Median / MAD')]],'mad',()=>{}), kLabel = element('label',tr('Multiplier')), k = element('input'); k.type='number'; k.value='3'; k.min='0.5'; k.max='10'; k.step='0.1'; kLabel.append(k); patFields.append(kLabel);
   const note = element('p',tr('PDF preserves Unicode as page images. Word text and tables remain editable. Multi-page PNG/JPEG exports are ZIP files.'),'muted');
   const actions = element('div',undefined,'viewer-toolbar'), submit = element('button',tr('Create report'),'button primary'), cancel = element('button',tr('Cancel'),'quiet-button'); submit.type='submit'; cancel.type='button'; cancel.hidden=true; actions.append(submit,cancel);
-  const output = element('div',undefined,'study-result'); form.append(controls,formats,sections,pat,layout,note,actions); container.append(form,output); let cancelled=false;
+  const output = element('div',undefined,'study-result'); form.append(controls,outcomeNote,formats,sections,pat,layout,note,actions); container.append(form,output); let cancelled=false;
   cancel.addEventListener('click',()=>{cancelled=true;api.client().cancel();});
   form.addEventListener('submit',event=>{
     event.preventDefault(); api.run(async()=>{
@@ -173,7 +178,7 @@ export async function renderDocumentTools(container, api) {
         if(['source','sources','both'].includes(scope.value))for(const item of sources)if(scope.value!=='source'||item.id===source.value)addScope(item.name,[item.id],`source-${scopes.length+1}-${item.name}`);
         if(['lot','lots','both'].includes(scope.value))for(const [name,ids]of lots)if(scope.value!=='lot'||name===lot.value)addScope(`Lot ${name||'unspecified'}`,ids,`lot-${scopes.length+1}-${name||'unspecified'}`);
         const progress=event=>{output.textContent=event.phase==='document-pages'?`Rendering page ${event.pages}…`:event.phase==='document-catalogue'?`Analyzing test ${event.completed} of ${event.total}…`:event.phase==='document-batch'?`Completed report ${event.completed} of ${event.total}…`:`Writing ${event.completed} of ${event.total} formats…`;};
-        const tasks=scopes.map(item=>()=>collectDocumentReport(api,{title:title.value,...item,layout:pageLayout,sections:selectedSections,patFit:fit.value,patK:k.valueAsNumber},{checkCancelled,onProgress:progress}));
+        const tasks=scopes.map(item=>()=>collectDocumentReport(api,{title:title.value,...item,layout:pageLayout,sections:selectedSections,deviceOutcomes:outcomes.value,patFit:fit.value,patK:k.valueAsNumber},{checkCancelled,onProgress:progress}));
         const result=await createDocumentBatch(tasks,{formats:selectedFormats,checkCancelled,onProgress:progress});
         checkCancelled();output.replaceChildren();
         for(const item of result.files)showDownload(item.file,item.filename,()=>api.client().request('viewerDownloads',{action:'release',kind:'document',token:item.token}),`document:${item.token}`);

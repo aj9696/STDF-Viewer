@@ -524,3 +524,60 @@ Evidence under `results/`: `viewer-yield-chrome-1792410993292/`,
 
 No new large-file throughput or actual browser-zoom qualification is claimed.
 Public deployment is recorded separately in `DEPLOYMENT.md`.
+
+## Library organization and report filters — 2026-10-19
+
+Checks use synthetic data and disposable browser profiles. No engineer's library
+is reset or used as a test fixture.
+
+- `library-metadata-unit.mjs` verifies normalization, missing/malformed MIR,
+  4,096-record bound, early stopping, cancellation and cache failure tolerance.
+  `library-metadata-check.mjs chrome` and `msedge` verify retained-v1/v2 and both
+  byte orders, missing fields, persistent cache reuse without dataset access,
+  signature invalidation, unavailable-source recovery and legacy package restore.
+  No viewer cache is created by Library metadata reads.
+- `library-organize-check.mjs` checks grouping, UTC chronology, metadata search,
+  unknown dates and atomic eight-file selection. `library-organize-ui-check.mjs`
+  passes in Chrome and Edge: selection across pages/search/groups, keyboard
+  focus, remove/clear controls, selection bounds, real WASM/SQLite import metadata
+  in Library and Details, and two-file navigation into independent Viewer groups.
+  Screenshots at 1440, 768, 390 and 360 pixels were inspected. Existing
+  `frontend-check.mjs chrome` passes all fifteen regression groups.
+- `viewer-report-filter-check.mjs chrome` and `msedge` verify all/current attempts
+  with all/non-failed/pass outcomes, matching overview/device/analysis/bin/map/
+  dashboard counts, a failed later retest, unknown and empty populations,
+  cancellation, invalid/unsupported options and original-source preservation.
+  Five generated XLSX workbooks per browser are inspected independently using
+  Python ZIP/XML, including a mandatory scope sheet without File Info. Unowned
+  datalog notes and original PCR summaries remain labelled source context.
+- `viewer-report-filter-ui-check.mjs chrome` and `msedge` collect real filtered
+  documents and inspect PDF, Word, Excel and PNG exports. Filter provenance
+  survives omitting Summary. The Reports form forwards the selected outcome
+  scope. The investigation modal passes the same scope to six embedded PNG
+  charts and workbook tables; a new dialog resets to All devices. Raw-record
+  exports hide the report filter. Saved workspace selection remains unchanged.
+  The actual Viewer modal fits 360 pixels; keyboard selection and Escape work.
+- Existing `viewer-e2e-check.mjs`, `viewer-documents-check.mjs` and
+  `viewer-help-check.mjs` pass in Chrome and Edge. Nine tabs, the original
+  eight-sheet/eleven-image default workbook, workspace save/restore, document
+  formats, and controlled-English help remain correct. Existing population and
+  lifecycle suites also pass in Chrome.
+
+Independent review corrected File Details metadata handoff. Accessibility review
+added concise labels to report selectors. The report filter is ephemeral; source
+databases, parser versions and portable-package schemas require no migration.
+No new large-file throughput or mobile storage qualification is claimed.
+
+Evidence under `results/` includes `library-metadata-1792421252512/` (Chrome),
+`library-metadata-1792421264775/` (Edge),
+`library-organize-chrome-1792421496236/`,
+`library-organize-msedge-1792421507566/`,
+`viewer-report-filter-chrome-1792421317359/`,
+`viewer-report-filter-msedge-1792421331228/`,
+`viewer-report-filter-ui-chrome-1792421684419/`,
+`viewer-report-filter-ui-msedge-1792421693520/`,
+`viewer-e2e-chrome-1792421501900/`, `viewer-e2e-msedge-1792421501910/`,
+`viewer-documents-chrome-1792421541238/`,
+`viewer-documents-msedge-1792421552217/`,
+`viewer-help-chrome-1792421501902/`, `viewer-help-msedge-1792421541242/`.
+Public release provenance is recorded in `DEPLOYMENT.md`.

@@ -1,4 +1,4 @@
-import { openViewerContext } from './viewer-context.js';
+import { openViewerContext, metadataDeviceWhere } from './viewer-context.js';
 import { overview, iterateReportDevices, readDevice } from './viewer-tables.js';
 import { rowsBounded } from './viewer-context.js';
 import { analyzeTest } from './viewer-analysis.js';
@@ -6,6 +6,7 @@ import { binChart, listWafers, waferMap } from './viewer-maps.js';
 import { parseTestKey, datasetId, boundedInteger, invalid } from './viewer-model.js';
 import { writeWorkbook } from './xlsx-writer.js';
 import { loadParser } from './import-source.js';
+import { reportDeviceOutcomes, reportPopulationText } from './viewer-report-scope.js';
 
 export const REPORT_SECTIONS = ['File Info', 'DUT Summary', 'Trend Chart', 'Histogram', 'Bin Chart', 'Wafer Map', 'Test Statistics', 'GDR & DTR Summary'];
 const DIRECTORY = 'semidata-report-exports-v1', LIMIT = 16 * 1024 ** 3;
@@ -60,9 +61,17 @@ async function* analyses(view, options) {
     yield await analyzeTest(view, { testKey, bins: options.bins ?? 30, seriesBy: options.seriesBy ?? 'aggregate', includeAggregate: options.includeAggregate });
   }
 }
+async function* reportScope(view) {
+  yield ['Device outcome filter', reportPopulationText(view.selection.deviceOutcomes)];
+  yield ['Device scope', 'The filter applies after the selected retest policy. Every result from a retained device remains available, including failed test executions.'];
+  yield ['Source metadata', 'Header records and recorded part/bin summaries describe the original files. They are not recalculated for the report filter.'];
+  yield ['Datalog scope', view.selection.deviceOutcomes ? 'Records with an explicit device link follow the selected devices. GDR/DTR notes have no device owner and remain source context; they can describe excluded devices.' : 'GDR/DTR records describe the original files.'];
+  yield ['Filtered yield', view.selection.deviceOutcomes ? 'Yield and bin percentages describe the retained population only. They do not represent the original production yield.' : 'Yield and bin percentages describe the selected population.'];
+}
 async function* information(view, options) {
   yield ['Report generated (UTC)', new Date().toISOString()];
   yield ['Population', JSON.stringify(view.selection)];
+  yield* reportScope(view);
   yield ['Settings', JSON.stringify(options.settings ?? {})];
   yield ['Method', 'Base STDF units; finite flag-valid measurements; valid failures included; population sigma; exact median; Cpk withheld for changing/missing limits or zero spread.'];
   yield ['Trend', 'Display uses first/last/min/max reduction; histogram and statistics use the full eligible population.'];
@@ -114,10 +123,11 @@ async function* wafers(view, options) {
 }
 async function* datalog(view) {
   for (const source of view.sources) {
+    const scope = metadataDeviceWhere(view, source);
     let after = 0;
     for (;;) {
       view.context.checkCancelled();
-      const records = rowsBounded(view.db, `SELECT id,seq,type,subtype,device_id,json FROM ${source.alias}.metadata WHERE id>? AND type=50 AND subtype IN(10,30) ORDER BY id LIMIT 100`, [after]);
+      const records = rowsBounded(view.db, `SELECT id,seq,type,subtype,device_id,json FROM ${source.alias}.metadata m WHERE id>? AND type=50 AND subtype IN(10,30) AND ${scope.sql} ORDER BY id LIMIT 100`, [after, ...scope.bind]);
       if (!records.length) break;
       for (const record of records) {
         const parts = chunks(JSON.parse(record.json));
@@ -161,13 +171,15 @@ export async function runViewerReport(store, message, context) {
     return { released: true };
   }
   const options = message.options ?? {}, tests = options.tests ?? [];
+  const deviceOutcomes = reportDeviceOutcomes(options.deviceOutcomes);
   if (options.kind !== undefined && !['report', 'records', 'device', 'deviceCsv'].includes(options.kind)) invalid('Choose a supported report format.');
+  if (deviceOutcomes !== 'all' && options.kind !== undefined && options.kind !== 'report') invalid('Device outcome filters apply only to investigation reports.');
   if (['device', 'deviceCsv'].includes(options.kind) && (!options.device || typeof options.device !== 'object')) invalid('Choose a device attempt to export.');
   if (!Array.isArray(tests) || tests.length > 12) invalid('Choose up to twelve tests for a report.');
   tests.forEach(parseTestKey);
   const sections = options.sections ?? REPORT_SECTIONS;
   if (!Array.isArray(sections) || new Set(sections).size !== sections.length || sections.some((s) => !REPORT_SECTIONS.includes(s))) invalid('Choose supported report sections.');
-  const view = await openViewerContext(store, message.selection, context);
+  const view = await openViewerContext(store, message.selection, context, { deviceOutcomes });
   const extension = options.kind === 'deviceCsv' ? 'csv' : 'xlsx';
   const token = `${crypto.randomUUID()}.${extension}`; let writable;
   try {
@@ -188,6 +200,7 @@ export async function runViewerReport(store, message, context) {
       { name: 'Device observations', headers: observationHeaders, rows: deviceObservations(view, spec), freezeRows: 1, autoFilter: true },
     ] : sections.map((name) => ({ name, ...definitions[name], freezeRows: 1, autoFilter: true }));
     if (!sheets.length) invalid('Choose at least one report section.');
+    if (deviceOutcomes !== 'all' && !sections.includes('File Info')) sheets.unshift({ name: 'Report scope', rows: reportScope(view) });
     const images = options.images ?? [];
     if (!Array.isArray(images) || images.length > 128 || images.reduce((sum, image) => sum + (image.blob?.size ?? LIMIT), 0) > 64 * 1024 * 1024) invalid('Report chart images exceed the 64 MiB / 128 image limit.');
     const handle = await directory.getFileHandle(token, { create: true }); writable = await handle.createWritable();

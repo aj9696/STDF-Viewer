@@ -1,10 +1,13 @@
 import { configureDatabase } from './dataset-schema.js';
 import { ensureViewerCache } from './viewer-cache.js';
 import { validateSelection, parseTestKey, boundedInteger, invalid } from './viewer-model.js';
+import { reportDeviceOutcomes, deviceOutcomeWhere } from './viewer-report-scope.js';
 
 /** Scope SQL to validated sources. Only internal aliases enter SQL text. */
-export async function openViewerContext(store, input, context) {
+export async function openViewerContext(store, input, context, options = {}) {
   const selection = validateSelection(input), caches = new Map();
+  const outcomes = reportDeviceOutcomes(options.deviceOutcomes);
+  if (outcomes !== 'all') selection.deviceOutcomes = outcomes;
   for (const id of new Set(selection.groups.flatMap((g) => g.datasetIds))) {
     caches.set(id, await ensureViewerCache(store, id, context));
   }
@@ -52,10 +55,18 @@ export function retiredExpression(view, source, alias = 'd') {
 export function scopeWhere(selection, alias = 'd', { allAttempts = false } = {}) {
   const where = [], bind = [];
   if (!allAttempts && selection.attempts === 'current') where.push(`${alias}.retired=0`);
+  if (selection.deviceOutcomes) where.push(deviceOutcomeWhere(selection.deviceOutcomes, alias));
   for (const [key, column] of [['heads', 'head'], ['sites', 'site']]) {
     if (selection[key]) { where.push(`${alias}.${column} IN (${selection[key].map(() => '?').join(',')})`); bind.push(...selection[key]); }
   }
   return { sql: where.length ? where.join(' AND ') : '1', bind };
+}
+
+/** File-level notes remain available; linked notes follow the report population. */
+export function metadataDeviceWhere(view, source, alias = 'm') {
+  if (!view.selection.deviceOutcomes) return { sql: '1', bind: [] };
+  const scope = scopeWhere(view.selection);
+  return { sql: `(${alias}.device_id IS NULL OR EXISTS(SELECT 1 FROM v_devices d WHERE d.source=? AND d.id=${alias}.device_id AND ${scope.sql}))`, bind: [source.source, ...scope.bind] };
 }
 export function testWhere(key, alias = 'o') {
   const test = parseTestKey(key);

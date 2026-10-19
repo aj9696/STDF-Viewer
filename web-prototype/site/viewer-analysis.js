@@ -1,6 +1,7 @@
 import { PopulationStats, TrendSampler, histogramEdges, addToHistogram, parseTestKey,
   boundedInteger, invalid } from './viewer-model.js';
 import { eachRow, retiredExpression } from './viewer-context.js';
+import { deviceOutcomeWhere } from './viewer-report-scope.js';
 
 const seriesKey = (group, head, site) => JSON.stringify([group, head, site]);
 function projection(view, source, test, order = 'seq') {
@@ -10,6 +11,7 @@ function projection(view, source, test, order = 'seq') {
   const testId = view.db.selectValue(`SELECT id FROM ${alias}.tests WHERE family=? AND number=? AND name=? AND identity=?`, [test.family, test.number, test.name, identity]);
   if (!testId) return null;
   const where = ['o.test_id=?', 'o.unit=?', 'o.channel=?'], bind = [testId, test.unit, test.channel];
+  if (view.selection.deviceOutcomes) where.push(deviceOutcomeWhere(view.selection.deviceOutcomes));
   if (view.selection.attempts === 'current') {
     where.push(`NOT ${retiredExpression(view, source)}`);
   }

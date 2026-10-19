@@ -30,6 +30,21 @@ names contain distinct prefixes and sequence numbers. The existing viewer
 selection supports at most eight sources; at most sixteen report scopes can be
 generated together.
 
+**Report devices** defaults to **All devices**. **Exclude failed devices**
+keeps passing and unknown outcomes. **Passing devices only** keeps known passes.
+The PRR flags determine the device outcome; this is not a filter on individual
+test results. A passing device can still contain a failed test execution.
+Retest replacement occurs before this filter, so removing a failed later attempt
+does not restore an earlier attempt. The viewer selection remains unchanged.
+
+Every device-based table and chart uses the same report population. Filtered
+yield describes that population, not original production yield. The filter is
+visible in each report's scope and methods, including when Summary is unchecked,
+and is retained in receipts. PCR counts and source headers remain original
+source facts. Notes without an explicit device link remain source context and
+can describe excluded devices. GDR/DTR active-device context does not establish
+device ownership.
+
 ## Sections and populations
 
 | Section | Calculation and presentation |
@@ -42,8 +57,8 @@ generated together.
 | Site yield and test time | Per-head/site outcome counts, known-outcome yield and mean recorded PRR test time |
 | Device yield/time trends | Cumulative known-outcome yield and PRR test time by selected device order; extrema-preserving display reduction with full eligible population counts |
 | Retest counts | All attempts and explicitly superseded attempts; repeated identifiers alone do not imply retest |
-| Recorded part counts | Original PCR summaries, independent of current head/site/retest filtering; head/site 255 is a summary scope and sentinel counts remain unknown |
-| Datalog notes | First 100 selected source records, with the complete record count stated |
+| Recorded part counts | Original PCR summaries, independent of head/site/retest/report device filters; head/site 255 is a summary scope and sentinel counts remain unknown |
+| Datalog notes | First 100 scoped records, with total count; explicitly device-linked records follow the report filter, unowned source context remains |
 | PAT | Selected numeric-test screen, fit/count/limits, warnings and up to 1,000 flagged-device decisions; no disposition change |
 | Full catalogue worst Cpk | Optional scan of every numeric test identity in the selected scope; report the six tests with the lowest available population Cpk |
 
@@ -142,6 +157,10 @@ Collection returns a plain report with `title`, `createdAt`, `scope`, optional
 `filenameStem`, `provenance`, `layout: {pageWidthMm, pageHeightMm, imageWidthPx}`,
 and `sections`. Each section has a title and any
 of `paragraphs`, `table: {headers, rows}`, or a PNG/JPEG `image` Blob.
+
+`choice.deviceOutcomes` accepts `all` (default), `non-failed`, or `pass` and is
+passed to each data query and recorded in `provenance.selection`. See the
+[provider contract](VIEWER-CONTRACT.md#report-device-outcomes).
 
 `viewer-document-formats.js` is independent of viewer queries:
 

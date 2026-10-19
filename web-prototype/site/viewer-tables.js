@@ -1,4 +1,4 @@
-import { scopeWhere, testWhere, pageOptions, rowsBounded, eachRow, retiredExpression } from './viewer-context.js';
+import { scopeWhere, testWhere, pageOptions, rowsBounded, eachRow, retiredExpression, metadataDeviceWhere } from './viewer-context.js';
 import { testKey, parseTestKey, textOption, boundedInteger, datasetId, invalid, deviceOutcome } from './viewer-model.js';
 
 export async function overview(view) {
@@ -7,6 +7,8 @@ export async function overview(view) {
   await eachRow(view, 'SELECT d.group_id,d.head,d.site,d.retired,d.part_flags FROM v_devices d', [], (row) => {
     headSet.add(row.head); siteSet.add(`${row.head}/${row.site}`);
     if (view.selection.heads && !view.selection.heads.includes(row.head) || view.selection.sites && !view.selection.sites.includes(row.site)) return;
+    const outcome = deviceOutcome(row.part_flags);
+    if (view.selection.deviceOutcomes === 'non-failed' && outcome === 'fail' || view.selection.deviceOutcomes === 'pass' && outcome !== 'pass') return;
     const item = counts[row.group_id]; item.total++; item.superseded += row.retired;
     if (view.selection.attempts === 'all' || !row.retired) item[{ pass: 'passed', fail: 'failed', unknown: 'unknown' }[deviceOutcome(row.part_flags)]]++;
   });
@@ -264,9 +266,12 @@ export function readMetadata(view, options) {
   const { offset, limit } = pageOptions(options, 100), query = textOption(options.query ?? '');
   const families = { datalog: '(type=50 AND subtype IN(10,30))', pins: '(type=1 AND subtype IN(60,62,63))', headers: '(type IN(0,1) AND subtype NOT IN(40,50,60,62,63))', all: '1' };
   const family = options.family ?? 'datalog'; if (!Object.hasOwn(families, family)) invalid('Unknown record family.');
-  const union = view.sources.map((s) => `SELECT seq,type,subtype,device_id,json,${s.source} source FROM ${s.alias}.metadata`).join(' UNION ALL ');
+  const scopeBind = [], union = view.sources.map((s) => {
+    const scope = metadataDeviceWhere(view, s); scopeBind.push(...scope.bind);
+    return `SELECT seq,type,subtype,device_id,json,${s.source} source FROM ${s.alias}.metadata m WHERE ${scope.sql}`;
+  }).join(' UNION ALL ');
   const where = `${families[family]} AND instr(lower(json),lower(?))>0`;
-  const total = view.db.selectValue(`SELECT COUNT(*) FROM(${union}) WHERE ${where}`, [query]);
-  const items = rowsBounded(view.db, `SELECT * FROM(${union}) WHERE ${where} ORDER BY source,seq LIMIT ? OFFSET ?`, [query, limit, offset]);
+  const total = view.db.selectValue(`SELECT COUNT(*) FROM(${union}) WHERE ${where}`, [...scopeBind, query]);
+  const items = rowsBounded(view.db, `SELECT * FROM(${union}) WHERE ${where} ORDER BY source,seq LIMIT ? OFFSET ?`, [...scopeBind, query, limit, offset]);
   return { items: items.map((row) => ({ ...row, datasetId: view.sources[row.source].datasetId, sourceName: view.sources[row.source].cache.dataset.name, fields: JSON.parse(row.json), json: undefined })), total, offset, nextOffset: offset + items.length < total ? offset + items.length : null };
 }

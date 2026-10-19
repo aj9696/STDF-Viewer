@@ -12,6 +12,14 @@ In Viewer, open **Workspace** beside Settings:
   sources, ordered groups, tests and supported settings.
 - **Save workspace** downloads a portable copy of the current investigation.
 - **Export report** chooses results and chart sections for an Excel report.
+  **Report devices** can exclude failed devices or keep only passing devices.
+  The filter changes every device-based table and chart in that report. It does
+  not change the saved viewer selection or individual-device/raw-record exports.
+  Unknown outcomes remain with **Exclude failed devices** and are removed with
+  **Passing devices only**. Filtered workbooks identify the filter in File Info,
+  or a separate Report scope sheet if File Info is unchecked. Original source
+  counts and unowned notes remain labelled source facts. See
+  [report population rules](LIBRARY-AND-REPORT-FILTERS.md).
 - **Downloads** retrieves or removes generated temporary files retained locally.
 
 The Library footer's **Open workspace** link reaches the same menu, including

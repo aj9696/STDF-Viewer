@@ -4,13 +4,16 @@ import { analyzeTest, summarizeTests } from './viewer-analysis.js';
 import { binChart, listWafers, waferMap } from './viewer-maps.js';
 import { boundedInteger, datasetId, invalid } from './viewer-model.js';
 import { loadParser } from './import-source.js';
+import { reportDeviceOutcomes } from './viewer-report-scope.js';
 
 export async function runViewerQuery(store, message, context) {
   const options = message.options ?? {};
   if (!options || typeof options !== 'object' || Array.isArray(options)) invalid('Viewer options must be an object.');
   const actions = ['prepare', 'overview', 'tests', 'devices', 'device', 'analyze', 'testSummaries', 'bins', 'wafers', 'wafer', 'records', 'record', 'rawRecords', 'advanced'];
   if (!actions.includes(message.action)) invalid('Unknown viewer operation.');
-  const view = await openViewerContext(store, message.selection, context);
+  const deviceOutcomes = reportDeviceOutcomes(options.deviceOutcomes);
+  if (deviceOutcomes !== 'all' && (['prepare', 'device', 'record', 'rawRecords'].includes(message.action) || message.action === 'advanced' && !['dashboard', 'screening'].includes(options.kind))) invalid('This operation does not support a report device filter.');
+  const view = await openViewerContext(store, message.selection, context, { deviceOutcomes });
   try {
     switch (message.action) {
       case 'advanced': {

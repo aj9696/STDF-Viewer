@@ -366,3 +366,12 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 - [x] Integrate tab, cache lifecycle, workspace persistence and contextual help.
 - [x] Independent review; real-provider and Chrome/Edge UI regression checks.
 - [x] Publish clean release and verify the public assets and workflows.
+
+### Library organization and report filters — 2026-10-19
+
+- [x] Specify metadata, multi-selection and consistent report population rules.
+- [x] Add bounded metadata extraction/cache for existing and newly saved sources.
+- [x] Add Library grouping/search and selection of up to eight files.
+- [x] Add coherent report outcome scope, chart capture and export provenance.
+- [x] Verify report contents, retest behavior and Chrome/Edge Library/report UI.
+- [ ] Review, document, publish and verify the public release.
