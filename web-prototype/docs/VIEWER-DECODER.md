@@ -17,8 +17,15 @@ Each batch is `{version:1,pending,tests,observations,pinStates,devices,metadata}
 Arrays contain positional rows described below. There are at most 2,048 rows and
 2 MiB of serialized JSON per batch. Decoding retains no measurements across
 completed batches, except output from one bounded STDF record awaiting drain.
-Test/declaration state is limited to 20,000 identities/declarations and 16 MiB of
-metadata. Exceeding a limit fails with `METADATA_LIMIT`, never silent truncation.
+Test identities are limited to 20,000. Estimated retained identity/default and
+declaration-cache state is limited to 16 MiB; serialized metadata already emitted
+to SQLite does not consume that retained-state budget. The exact-declaration
+lookup cache holds at most 20,000 entries. When its entry or byte allowance is
+full, the decoder releases that lookup cache and continues. First-test defaults
+remain available. A declaration that does not fit the remaining cache allowance
+is emitted without being cached. Neither case discards recorded results.
+Durable identity/default state that exceeds its bound still fails explicitly
+with `METADATA_LIMIT`, as does a decoded row exceeding the batch bound.
 
 All IDs are source-local safe integers. Record sequence starts at one and matches
 the retained index; device ID is the matching PIR sequence. Family is STDF
@@ -74,9 +81,12 @@ Declaration JSON contains `identity`, `raw`, `presentFields`, `rawTailHex`, `war
 include this in cross-dataset identity matching, never match synthetic display
 names to actual source names. Effective fields include `unit`, `scale`, `lowScale`, `highScale`,
 `low`, `high`, `lowSpec`, `highSpec`, `pinIndices`, `pattern`, and `section`.
-Limits/specifications in effective metadata also use base units. Cold metadata
-is emitted once per distinct declaration (metadata ID is its first record
-sequence). Observation rows reference that ID. Cold STDF records use their own
+Limits/specifications in effective metadata also use base units. A declaration
+is emitted once while its exact key remains in the bounded lookup cache. If an
+evicted key returns, its metadata is emitted again with the current record
+sequence as a new ID. Metadata IDs are opaque references, not permanent unique
+declaration identities. Observation rows reference the correct emitted metadata
+row. Cold STDF records use their own
 record sequence as ID and their decoded uppercase STDF field names in JSON.
 Metadata includes FAR/ATR/VUR/MIR/MRR/PCR/HBR/SBR/SDR/PMR/PGR/PLR/RDR,
 WIR/WRR/WCR/TSR/GDR/DTR/BPS/EPS; unknown record families remain source-indexed.
@@ -87,6 +97,14 @@ observations,devices,metadata,byteOrder,recordCounts,warnings}`. It validates th
 final record boundary, MIR/MRR, and matching device starts/ends. `byteOrder` is
 `little` or `big`. Warnings is a bounded list of interpretation warnings, not
 one entry per measurement.
+
+The 2026-10-22 memory-accounting repair keeps the `viewer-v1` interpretation and
+cache schema. Existing completed caches remain valid: their observation values,
+defaults and references are unchanged. Only new cache construction changes its
+in-memory deduplication lifetime. Repeated declarations after cache turnover can
+increase cold metadata rows and SQLite size. Raw source record counts do not
+change. Failed builds contain no completed manifest and are removed or rebuilt;
+the immutable source snapshot and retained database remain available.
 
 `decode_record(bytes, byteOrder)` decodes exactly one complete framed record and
 returns JSON `{type,subtype,name,fields}`. Byte order must be `little` or `big`.

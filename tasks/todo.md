@@ -375,3 +375,11 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 - [x] Add coherent report outcome scope, chart capture and export provenance.
 - [x] Verify report contents, retest behavior and Chrome/Edge Library/report UI.
 - [x] Review, document, publish and verify the public release.
+
+### Viewer declaration memory limit — 2026-10-22
+
+- [x] Trace the exact error to cumulative declaration accounting.
+- [x] Reproduce with independently generated STDF and the old WASM.
+- [x] Bound live defaults/cache state without losing declaration information.
+- [x] Verify native semantics and rebuilt Chrome/Edge WASM/cache workflows.
+- [ ] Review, document, publish and verify the repaired release.

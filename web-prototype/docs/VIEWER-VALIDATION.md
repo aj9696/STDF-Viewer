@@ -581,3 +581,76 @@ Evidence under `results/` includes `library-metadata-1792421252512/` (Chrome),
 `viewer-documents-msedge-1792421552217/`,
 `viewer-help-chrome-1792421501902/`, `viewer-help-msedge-1792421541242/`.
 Public release provenance is recorded in `DEPLOYMENT.md`.
+
+## Viewer declaration memory accounting — 2026-10-22
+
+The reported `METADATA_LIMIT: viewer declaration state exceeds 16 MiB` was
+reproduced with independently generated synthetic STDF, without using a user's
+test data. `make-viewer-metadata-fixtures.py` uses Python `struct` and explicit
+expectations; it does not derive expected results from the application decoder.
+
+Two byte-order fixtures each contain 12,000 test identities, 24,009 records,
+24,002 observations and 12,002 retained PTR declarations in 1,752,266 bytes.
+The previous WASM imports each successfully, then fails viewer construction at
+record 5,428. The source remains ready and checksum-valid; the incomplete viewer
+cache is removed. The counter included serialized JSON already drained to SQLite.
+
+The repaired decoder budgets estimated live identity/default and declaration
+lookup state. It can discard the optional declaration cache while preserving
+first defaults; repeated declarations then receive fresh metadata rows. It does
+not raise the 16 MiB state budget or the 20,000-test identity limit. Record and
+batch limits remain in force. Completed old caches require no migration.
+
+`viewer-metadata-check.mjs chrome` and `msedge` pass with the rebuilt WASM:
+
+- Both 12,000-test fixtures build with exact test/device/observation counts.
+  Local limit overrides and later omitted fields retain the first defaults.
+  Mean, median, histogram counts and device rows match independent expectations.
+- A 1,945,039-byte MPR fixture has 20,057 records, 20,052 observations and
+  20,051 distinct declaration tails for one test. After cache turnover, replayed
+  and omitted tails preserve PMR 42, V units and original limits. Production
+  cache construction validates every observation's metadata foreign key.
+- Warm queries and a new worker reuse completed caches. Original source hashes
+  remain equal. No page errors were observed. Recorded WASM memory was
+  13,434,880 bytes for each PTR fixture and 12,976,128 bytes for MPR; this is the
+  full WASM memory allocation, not a direct declaration-state measurement.
+
+Existing mixed-family `viewer-check.mjs` passes in both browsers, covering
+PTR/MPR/FTR, both byte orders, repeated executions, retests, bins, wafers,
+original-record reads and cache reuse. `viewer-lifecycle-check.mjs chrome`
+passes report paging, cancellation, generated-download cleanup and source checks.
+
+The full native suite passes 33 tests (5 library, 6 chunk, 9 retained and 13
+viewer tests; one fixture-generator test is intentionally ignored). Four new
+regressions cover emitted JSON history beyond the old byte limit, more than
+20,000 changing declarations with exactly equal row hashes across 1-, 17- and
+65,536-byte input chunks in both byte orders, original-default inheritance after
+eviction, explicit absent limits/string clearing, and near-budget uncached
+repetitions. Genuine durable-state overflow and the 20,001st test identity still
+reject explicitly. Tests validate batch bounds, unique metadata IDs and complete
+observation references. Independent code review found no remaining correctness
+issues or downstream requirement for declaration IDs to be lifetime-unique by
+content. Rust formatting and Git whitespace checks pass.
+
+Reproduction commands from the repository root:
+
+```powershell
+node web-prototype/scripts/viewer-metadata-check.mjs chrome
+node web-prototype/scripts/viewer-metadata-check.mjs msedge
+```
+
+For a controlled baseline, append `--expect-limit --runtime <old-pkg-directory>`
+to run against a preserved copy of both old `parser.js` and `parser_bg.wasm`.
+The harness snapshots both files before serving them and records the WASM hash.
+
+Baseline WASM SHA-256:
+`a540e02a62d84945d1688227b56e36be0983c8b5eb1113db7c782a7d1b10c8aa`.
+Repaired WASM SHA-256:
+`ee84afa61a774fc3d511154dccef0e3a29658eb7e168937790663ecc034ea0e0`.
+Evidence under `results/`: `viewer-metadata-before-chrome-1792693945554/`,
+`viewer-metadata-fixed-chrome-1792694059104/`,
+`viewer-metadata-fixed-msedge-1792694059103/`,
+`viewer-chrome-1792694006106/`, `viewer-msedge-1792694006117/`, and
+`viewer-lifecycle-chrome-1792694006126/`. Timing samples were collected during
+concurrent checks and are not a controlled throughput benchmark. These cases do
+not establish that every possible STDF fits the remaining explicit limits.

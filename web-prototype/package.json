@@ -15,6 +15,7 @@
     "test:viewer:report-filter-ui": "node scripts/viewer-report-filter-ui-check.mjs",
     "test:viewer:model": "node scripts/viewer-model-check.mjs",
     "test:viewer": "node scripts/viewer-check.mjs",
+    "test:viewer:metadata": "node scripts/viewer-metadata-check.mjs",
     "test:viewer:ui": "node scripts/viewer-ui-check.mjs",
     "test:viewer:e2e": "node scripts/viewer-e2e-check.mjs",
     "test:viewer:transfer": "node scripts/viewer-transfer-check.mjs",

@@ -376,3 +376,18 @@ checks pass all fifteen groups, including metadata organization, two-file
 selection, report controls and workspace restoration. Generated document and
 workbook contents passed local provider/UI checks in both browsers. See
 `web-prototype/docs/VIEWER-VALIDATION.md` and `DEPLOYMENT.md` for evidence.
+
+### Viewer declaration memory limit — 2026-10-22
+
+The reported `METADATA_LIMIT: viewer declaration state exceeds 16 MiB` comes
+from the viewer decoder. Its counter includes all serialized declaration JSON
+ever emitted even though drained JSON is stored in SQLite, not retained by the
+decoder. Replace this cumulative budget with bounded live state: keep first
+test defaults and identities, release the optional exact-declaration lookup
+cache when full, and emit another metadata row if an evicted declaration recurs.
+Preserve observations, local overrides, omitted-field defaults and valid existing
+viewer caches. Keep explicit bounds on durable defaults, identities and batches.
+
+Reproduce with synthetic STDF against the old WASM, test native endian/chunk and
+cache-turnover cases, rebuild WASM and verify cold/warm browser cache behavior.
+Record generated fixture sizes, limits, regression coverage and deployment.

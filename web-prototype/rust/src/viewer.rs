@@ -12,6 +12,17 @@ use std::sync::Arc;
 
 pub const MAX_BATCH_ROWS: usize = 2048;
 pub const MAX_BATCH_BYTES: usize = 2 * 1024 * 1024;
+// Fixed allowance per retained entry covers structs, map/vector indexing and
+// spare capacity. Variable String/Vec allocations are counted separately.
+const STATE_ENTRY_BYTES: usize = 512;
+
+fn effective_heap_bytes(e: &Effective) -> usize {
+    e.unit.capacity()
+        + e.pattern.capacity()
+        + e.section.capacity()
+        + e.input_unit.capacity()
+        + e.pin_indices.capacity() * std::mem::size_of::<u16>()
+}
 pub type TestRow = (u32, u8, u32, String, u64, String);
 pub type ObservationRow = (
     u64,
@@ -143,11 +154,30 @@ pub struct ViewerEngine {
     names: HashMap<(u8, u32), Vec<u32>>,
     tests: Vec<Test>,
     declarations: HashMap<(u32, String, Vec<u8>), Arc<Declaration>>,
-    metadata_bytes: usize,
+    definition_bytes: usize,
+    declaration_bytes: usize,
     counts: BTreeMap<String, u64>,
     warnings: Vec<String>,
 }
 impl ViewerEngine {
+    fn discard_declarations(&mut self) {
+        // Replacing the map also releases its allocation. clear() alone would
+        // retain capacity after the accounted entries had been removed.
+        self.declarations = HashMap::new();
+        self.declaration_bytes = 0;
+    }
+
+    fn reserve_definition_bytes(&mut self, bytes: usize) -> Result<(), String> {
+        if bytes > MAX_DEFINITION_BYTES - self.definition_bytes {
+            return Err("METADATA_LIMIT: initial viewer test definitions exceed 16 MiB; reduce distinct tests or initial pin maps per source.".into());
+        }
+        self.definition_bytes += bytes;
+        if self.declaration_bytes > MAX_DEFINITION_BYTES - self.definition_bytes {
+            self.discard_declarations();
+        }
+        Ok(())
+    }
+
     pub fn push(&mut self, bytes: &[u8]) -> Result<ViewerBatch, String> {
         if self.closed {
             return Err("Viewer parser is closed.".into());
@@ -448,6 +478,13 @@ impl ViewerEngine {
             if self.tests.len() >= MAX_DEFINITIONS {
                 return Err("METADATA_LIMIT: more than 20,000 test identities.".into());
             }
+            let name_bytes = match &key.2 {
+                Name::Present(name) => name.capacity(),
+                _ => 0,
+            };
+            // Identities and first defaults are durable. Unlike declaration
+            // deduplication, neither can be evicted without changing meaning.
+            self.reserve_definition_bytes(STATE_ENTRY_BYTES + name_bytes)?;
             let id = self.tests.len() as u32 + 1;
             self.tests.push(Test {
                 defaults: Effective::default(),
@@ -527,9 +564,6 @@ impl ViewerEngine {
         let declaration = if let Some(d) = self.declarations.get(&key) {
             Arc::clone(d)
         } else {
-            if self.declarations.len() >= MAX_DEFINITIONS {
-                return Err("METADATA_LIMIT: more than 20,000 viewer declarations.".into());
-            }
             let e = fields::effective(
                 body,
                 l,
@@ -539,25 +573,33 @@ impl ViewerEngine {
                 &section,
             );
             let metadata = fields::declaration(body, l, order, &e, warnings);
-            let cost = metadata.len() * 2
-                + key.1.len()
-                + key.2.len()
-                + e.pin_indices.len() * 4
-                + e.unit.len() * 2
-                + 512;
-            if self.metadata_bytes + cost > MAX_DEFINITION_BYTES {
-                return Err("METADATA_LIMIT: viewer declaration state exceeds 16 MiB.".into());
-            }
-            self.metadata_bytes += cost;
             if new {
-                self.tests[id as usize - 1].defaults = e.clone();
+                let defaults = e.clone();
+                self.reserve_definition_bytes(effective_heap_bytes(&defaults))?;
+                self.tests[id as usize - 1].defaults = defaults;
+            }
+            // Serialized JSON belongs to the bounded output batch, not to this
+            // retained cache. An evicted key can emit a fresh metadata row; old
+            // observation references remain valid in the consumer's database.
+            let cost =
+                STATE_ENTRY_BYTES + key.1.capacity() + key.2.capacity() + effective_heap_bytes(&e);
+            let available = MAX_DEFINITION_BYTES - self.definition_bytes;
+            if self.declarations.len() >= MAX_DEFINITIONS
+                || cost > available.saturating_sub(self.declaration_bytes)
+            {
+                self.discard_declarations();
             }
             let d = Arc::new(Declaration {
                 id: seq,
                 test_id: id,
                 effective: e,
             });
-            self.declarations.insert(key, Arc::clone(&d));
+            // A valid record may not fit beside large durable defaults. Emit
+            // it without caching rather than rejecting a bounded stream row.
+            if cost <= available {
+                self.declaration_bytes += cost;
+                self.declarations.insert(key, Arc::clone(&d));
+            }
             self.output
                 .push_back(Row::Metadata((seq, seq, 15, family, device, metadata)));
             self.metadata += 1;

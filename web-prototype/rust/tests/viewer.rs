@@ -2,6 +2,8 @@ use semidata_web_parser::viewer::{
     decode_record_native, ViewerBatch, ViewerEngine, MAX_BATCH_BYTES, MAX_BATCH_ROWS,
 };
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
+use std::collections::{HashSet, VecDeque};
 
 fn u16b(n: u16, big: bool) -> [u8; 2] {
     if big {
@@ -170,6 +172,260 @@ fn one_device(records: &[Vec<u8>], big: bool) -> Vec<u8> {
     b.extend(prr(1, 2, 0, big));
     b.extend(finish(big));
     b
+}
+
+#[derive(Debug, PartialEq)]
+struct StreamAudit {
+    hashes: Vec<Vec<u8>>,
+    summary: Value,
+    declarations: usize,
+    declaration_json_bytes: usize,
+    first_default: Value,
+    last_observations: Vec<Value>,
+}
+
+// Audit large streams without retaining their emitted declaration history.
+fn audit_stream(bytes: &[u8], chunk: usize) -> Result<StreamAudit, String> {
+    let mut engine = ViewerEngine::default();
+    let mut hashes: [Sha256; 5] = std::array::from_fn(|_| Sha256::new());
+    let mut metadata_ids = HashSet::new();
+    let mut declarations = 0;
+    let mut declaration_json_bytes = 0;
+    let mut first_default = Value::Null;
+    let mut last_observations = VecDeque::new();
+    fn hash_rows<T: serde::Serialize>(hash: &mut Sha256, rows: &[T]) {
+        for row in rows {
+            hash.update(serde_json::to_vec(row).unwrap());
+            hash.update(b"\n");
+        }
+    }
+    for input in bytes.chunks(chunk) {
+        let mut batch = engine.push(input)?;
+        loop {
+            let rows = batch.tests.len()
+                + batch.observations.len()
+                + batch.devices.len()
+                + batch.pin_states.len()
+                + batch.metadata.len();
+            assert!(rows <= MAX_BATCH_ROWS);
+            if rows != 0 {
+                assert!(serde_json::to_vec(&batch).unwrap().len() <= MAX_BATCH_BYTES);
+            }
+            hash_rows(&mut hashes[0], &batch.tests);
+            hash_rows(&mut hashes[1], &batch.observations);
+            hash_rows(&mut hashes[2], &batch.devices);
+            hash_rows(&mut hashes[3], &batch.pin_states);
+            hash_rows(&mut hashes[4], &batch.metadata);
+            if first_default.is_null() {
+                if let Some(row) = batch.tests.first() {
+                    first_default = serde_json::from_str(&row.5).unwrap();
+                }
+            }
+            for row in &batch.metadata {
+                assert!(metadata_ids.insert(row.0), "metadata IDs remain unique");
+                if row.2 == 15 {
+                    declarations += 1;
+                    declaration_json_bytes += row.5.len();
+                }
+            }
+            for row in &batch.observations {
+                assert!(
+                    metadata_ids.contains(&row.13),
+                    "observation references an emitted declaration"
+                );
+                last_observations.push_back(serde_json::to_value(row).unwrap());
+                if last_observations.len() > 8 {
+                    last_observations.pop_front();
+                }
+            }
+            if !batch.pending {
+                break;
+            }
+            batch = engine.drain()?;
+        }
+    }
+    Ok(StreamAudit {
+        hashes: hashes
+            .into_iter()
+            .map(|hash| hash.finalize().to_vec())
+            .collect(),
+        summary: engine.finish()?,
+        declarations,
+        declaration_json_bytes,
+        first_default,
+        last_observations: last_observations.into_iter().collect(),
+    })
+}
+
+#[test]
+fn streamed_declaration_json_is_not_retained_state() {
+    for big in [false, true] {
+        let mut bytes = start(big);
+        bytes.extend(pir(1, 2, big));
+        for i in 0..2500 {
+            let mut t = cn("DYNAMIC");
+            t.extend(cn(&format!("{i:05}{}", "A".repeat(220))));
+            t.extend([0, 0, 0, 0]);
+            t.extend(u32b(0_f32.to_bits(), big));
+            t.extend(u32b(2_f32.to_bits(), big));
+            t.extend(cn("V"));
+            for _ in 0..3 {
+                t.extend(cn(&"F".repeat(250)));
+            }
+            bytes.extend(ptr(7, 1_f32.to_bits(), &t, 0, big));
+        }
+        bytes.extend(prr(1, 2, 0, big));
+        bytes.extend(finish(big));
+        let result = audit_stream(&bytes, 65536).unwrap();
+        assert_eq!(result.summary["tests"], 1);
+        assert_eq!(result.summary["observations"], 2500);
+        assert_eq!(result.declarations, 2500);
+        // The old accounting rejected this emitted JSON even though it was no
+        // longer held by the parser after each bounded batch was consumed.
+        assert!(result.declaration_json_bytes * 2 > 16 * 1024 * 1024);
+        assert_eq!(result.last_observations.last().unwrap()[12], 2.);
+    }
+}
+
+#[test]
+fn declaration_cache_rotation_preserves_first_defaults_and_chunk_determinism() {
+    for big in [false, true] {
+        let initial = tail("OVERRIDES", 0, [6, 3, 9], -1., 2., "V", big);
+        let mut bytes = start(big);
+        bytes.extend(pir(1, 2, big));
+        bytes.extend(ptr(7, 1_f32.to_bits(), &initial, 0, big));
+        for i in 1..=20000 {
+            bytes.extend(ptr(
+                7,
+                1_f32.to_bits(),
+                &tail("OVERRIDES", 0, [0, 0, 0], i as f32, i as f32 + 1., "V", big),
+                0,
+                big,
+            ));
+        }
+        // The first exact key has been evicted and needs a fresh metadata ID.
+        bytes.extend(ptr(7, 1_f32.to_bits(), &initial, 0, big));
+        bytes.extend(ptr(7, 1_f32.to_bits(), &initial, 0, big));
+        bytes.extend(ptr(
+            7,
+            1_f32.to_bits(),
+            &tail("OVERRIDES", 0xc0, [0, 0, 0], 8., 9., "\0", big),
+            0,
+            big,
+        ));
+        bytes.extend(ptr(7, 1_f32.to_bits(), &[], 0, big));
+        bytes.extend(prr(1, 2, 0, big));
+        bytes.extend(finish(big));
+        let expected = audit_stream(&bytes, 65536).unwrap();
+        assert_eq!(expected.summary["tests"], 1);
+        assert_eq!(expected.summary["observations"], 20005);
+        assert_eq!(expected.declarations, 20004);
+        assert_eq!(expected.first_default["effective"]["scale"], 6);
+        let last = &expected.last_observations;
+        let repeated = &last[last.len() - 4];
+        assert_eq!(
+            repeated[0], repeated[13],
+            "evicted declaration receives the current sequence ID"
+        );
+        assert_eq!(
+            last[last.len() - 3][13],
+            repeated[13],
+            "resident exact key is still deduplicated"
+        );
+        assert!(last[last.len() - 2][11].is_null());
+        assert!(last[last.len() - 2][12].is_null());
+        assert_eq!(last[last.len() - 2][14], "");
+        assert_eq!(last.last().unwrap()[11], -1.);
+        assert_eq!(last.last().unwrap()[12], 2.);
+        assert_eq!(last.last().unwrap()[14], "V");
+        for chunk in [1, 17] {
+            assert_eq!(
+                audit_stream(&bytes, chunk).unwrap(),
+                expected,
+                "chunk {chunk}"
+            );
+        }
+    }
+}
+
+fn large_initial_sections(tests: usize, repeats: usize, big: bool) -> Vec<u8> {
+    let mut bytes = start(big);
+    bytes.extend(pir(1, 2, big));
+    for _ in 0..256 {
+        bytes.extend(rec(20, 10, &cn(&"S".repeat(255)), big));
+    }
+    for i in 0..tests {
+        bytes.extend(ptr(
+            1000 + i as u32,
+            1_f32.to_bits(),
+            &tail(&format!("D{i:03}"), 0, [0, 0, 0], 0., 2., "V", big),
+            0,
+            big,
+        ));
+    }
+    for _ in 0..repeats {
+        bytes.extend(ptr(
+            1000 + tests as u32 - 1,
+            1_f32.to_bits(),
+            &tail(
+                &format!("D{:03}", tests - 1),
+                0,
+                [0, 0, 0],
+                0.,
+                2.,
+                "V",
+                big,
+            ),
+            0,
+            big,
+        ));
+    }
+    for _ in 0..256 {
+        bytes.extend(rec(20, 20, &[], big));
+    }
+    bytes.extend(prr(1, 2, 0, big));
+    bytes.extend(finish(big));
+    bytes
+}
+
+#[test]
+fn durable_defaults_remain_bounded_and_uncacheable_records_can_stream() {
+    for big in [false, true] {
+        // A 65,535-byte initial section per test nearly fills durable state.
+        // The last declaration cannot fit alongside it, but can still stream.
+        let result = audit_stream(&large_initial_sections(254, 2, big), 65536).unwrap();
+        assert_eq!(result.summary["tests"], 254);
+        assert_eq!(result.summary["observations"], 256);
+        assert_eq!(result.declarations, 256);
+        for row in result.last_observations.iter().rev().take(3) {
+            assert_eq!(
+                row[0], row[13],
+                "uncached exact repetitions emit fresh metadata IDs"
+            );
+            assert_eq!(row[12], 2.);
+        }
+        let error = audit_stream(&large_initial_sections(255, 0, big), 65536).unwrap_err();
+        assert!(
+            error.contains("initial viewer test definitions exceed 16 MiB"),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn declaration_rotation_does_not_remove_the_test_identity_limit() {
+    let mut bytes = start(false);
+    bytes.extend(pir(1, 2, false));
+    for number in 0..=20000 {
+        bytes.extend(ptr(number, 1_f32.to_bits(), &cn("A"), 0, false));
+    }
+    bytes.extend(prr(1, 2, 0, false));
+    bytes.extend(finish(false));
+    let error = audit_stream(&bytes, 65536).unwrap_err();
+    assert!(
+        error.contains("more than 20,000 test identities"),
+        "{error}"
+    );
 }
 
 #[test]
