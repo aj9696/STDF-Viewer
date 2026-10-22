@@ -314,3 +314,48 @@ The existing live Viewer was refreshed while idle and retained its local source
 and Yield Manager view. No source/package schema migration is required.
 Documentation-only commits after `8a0a616` record this release without changing
 the deployed asset revision.
+
+## Viewer declaration memory repair — 2026-10-22
+
+Cloudflare deployment `9f956256-22d5-49a2-ac32-5b275598d385` published clean source
+revision [`9d5ce49`](https://github.com/aj9696/STDF-Viewer/commit/9d5ce499dcf1142611704d0816a07ef3ca0ae7bd)
+to [SemiData](https://semidata.pages.dev/). The viewer now budgets retained
+declaration state instead of all metadata text previously emitted to SQLite.
+The optional declaration cache can rotate without losing initial defaults,
+observations or source records. Durable-state and batch bounds remain explicit.
+
+The package has `sourceDirty: false`, 126 files and 4,210,717 uncompressed bytes.
+Its ZIP contains the same entries, compared byte-for-byte against `dist/pages`
+and the release manifest. ZIP size is 1,554,317 bytes; SHA-256 is
+`5411cdc6d1371c1e099e0905857cf0ce59217936cef89a36fb147faf4fd47545`.
+The packaged parser WASM SHA-256 is
+`c298c214ed5076e191655afa2d34a2139197ebce3c0fa327bd3ec25cfa2799cf`.
+Cloudflare confirmed 126/126 uploaded files and deployment success.
+
+Fresh Chrome and Edge profiles each pass all fifteen public release check
+groups. All 124 public manifest assets match their packaged hashes and sizes;
+release.json matches separately and `_headers` is consumed as configuration.
+Library metadata grouping, multiple-file opening, report filters, statistics,
+help, Yield Manager, workspace download, full browser restart, fresh-profile
+restore and source hashes pass. No JavaScript errors, failed application
+requests or external application requests were recorded. Evidence is in
+`results/release-smoke-chrome-1792694705094/` and
+`results/release-smoke-msedge-1792694705097/`.
+
+Both browsers also import the independently generated 12,000-test PTR fixture
+and the MPR fixture with 20,051 distinct declaration tails through the actual
+public Library and Viewer. Exact observation/test counts, mean and median,
+PMR channel identity, source hashes, warm cache reuse and page reload pass.
+These fixtures reproduce the old accounting failure and exercise declaration
+cache turnover. Evidence, source manifests and public Viewer screenshots are in
+`results/metadata-release-chrome-1792694705110/` and
+`results/metadata-release-msedge-1792694705116/`. The 12,000-test Chrome
+screenshot was inspected. All checks use synthetic data in isolated profiles;
+the engineer's reported source file was not available for direct verification.
+
+Existing completed viewer caches remain valid. Failed cache builds can be
+retried by refreshing the app and reopening the retained Library source; no
+source re-import or storage migration is required. Local/native qualification,
+remaining explicit limits and baseline reproduction are in
+`VIEWER-VALIDATION.md`. Documentation-only commits after `9d5ce49` record the
+release without changing its deployed asset revision.

@@ -382,4 +382,4 @@ Narrow/reflow checks are passed, but are not recorded as an actual zoom test.
 - [x] Reproduce with independently generated STDF and the old WASM.
 - [x] Bound live defaults/cache state without losing declaration information.
 - [x] Verify native semantics and rebuilt Chrome/Edge WASM/cache workflows.
-- [ ] Review, document, publish and verify the repaired release.
+- [x] Review, document, publish and verify the repaired release.

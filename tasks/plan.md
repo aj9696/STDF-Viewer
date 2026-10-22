@@ -391,3 +391,10 @@ viewer caches. Keep explicit bounds on durable defaults, identities and batches.
 Reproduce with synthetic STDF against the old WASM, test native endian/chunk and
 cache-turnover cases, rebuild WASM and verify cold/warm browser cache behavior.
 Record generated fixture sizes, limits, regression coverage and deployment.
+
+Published as clean asset revision `9d5ce49` on 2026-10-22. Chrome and Edge each
+pass fifteen public release check groups, then import and open the 12,000-test
+and declaration-turnover fixtures through the public Library and Viewer.
+Counts, statistics, source hashes and warm/reloaded cache reuse pass. Existing
+completed caches remain valid. See `web-prototype/docs/DEPLOYMENT.md` for the
+deployment ID, package provenance and live verification evidence.

@@ -645,12 +645,35 @@ The harness snapshots both files before serving them and records the WASM hash.
 
 Baseline WASM SHA-256:
 `a540e02a62d84945d1688227b56e36be0983c8b5eb1113db7c782a7d1b10c8aa`.
-Repaired WASM SHA-256:
+Baseline evidence is `results/viewer-metadata-before-chrome-1792693945554/`.
+
+The first repaired build had WASM SHA-256
 `ee84afa61a774fc3d511154dccef0e3a29658eb7e168937790663ecc034ea0e0`.
-Evidence under `results/`: `viewer-metadata-before-chrome-1792693945554/`,
+Its evidence under `results/` is
 `viewer-metadata-fixed-chrome-1792694059104/`,
 `viewer-metadata-fixed-msedge-1792694059103/`,
 `viewer-chrome-1792694006106/`, `viewer-msedge-1792694006117/`, and
-`viewer-lifecycle-chrome-1792694006126/`. Timing samples were collected during
-concurrent checks and are not a controlled throughput benchmark. These cases do
-not establish that every possible STDF fits the remaining explicit limits.
+`viewer-lifecycle-chrome-1792694006126/`.
+
+The final package was rebuilt from clean source revision
+`9d5ce499dcf1142611704d0816a07ef3ca0ae7bd` after Rust formatting. Its WASM SHA-256 is
+`c298c214ed5076e191655afa2d34a2139197ebce3c0fa327bd3ec25cfa2799cf`.
+All three metadata fixtures pass again in Chrome and Edge against this exact
+binary, with no errors. The result files record the hash, counts, defaults,
+statistics, cache reuse and source integrity:
+`results/viewer-metadata-fixed-chrome-1792694174938/` and
+`results/viewer-metadata-fixed-msedge-1792694174941/`.
+
+The final build also passes ten end-to-end check groups in each browser,
+including actual test selection, scoped charts and tables, report download,
+workspace restoration, mobile layout and original-source checks. Neither run
+records page errors or external application requests. Evidence is in
+`results/viewer-e2e-chrome-1792694264508/` and
+`results/viewer-e2e-msedge-1792694264514/`.
+`results/viewer-report-filter-chrome-1792694264510/` records nine passing filter
+check groups and five verified XLSX workbooks, with no page errors.
+
+These are local qualification results; public deployment verification is recorded
+separately in `DEPLOYMENT.md`. Timing samples were collected during concurrent
+checks and are not a controlled throughput benchmark. These cases do not establish
+that every possible STDF fits the remaining explicit limits.
